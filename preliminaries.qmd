@@ -1,0 +1,68 @@
+---
+title: "Preliminaries"
+author: "Albert Rapp"
+date: June 19, 2024
+format:
+  html:
+    code-link: true
+    code-fold: true
+    self-contained: true
+    embed-resources: true
+    toc: true
+    theme: Zephyr
+    number-sections: false
+execute: 
+  warning: false
+  message: false
+  echo: false
+editor_options: 
+  chunk_output_type: console
+---
+
+# Preliminaries
+
+In this session, Albert provides an overview of the main functions and shortcuts to be used through the course.
+
+## Lesson 1
+
+Running the code
+
+```{r running_code}
+#| echo: true
+
+library(tidyverse)
+library(janitor)
+library(skimr)
+library(palmerpenguins)
+
+penguins |> 
+  skimr::skim()
+modeldata::ames |> 
+  janitor::clean_names() |> 
+  skimr::skim(lot_frontage, lot_area)
+
+
+
+```
+
+## Displaying output
+
+Enable to display the output in the **Console(Viewer screen)** instead of the **Inline**
+
+## Referring to documentation on the fly
+
+Highlight the command or function interested in, then press `fn` (function key) along with `F1` key.
+
+## Install Instructions
+
+The install instructions are available at this [website](file:///Users/albertofcabrera/Documents/R-books/3MW(Albert%20Rapp)/r_data_cleanning_master_class/Lbcp8OXMTZ6Y3iPZ9Ui4_downloads/00_getting_started.html).
+
+```{r packages needed}
+
+pkgs <- c('tidyverse', 'palmerpenguins', 'here', 'janitor', 'modeldata', 'skimr', 'quarto', 'sessioninfo')
+
+
+install.packages(pkgs)
+
+
+```
