@@ -144,7 +144,7 @@ Notice that the application of the function prompted an error message. It was tr
 #     return(FALSE)
 #   }
 # }
-# 
+
 # penguins_wo_NAs |>
 #   mutate(
 #     large_bill_length = large_quantity(bill_length_mm)
