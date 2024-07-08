@@ -17,7 +17,6 @@ execute:
   echo: false
 editor_options: 
   chunk_output_type: console
----`
 ---
 
 # Preliminaries

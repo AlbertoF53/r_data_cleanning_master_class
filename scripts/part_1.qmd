@@ -1077,12 +1077,14 @@ Using the housing dataset from the `ames` database from `modeldata` library.
 
 library(modeldata)
 library(janitor)
+library(skimr)
+library(modeldata)
 
 ames <- modeldata::ames |> 
   clean_names() |> 
   as_tibble()
   
-#Examening dataset using skimr
+#Examining dataset using skimr
 
 ames |> 
   clean_names() |> 
@@ -1094,6 +1096,12 @@ Focusing our attention to the numeric variables. We can also transform the varia
 
 ```{r ames_numeric_variables}
 #| echo: true
+
+library(modeldata)
+library(janitor)
+library(skimr)
+library(modeldata)
+
 
 ames |> 
   select(where(is.numeric)) |> 
@@ -1115,6 +1123,12 @@ Next we can use this information to identify continuous variables. The ames_nume
 
 ```{r checking_for_counting_variables}
 #| echo: true
+
+library(modeldata)
+library(janitor)
+library(skimr)
+library(modeldata)
+
 
 ames_numeric |> 
   #Checking that the range of values goes from 0 to 10 across all variables
@@ -1186,6 +1200,12 @@ The neighborhood column has 28 values, which makes it difficult to handle. Conse
 ```{r neighborhood_lumped}
 #| echo: true
 
+library(modeldata)
+library(janitor)
+library(skimr)
+library(modeldata)
+
+
 ames |> 
   count(neighborhood) |> 
   print(n = Inf)
@@ -1204,7 +1224,7 @@ ames_top_five <-  ames |>
     ) 
 ames_top_five |> 
   select(neighborhood) |> 
-  count(neighborhood)
+  count(neighborhood) |> 
   print(n = Inf)
 ```
 
@@ -1294,6 +1314,7 @@ ames_top_five |>
 To make it more obvious what those labels are, we can add another `geom_point()` layer. It adds points to the min and max. We can also shape as a triangle-like instead of a point (shape = 5).
 
 ```{r passing_labels}
+#| echo: true
 
 ames_top_five |> 
   ggplot(aes(x = sale_price)) +
@@ -1320,27 +1341,27 @@ Another data visualization, but this time dealing with count variables. In this 
 ```{r viz_count_variables}
 #| echo: true
 
-ames_numeric |> 
-  select(where(function(x) all(x %in% 0:10) ) ) |> 
- colnames()
-  
+# ames_numeric |> 
+#   select(where(function(x) all(x %in% 0:10) ) ) |> 
+#  colnames()
+#   
 
 ```
 
-We can reduce the number of counts lower. We end up with 7 variables instead of 9. We can also exclude varaibles related to basement and kitchen
+We can reduce the number of counts lower. We end up with 7 variables instead of 9. We can also exclude variables related to basement and kitchen
 
 ```{r reduced_var_counts}
 #| echo: true
 
-selected_counts <- ames_numeric |> 
-  select(where(function(x) all(x %in% 0:5) ) ) |> 
-  select(
-    -contains('bsmt'),
-    -contains('kitchen')
-  ) 
-
-selected_counts |> 
-  skim()
+# selected_counts <- ames_numeric |> 
+#   select(where(function(x) all(x %in% 0:5) ) ) |> 
+#   select(
+#     -contains('bsmt'),
+#     -contains('kitchen')
+#   ) 
+# 
+# selected_counts |> 
+#   skim()
 ```
 
 We can mutate again and with `across()`, and transforming the count variables into factor variables. Notice that for most variables the frequencies gravitate around 0 or 1. Consequently, we could lump together the variables.
@@ -1348,13 +1369,13 @@ We can mutate again and with `across()`, and transforming the count variables in
 ```{r viz_counts_vars}
 #| echo: true
 
-selected_counts |> 
-  mutate(
-    across(
-      .cols = everything(),
-      .fns = factor ) 
-    ) |> 
-  skim()
+# selected_counts |> 
+#   mutate(
+#     across(
+#       .cols = everything(),
+#       .fns = factor ) 
+#     ) |> 
+#   skim()
 
 ```
 
@@ -1365,12 +1386,12 @@ Lumping together factor variables with limited range. Instead of using `fct_lump
 ```{r changing_factors_lim_range}
 #| echo: true
 
-selected_counts |> 
-  mutate(
-    across(
-      .cols = everything(),
-      .fns = function(x) if_else(x < 2, x, '2+')
-  ) )
+# selected_counts |> 
+#   mutate(
+#     across(
+#       .cols = everything(),
+#       .fns = function(x) if_else(x < 2, x, '2+')
+#   ) )
 
 ```
 
@@ -1379,14 +1400,14 @@ However, our function generated an error since we are dealing with numeric value
 ```{r changing_factor_into_character}
 #| echo: true
 
-selected_counts |> 
-  mutate(
-    across(
-      .cols = everything(),
-      .fns = function(x) if_else(x < 2, 
-                                 as.character(x), '2+')
-  ) ) |> 
-  skim()
+# selected_counts |> 
+#   mutate(
+#     across(
+#       .cols = everything(),
+#       .fns = function(x) if_else(x < 2, 
+#                                  as.character(x), '2+')
+#   ) ) |> 
+#   skim()
 
 
 ```
@@ -1396,16 +1417,16 @@ And then we could also transform back into a factor by adding the `factor()` fun
 ```{r back_into_factor}
 #| echo: true
 
-selected_counts |> 
-  mutate(
-    across(
-      .cols = everything(),
-      .fns = function(x) if_else(x < 2, 
-                                 as.character(x), 
-                                 '2+'
-                                 ) |> 
-        factor(levels = c(0:1,'2+')) ) ) |> 
-  skim()
+# selected_counts |> 
+#   mutate(
+#     across(
+#       .cols = everything(),
+#       .fns = function(x) if_else(x < 2, 
+#                                  as.character(x), 
+#                                  '2+'
+#                                  ) |> 
+#         factor(levels = c(0:1,'2+')) ) ) |> 
+#   skim()
 
 ```
 
@@ -1413,14 +1434,14 @@ We can modify the dataset to include the house sale price
 
 ```{r house_sale_counts}
 
-selected_counts <- ames_numeric |> 
-  select(
-    sale_price,
-    where(function(x) all(x %in% 0:5) ) ) |> 
-  select(
-    -contains('bsmt'),
-    -contains('kitchen')
-  ) 
+# selected_counts <- ames_numeric |> 
+#   select(
+#     sale_price,
+#     where(function(x) all(x %in% 0:5) ) ) |> 
+#   select(
+#     -contains('bsmt'),
+#     -contains('kitchen')
+#   ) 
 
 
 ```
@@ -1429,26 +1450,26 @@ And then, we have to make sure our `across()` call includes all variables, but t
 
 ```{r includying_house_price_factors}
 
-selected_counts |> 
-  mutate(
-    across(
-      .cols = -sale_price,
-      .fns = function(x) if_else(x < 2, 
-                                 as.character(x), 
-                                 '2+'
-                                 ) |> 
-        factor(levels = c(0:1,'2+')) ) ) |> 
-  skim()
-
-grouped_counts <- selected_counts |> 
-  mutate(
-    across(
-      .cols = -sale_price,
-      .fns = function(x) if_else(x < 2, 
-                                 as.character(x), 
-                                 '2+'
-                                 ) |> 
-        factor(levels = c(0:1,'2+')) ) )
+# selected_counts |> 
+#   mutate(
+#     across(
+#       .cols = -sale_price,
+#       .fns = function(x) if_else(x < 2, 
+#                                  as.character(x), 
+#                                  '2+'
+#                                  ) |> 
+#         factor(levels = c(0:1,'2+')) ) ) |> 
+#   skim()
+# 
+# grouped_counts <- selected_counts |> 
+#   mutate(
+#     across(
+#       .cols = -sale_price,
+#       .fns = function(x) if_else(x < 2, 
+#                                  as.character(x), 
+#                                  '2+'
+#                                  ) |> 
+#         factor(levels = c(0:1,'2+')) ) )
 
 ```
 
@@ -1457,28 +1478,28 @@ The dataset needs to be transformed into a long format for ggplot(). We need to 
 ```{r grp_count_pivot_longer}
 #| echo: true
 
-grouped_counts |> 
-  pivot_longer(
-    cols = -sale_price
-  ) |> 
-  ggplot(aes(x = sale_price)) +
-  geom_density(fill = 'grey80')
-
-grouped_counts |> 
-  pivot_longer(
-    cols = -sale_price
-  ) |> 
-  ggplot(aes(x = sale_price)) +
-  geom_density(fill = 'grey80') +
-  scale_x_log10(label = scales::label_dollar()) +
-  facet_grid(
-    rows = vars(name),
-    cols = vars(value)
-    ) +
-  theme_minimal(
-    base_family = 'Source Sans Pro',
-    base_size = 16
-  )
+# grouped_counts |> 
+#   pivot_longer(
+#     cols = -sale_price
+#   ) |> 
+#   ggplot(aes(x = sale_price)) +
+#   geom_density(fill = 'grey80')
+# 
+# grouped_counts |> 
+#   pivot_longer(
+#     cols = -sale_price
+#   ) |> 
+#   ggplot(aes(x = sale_price)) +
+#   geom_density(fill = 'grey80') +
+#   scale_x_log10(label = scales::label_dollar()) +
+#   facet_grid(
+#     rows = vars(name),
+#     cols = vars(value)
+#     ) +
+#   theme_minimal(
+#     base_family = 'Source Sans Pro',
+#     base_size = 16
+#   )
 
 
 
@@ -1489,25 +1510,25 @@ We can center all distributions to their mean price using the `scale()` function
 ```{r scaling_price_ammenities}
 #| echo: true
 
-grouped_counts |> 
-  pivot_longer(
-    cols = -sale_price
-  ) |> 
-  mutate(
-    sale_price = scale(sale_price),
-    .by = name
-  ) |> 
-  ggplot(aes(x = sale_price)) +
-  geom_density(fill = 'grey80') +
-  scale_x_log10(label = scales::label_dollar()) +
-  facet_grid(
-    rows = vars(name),
-    cols = vars(value)
-    ) +
-  theme_minimal(
-    base_family = 'Source Sans Pro',
-    base_size = 16
-  )
+# grouped_counts |> 
+#   pivot_longer(
+#     cols = -sale_price
+#   ) |> 
+#   mutate(
+#     sale_price = scale(sale_price),
+#     .by = name
+#   ) |> 
+#   ggplot(aes(x = sale_price)) +
+#   geom_density(fill = 'grey80') +
+#   scale_x_log10(label = scales::label_dollar()) +
+#   facet_grid(
+#     rows = vars(name),
+#     cols = vars(value)
+#     ) +
+#   theme_minimal(
+#     base_family = 'Source Sans Pro',
+#     base_size = 16
+#   )
 
 
 ```
@@ -1517,25 +1538,25 @@ Changing the log-10 transformation
 ```{r repalcing_log_10}
 #| echo: true
 
-grouped_counts |> 
-  pivot_longer(
-    cols = -sale_price
-  ) |> 
-  mutate(
-    sale_price = scale(sale_price),
-    .by = name
-  ) |> 
-  ggplot(aes(x = sale_price)) +
-  geom_density(fill = 'grey80') +
-  scale_x_continuous() +
-  facet_grid(
-    rows = vars(name),
-    cols = vars(value)
-    ) +
-  theme_minimal(
-    base_family = 'Source Sans Pro',
-    base_size = 16
-  )
+# grouped_counts |> 
+#   pivot_longer(
+#     cols = -sale_price
+#   ) |> 
+#   mutate(
+#     sale_price = scale(sale_price),
+#     .by = name
+#   ) |> 
+#   ggplot(aes(x = sale_price)) +
+#   geom_density(fill = 'grey80') +
+#   scale_x_continuous() +
+#   facet_grid(
+#     rows = vars(name),
+#     cols = vars(value)
+#     ) +
+#   theme_minimal(
+#     base_family = 'Source Sans Pro',
+#     base_size = 16
+#   )
 
 
 ```
@@ -1545,25 +1566,25 @@ However, the scaling works better if you log scale the variable before
 ```{r log_before}
 #| echo: true
 
-grouped_counts |> 
-  pivot_longer(
-    cols = -sale_price
-  ) |> 
-  mutate(
-    sale_price = scale(sale_price |> 
-                         log()),
-    .by = name
-  ) |> 
-  ggplot(aes(x = sale_price)) +
-  geom_density(fill = 'grey80') +
-  scale_x_continuous() +
-  facet_grid(
-    rows = vars(name),
-    cols = vars(value)
-    ) +
-  theme_minimal(
-    base_family = 'Source Sans Pro',
-    base_size = 16
-  )
+# grouped_counts |> 
+#   pivot_longer(
+#     cols = -sale_price
+#   ) |> 
+#   mutate(
+#     sale_price = scale(sale_price |> 
+#                          log()),
+#     .by = name
+#   ) |> 
+#   ggplot(aes(x = sale_price)) +
+#   geom_density(fill = 'grey80') +
+#   scale_x_continuous() +
+#   facet_grid(
+#     rows = vars(name),
+#     cols = vars(value)
+#     ) +
+#   theme_minimal(
+#     base_family = 'Source Sans Pro',
+#     base_size = 16
+#   )
 
 ```
