@@ -48,7 +48,7 @@ The dimensions of the penguins database: 344 observations and 7 columns or varia
 dim(penguins)
 ```
 
-To have a good overview of the database, we can use the `skim()` function from the skimr package. It provides
+To have a good overview of the database, we can use the `skim()` function from the skimr package. It provides a summary statistics, ad report the proportion of missing cases
 
 ```{r skimr_penguins}
 #| echo: true
@@ -58,13 +58,18 @@ palmerpenguins::penguins |>
 
 ```
 
-We can apply the skim function to the ames database
+An alternative to skimr for descriptive statistics is `gt_plt_summary()` function of the gtExtras package. For it to work, you need to select the variables in advance. Note:
 
-```{r skimr_ames}
+```{r an_alternative_gt}
 #| echo: true
 
-modeldata::ames |> 
-  skimr::skim()
+library(tidyverse)
+library(gtExtras)
+library(gt)
+
+penguins |>
+  select(bill_length_mm,bill_depth_mm) |>
+  gt_plt_summary()
 
 ```
 
@@ -91,7 +96,7 @@ modeldata::ames |>
 
 ## Lesson 2
 
-The focus is the `mutate()` function. It also deals with vectorized vs iterative calculations with mutate. It introduces the `map()` function. This function aligns a function to a vector, compelling the estimating of one-by-one instead of vector mashing. The variations of map() discussed include the `map_lgl()` and the `map_dbl()`. The first one produces a logical vector. The second produces numeric values of 1 (True) and 0 (False).
+The focus is the `mutate()` function. It also deals with vectorized vs iterative calculations with mutate. It introduces the `map()` function. This function aligns a function to a vector, compelling the estimating of one-by-one instead of vector mashing. The variations of map() discussed include the `map_lgl()` (map logical) and the `map_dbl()` (map numeric). The first one produces a logical vector. The second produces numeric values of 1 (True) and 0 (False).
 
 ### Handling missing cases
 
@@ -115,7 +120,7 @@ skimr::skim(penguins_wo_NAs)
 
 ### Handling vectors
 
-Using mutate to create a new variable. Next use select() to display it. Mutate is a vectorised function. This means that it takes the two vectors listed in the mutate function as a whole. In other words the values of each column are not taken one-by-one. And then they are operated via a vectorized division (/).
+**Mutate** *is a* *vectorised function*. This means that it takes the two vectors listed in the mutate function as a whole. In other words the values of each column are not taken one-by-one. The values are handled as a vecto, and then they are operated via a vectorized division (/).
 
 Imagine these two vectors are "smashed together" and the result is divided.
 
@@ -137,37 +142,38 @@ Notice that the application of the function prompted an error message. It was tr
 ```{r vector_principle}
 #| echo: true
 
-# large_quantity <-  function(x) {
-#   if (x > 39) {
-#     return(TRUE)
-#   } else {
-#     return(FALSE)
-#   }
-# }
+large_quantity <-  function(x) {
+  if (x > 39) {
+    return(TRUE)
+   } else {
+    return(FALSE)
+  }
+}
 
 # penguins_wo_NAs |>
 #   mutate(
 #     large_bill_length = large_quantity(bill_length_mm)
-#   ) |> 
+#     ) |>
 #   select(bill_length_mm,large_bill_length)
-# 
-# #Reconstructing the essence of the function
-# c(34, 234) > 39
+
+
+ #Reconstructing the essence of the function
+# # c(34, 234) > 39
 
 
 ```
 
 ### Functional programming or `map()`
 
-#### map_lgl() enforces the one-by-one calculation instead of vector calculation
+***map_lgl() enforces the one-by-one calculation instead of the vector calculation***
 
-To address the limitation of working with vectors, we need `functional programming`. `map()` allows one-to-one calculation called upon by the `large_quantity` function within the mutate() function.
+To address the limitation of working with vectors, we need `functional programming`. `map()` allows one-to-one calculation operation. This operation is called upon by the `large_quantity` function within the mutate() function.
 
-In other words, instead of using the vector smashing approach to handle observations contained in the variable.
+In other words, instead of using the `vector smashing` approach to handle observations contained in the variable, we rely on handling each variable listed in the mutate function.
 
 We rely on the `map()` function. In this case the logical map function ( `map_lgl()`). And then we instruct R to apply the `large_quantity()` function to each component, one-by-one, of the column or vector **bill_lenght_mm**. Notice, map_lgl() lists the vector or column first, and then the function to be applied to it. In other words, map_lgl() applies the function to each element of the vector or column instead of smashing the vector.
 
-"The map functions transform their input by applying a function to each element of a list or atomic vector and returning an object of the same length as the input."
+*"The map functions transform their input by applying a function to each element of a list or atomic vector and returning an object of the same length as the input."*
 
 ```{r functional_programming_penguins}
 #| echo: true
@@ -190,9 +196,11 @@ penguins_wo_NAs |>
 
 ```
 
-Another variation is the `map()` itself. But instead of producing individual values, map() produces lists of values.
+Another variation is the `map()` itself. But instead of producing individual values, map() produces lists of values. However, the list of variables are reported in a vector.
 
 ```{r map_list}
+#| echo: true
+
 
 large_quantity <-  function(x) {
   if (x > 39) {
@@ -206,13 +214,14 @@ test <- penguins_wo_NAs |>
   mutate(
     large_bill_length = map(
       bill_length_mm,
+  #Applyng large function to vector bill_lenth_mm
       large_quantity) ) |> 
   select(bill_length_mm,large_bill_length)
 
 test
 ```
 
-Still another variation of the `map()` function, `the map_dbl()`. It reports numbers instead of logical statements. Notice, we list first the column to be modified followed by the function (`large_quantity`).
+Still another variation of the `map()` function is the `map_dbl()`. It reports numbers instead of logical statements. Notice, we list first the column to be modified followed by the function (`large_quantity`).
 
 ```{r map_numbers}
 #| echo: true
@@ -238,7 +247,7 @@ test
 
 ## Lesson 3
 
-This section cover the `summarise()`function. This function is the opposite of the `mutate()` function. It also works with vectors, but the difference is the amount of output. While mutate can be used to produce vectors, summarise turns out single elements.
+This section covers the `summarise()`function. This function is the opposite of the `mutate()` function. It also works with vectors, but the difference is the amount of output. While mutate can be used to produce vectors, summarise turns out single elements, or atomic values.
 
 ```{r summarise_function}
 #| echo: true
@@ -250,7 +259,7 @@ penguins_wo_NAs |>
 
 ```
 
-You can also save the lengths into one single list. In other words, the last column, labeled `flipper_lenghts()` contains a vector of values. This last column has 333 values corresponding to 333 penguins' flipper lengths.
+You can also save the lengths into one single list using the `list()` function. In other words, the last column, labeled `flipper_lenghts()` contains a vector of values. This last column has 333 values corresponding to 333 penguins' flipper lengths.
 
 ```{r listing_summary_results}
 #| echo: true
@@ -270,13 +279,7 @@ test
 Handling missing values with common calculations. If not handled, the summarise function would generate NAs. One option is to use `na.rm = TRUE.`
 
 ```{r handling_nas}
-
-palmerpenguins::penguins |> 
-  mutate(
-    bill_flipper_ratio = bill_length_mm / bill_depth_mm,
-    mean_column = mean(bill_length_mm, na.rm = TRUE)
-  ) |> 
-  select(bill_length_mm, bill_depth_mm, bill_flipper_ratio, mean_column)
+#| echo: true
 
 
 palmerpenguins::penguins |> 
@@ -289,9 +292,9 @@ palmerpenguins::penguins |>
 
 ## Lesson 5
 
-Repeated calculations for subsets of data. Two options to automate repeated calculations. `for()` loop. Another is to rely on loop calculations. An example is to relay on the data without missing values.
+Repeated calculations for subsets of data. Two options to automate repeated calculations. `for()` loop. Another is to rely on loop calculations. An example is to rely on the data without missing values.
 
-One option is to rely on the option .by = () to specify subgroups. Be careful about omitting the "." It would produce an output but creating a new variable labeled species.
+One option is to rely on the option .by = () to specify subgroups. Be careful about omitting the "." It would produce an output but would miss summarizing results by species.
 
 ```{r repeated_calc}
 #| echo: true
@@ -310,7 +313,7 @@ Warning regarding grouping in a series of concatenated computations as show belo
 
 Notice the output indicates `#Groups : species[3]` Or 3 species by 5 islands. Adding another `summarise()` function generates a problem. Suppose we want to estimate the mean of the mean_flipper_length estimated in the previous run as well as the sd of the sd_flipper_lenght variable previously created. The end result is an sd_flipper_length with two NAs.
 
-During the first calculation, `group_by()` strips the last group alluded in the function, namely island. The end result is a 5 X 5 tibble table organized by three groups corresponding to the 3 species. This is an opportunity to mistakes if one ignores the structure imposed on the data by group_by() function. Grouped calculations behave differently.
+During the first calculation, `group_by()` strips the last group alluded in the function. In other words, the variable or column island is eliminated. The end result is a 5 X 5 tibble table organized by three groups corresponding to the 3 species. This is an opportunity to mistakes if one ignores the structure imposed on the data by group_by() function. Grouped calculations behave differently.
 
 ```{r grouping_danger}
 #| echo: true
@@ -326,13 +329,9 @@ penguins_wo_NAs |>
     sd_flipper_length = sd(sd_flipper_length)
   )
 
-
-
 ```
 
-To remove the underlying grouping structure, remove the grouping using the option .group = "drop' in the `summarise()` function. This option restores the original tibble table of 5 X 6.
-
-Another option is to use `.by = c(species,island)` which restores the original data structure.
+To remove the underlying grouping structure, remove the grouping using the option .groups = "drop' in the `summarise()` function. This option restores the original tibble table of 5 X 6.
 
 ```{r eliminating_underscore_grouping}
 #| echo: true
@@ -346,6 +345,16 @@ penguins_wo_NAs |>
     .groups = 'drop')
 
 
+
+```
+
+Another alternative to `.groups = "drop"` is the function `.by = c(species,island)` , which also restores the original data structure. Notice that in this case, the .`by =` function replaces the `group_by()` function.
+
+```{r _by_option_groups}
+#| echo: true
+
+# Notice: we don't use the group_by() function
+
 penguins_wo_NAs |> 
   summarise(
     mean_flipper_length = mean(flipper_length_mm),
@@ -353,51 +362,80 @@ penguins_wo_NAs |>
     flipper_lengths = list(flipper_length_mm),
     .by = c(species, island))
 
-
-
-
 ```
 
 ## Lesson 6
 
 ### Unique function
 
-Grouped calculations with mutate. In order to avoid a long list of means by species, use the `unique()` function.
+Using grouping `.by =`function with mutate can produce a long list of means. In this case, a long list of means by species. Notice, the mean column only reports one single mean value in the screen. To see the rest of the means across species, you need to create a column, say test, and print it.
 
 ```{r group_calculations}
+#| echo: true
+
+test <- palmerpenguins::penguins |> 
+  mutate(
+    mean_column = mean(bill_length_mm, na.rm = TRUE),
+    .by = species) |> 
+  select(bill_length_mm, flipper_length_mm, mean_column)
+
+test
+
+```
+
+In other to make sense of the the listing, let's just select the species column and the mean column.
+
+```{r listing_all_means_species}
+#| echo: true
+
+palmerpenguins::penguins |> 
+  mutate(
+    mean_column = mean(bill_length_mm, na.rm = TRUE),
+    .by = species) |> 
+  select(species, mean_column)
+
+```
+
+In order to avoid a long list of 344 means by species, use the `unique()` function. The unique function eliminates duplicates. There were many duplicates of the mean for each species which unique eliminated by reporting three species.
+
+The `.by = species` forces that the calculations take place separately by the components of the column referenced to, in this case, 3 species of penguins. `unique()`, on the other hand, excludes duplicated means within each species or rows.
+
+```{r unique_group_function}
 #| echo: true
 
 palmerpenguins::penguins |> 
   mutate(
     mean_column = mean(bill_length_mm, na.rm = TRUE),
     .by = species
-  ) |> 
-  select(species,mean_column) |> 
+  ) |>
+  select(species,mean_column) |>
   unique()
-
 
 ```
 
 ### Centering a variable by its mean
 
-A situation to use the scale function instead of reporting the means for each group as we did with mutate(). "`scale` is generic function whose default method centers and/or scales the columns of a numeric matrix."
+Centering a variable represents an ideal situation to use the function `.by =` in a mutate operator instead of using summarise. A situation to use the scale function instead of reporting the means for each group as we did with mutate(). "`scale` is a generic *R* function whose default method centers and/or scales the columns of a numeric matrix."
 
-Notice, we are centering each penguin's species bill length to their mean. Assuring transparency by requesting alpha = 0.5.
+Notice, we are centering, or scaling each penguin's species bill length to its mean. Assuring transparency by requesting alpha = 0.5.
+
+Centering is a technique to help display the distribution as normal. It is also a popular technique in machine learning. It also helps to locate the three species's distribution within a common line. It allows comparisons across species, or group scaling.
 
 ```{r group_calculations_summarise}
 #| echo: true 
 
-palmerpenguins::penguins |> 
-  mutate(
-    bill_length_mm = scale(bill_length_mm),
-    .by = species) |> 
+penguins |> 
+  filter(!is.na(sex)) |> 
+  mutate(bill_length_mm = scale(bill_length_mm), 
+         .by = species) |> 
   ggplot() +
-  geom_density(aes(x = bill_length_mm, fill = species),
-               alpha = 0.5)
+  geom_density(aes(x = bill_length_mm, 
+                   fill = species,
+                   alpha = 0.5))
 
 ```
 
-Another option to depict density distribution. Non centered
+Without centering, you can see that the three distribution have different scales. The lengths within each distribution vary between 30 to 60. So the location within each species is different.
 
 ```{r depicting_density_non_centered}
 #| echo: true
@@ -405,10 +443,27 @@ Another option to depict density distribution. Non centered
 palmerpenguins::penguins |> 
   # mutate(
   #   bill_length_mm = scale(bill_length_mm),
-  #   .by = species) |> 
+  #   .by = species) |>
   ggplot() +
   geom_density(aes(x = bill_length_mm, fill = species),
-               alpha = 0.5)
+               alpha = 0.5) 
+
+```
+
+Another option is to center within each species instead of across species. As shown below it produced a graph without a common center. This is why if you want to make group comparisons, you need to use the .by option, which produces a common center or zero point.
+
+```{r centering_no_species}
+#| echo: true
+
+penguins |> 
+  filter(!is.na(sex)) |> 
+  mutate(bill_length_mm = scale(bill_length_mm), 
+         # by = species
+         ) |>
+  ggplot() +
+  geom_density(aes(x = bill_length_mm, 
+                   fill = species,
+                   alpha = 0.5))
 
 
 ```
@@ -417,23 +472,24 @@ palmerpenguins::penguins |>
 
 ### Missing data with group calculations
 
-Notice not all combinations between species and islands are displayed. For instance Gentoe - Togerson, Chinstrap - Biscoe are not displayed.
+Notice not all combinations between species and islands are displayed. For instance Chinstrap -Biscoe, Chinstrap - Torgesen, Gentoo - Dream, and Gentoo-Torgeson combinations are not displayed.
 
 ```{r missing_data_grp_calc}
 #| echo: true
 
-penguins_wo_NAs |> 
+penguins |> 
   summarise(
     mean_flipper_length = mean(flipper_length_mm, na.rm = TRUE),
     sd_flipper_length = sd(flipper_length_mm, na.rm = TRUE),
     flipper_lengths = list(flipper_length_mm),
-    .by = c(species,island) )
+    .by = c(species,island) ) 
+
 
 ```
 
 To display all combinations between species and islands, even for those combinations with no observations we could use the following `complete()` function.
 
-`complete()` allows to display all combinations among variables with missing data. I also allows to change the default `NA` value for another, say 0.
+`complete()` allows one to display all combinations among variables even with missing data. It also allows to change the default `NA` value for another, say 0, using the `fill()` function.
 
 ```{r displaying_missing_comb}
 #| echo: true
@@ -473,9 +529,9 @@ penguins_wo_NAs |>
 
 #### Using 'across()\` function. Several variations.
 
-Also using glue() to affix a name to the corresponding output
+Also using glue() to affix a name to the corresponding output. This is done via the functions `.names = 'mean_{.col}'`. This glue function affix the legend `mean_` to all the columns/variables referenced in the `.cols = c(` function.
 
-Notice the output does not display the prefix `mean_`. If you want it you need the option `.names` that it is a glue specification.
+Notice the output does not display the prefix `mean_`. If you want it you need the option `.names` , which is a glue specification.
 
 ```{r across_variations_mutate}
 #| echo: true
@@ -554,10 +610,9 @@ penguins_wo_NAs |>
     .names = '{.fn}_{.col |> str_remove("_mm") |> str_remove("_g")}'
   ))
 
-
 ```
 
-To make it work correctly, we need to use .fns = list(mean = mean).
+To make it work correctly, we need to use `.fns = list(mean = mean)`. This is the best option to display the names of the summary statistics called for.
 
 ```{r adding_fn_list_names_function}
 #| echo: true
@@ -572,12 +627,11 @@ penguins_wo_NAs |>
     .names = '{.fn}_{.col |> str_remove("_mm") |> str_remove("_g")}'
   ))
 
-
 ```
 
-You can compute more summary statistics
+You can compute more summary statistics by adding estimation of standard deviation.
 
-```{r extending_summary_statistice}
+```{r extending_summary_statistics}
 #| echo: true
 
 penguins_wo_NAs |> 
@@ -597,9 +651,11 @@ penguins_wo_NAs |>
 
 ### Using across() + mutate( ) instead of repetitions
 
-Using across() inside mutate() facilitates cleaning multiple columns in one single shot. In this example, we would be using across() along with the parse_number() to extract the first number inside a text.
+Using `across()` inside `mutate()` facilitates cleaning multiple columns in one single shot. In this example, we would be using `across()` along with the `parse_number()` to extract the first number inside a text.
 
 We get a warning but the numbers were parsed or extracted from the strings. The end result is a tibble table with numbers instead of characters.
+
+`parse_number` extracts the number of any string whose text has numbers embedded into them.
 
 ```{r across_mutate_option}
 #| echo: true
@@ -640,7 +696,7 @@ tibble(
 
 ### Adding calculations next to across()
 
-Recapping a prior example below. The operations listed after summarize is just one of the calculations that could be further added
+Recapping a prior example below. The operations listed after summarize is just one of the calculations that could be further added. Below the `str_remove()` removes text listed within parenthesis across all columns.
 
 ```{r adding_calc_across}
 #| echo: true
@@ -653,6 +709,17 @@ penguins_wo_NAs |>
               "body_mass_g"),
     .fns = mean,
     .names = 'mean_{.col |> str_remove("_mm")}'
+  ))
+
+#Or, you can glue the label associated to the mean
+penguins_wo_NAs |> 
+  summarise(across(
+    .cols = c("bill_length_mm",
+              "bill_depth_mm",
+              "flipper_length_mm",
+              "body_mass_g"),
+    .fns = list(Avg = mean),
+    .names = '{.fn}_{.col |> str_remove("_mm")}'
   ))
 
 
@@ -675,6 +742,21 @@ penguins_wo_NAs |>
   sd_bill_length = sd(bill_length_mm)
   )
 
+added_column <- penguins_wo_NAs |> 
+  summarise(across(
+    .cols = c("bill_length_mm",
+              "bill_depth_mm",
+              "flipper_length_mm",
+              "body_mass_g"),
+    .fns = mean,
+    .names = 'mean_{.col |> str_remove("_mm")}'
+  ),
+  sd_bill_length = sd(bill_length_mm)
+  )
+
+added_column
+
+
 ```
 
 ## Lesson 11
@@ -682,6 +764,8 @@ penguins_wo_NAs |>
 ### Grouped calculations with across()
 
 In the last lesson we learned that not only we can use across() for multiple computations, but also we can combine it with other analyses. This means we could do across calculations on a group basis as well. In short, we can perform powerful estimations in a concise manner.
+
+In the example below, we can add the estimation of means and standard deviations by species and island.
 
 ```{r grouped_calculations_across}
 #| echo: true
@@ -699,9 +783,20 @@ penguins_wo_NAs |>
   .by = c(species,island)
   )
 
+added_sd <- penguins_wo_NAs |> 
+  summarise(across(
+    .cols = c("bill_length_mm",
+              "bill_depth_mm",
+              "flipper_length_mm",
+              "body_mass_g"),
+    .fns = mean,
+    .names = 'mean_{.col |> str_remove("_mm")}'
+  ),
+  sd_bill_length = sd(bill_length_mm),
+  .by = c(species,island)
+  )
 
-
-
+added_sd
 
 ```
 
@@ -727,7 +822,7 @@ penguins_wo_NAs |>
 
 ## Lesson 12
 
-### Getting to know The `reframe()` function
+### Getting to know the `reframe()` function
 
 `reframe()` is a function sitting between mutate and summarize. This function has an arbitrary length between one, which is associated with `summarise()` and multiple, which is associated with `mutate()`.
 
@@ -740,8 +835,8 @@ If we use range() within summarise() we get an error message, asking to use `ref
 
 range(penguins_wo_NAs$bill_length_mm)
 
-penguins_wo_NAs |> 
-  summarise(range_bill_lenght_mm = range(bill_length_mm))
+# penguins_wo_NAs |> 
+#   summarise(range_bill_lenght_mm = range(bill_length_mm))
 
 #Using reframe() function instead of summarise()
 penguins_wo_NAs |> 
@@ -759,11 +854,9 @@ penguins_wo_NAs |>
     type = c("min", "max"),
     range_bill_lenght_mm = range(bill_length_mm))
 
-
-
 ```
 
-We can do more things with reframe(). We can use group statistics.
+We can do more things with `reframe( )`. We can use group statistics as well.
 
 ```{r reframe_flexibility}
 #| echo: true
@@ -774,10 +867,9 @@ penguins_wo_NAs |>
     range_bill_lenght_mm = range(bill_length_mm),
     .by = species)
 
-
 ```
 
-We can also add across() and request range() within .fns =
+We can also add across() and request range() within `.fns =`. This approach insert the `across( )` function within the `reframe( )`function.
 
 ```{r reframe_group_across}
 #| echo: true
@@ -793,11 +885,9 @@ penguins_wo_NAs |>
              ),
     .by = species)
 
-
-
 ```
 
-But we could also format it as a table. To do, we need to call upon pivot \_longer and pivot_wider
+But we could also format it as a table. To do so, we need to call upon `pivot _longer( )` function as well as the and `pivot_wider( )` function.
 
 ```{r table_reframe}
 #| echo: true
@@ -828,7 +918,7 @@ penguins_wo_NAs |>
 
 ## Lesson 13
 
-Motivation for tidyselect helpers. They are powerful techniques. Allows one to select the correct columns or variables. For instance, the `.fns =` allows one to label the variables. Then this label is collected via the `.names =` function (see below)
+Motivation for tidyselect helpers. They are powerful techniques. Allows one to select the correct columns or variables. For instance, the `.fns =` allows one to label the variables. Then those labels are collected via the `.names =` function (see below):
 
 ```{r motivation_tidyselect}
 #| echo: true
@@ -844,8 +934,6 @@ penguins_wo_NAs |>
     .names = '{.fn}_{.col |> str_remove("_mm")}'
   ),
   .by = c(species,island))
-
-
 
 ```
 
@@ -865,7 +953,7 @@ penguins_wo_NAs |>
 
 ```
 
-Notice this omnibus statement includes the column year, which is categorical. In other to exclude this kind of variable from the omnibus statement we can add the `-`(minus) to exclude the categorical variable. Notice we need to encircle it within the concatenate function c( ). `c(where(is.numeric), -year)` concatenates the tidy helper while excluding the column year.
+Notice this omnibus statement includes the column year, which is categorical. In other to exclude this kind of variable from the omnibus statement we can add the `-`(minus) to exclude the categorical variable. Notice we need to encircle it within the concatenate function c( ) . The script `c(where(is.numeric), -year)` concatenates the tidy helper while excluding the column year.
 
 ```{r where_is_numeric_but_no_categorical}
 #| echo: true
@@ -878,15 +966,13 @@ penguins_wo_NAs |>
   ),
   .by = c(species,island))
 
-
-
 ```
 
 ## Lesson 14
 
 Another custom function for `across()` function. Using the original penguins dataset. Performing the function, you will get missing data.
 
-How to avoid these situations of ending up with `NA`s. We can use the mean function with `na.rm` option. The way to do so is to specify a new function that also specifies na.rm = TRUE. We can do so via an anonymous `function(x)`
+How to avoid these situations of ending up with `NA`s. We can use the mean function with `na.rm` option. The way to do so is to specify a new function that also specifies `na.rm = TRUE`. We can do so via an anonymous `function(x)`
 
 Two options:
 
