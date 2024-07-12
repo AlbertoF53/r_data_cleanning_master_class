@@ -34,6 +34,8 @@ library(modeldata)
 library(janitor)
 library(skimr)
 library(e1071)
+library(gt)
+library(gtExtras)
 
 ames <- ames
 penguins <- penguins
@@ -1013,32 +1015,42 @@ palmerpenguins::penguins |>
 
 ## Lesson 15
 
-Selecting the right data by column/variable types. Using select along with `where(is.numeric)` screens the database in search of variables that are numeric. We can eliminate as well variable with are not numeric.
+This lesson shows the most important `tidy` select helpers.
 
-The `where()` function can be used in several scenarios.
+Selecting the right data by column/variable types. Using select along with `where(is.numeric)` screens the database in search of variables that are numeric. We can eliminate non numeric variables as well. In the example below, we exclude the column year.
+
+The `where()` function can be used in several scenarios. One is to select numeric variables. Another for selecting factor variables. And finally selecting both factor and character variables.
+
+### Using `where( )` function to select variables by measurement (numeric, factor, character)
+
+In this example we only want to include numeric variables. We are excluding year. This variable although coded as numerical is at the end categorical.
 
 ```{r right_data_column_type}
 #| echo: true
 
+#Scenario 1: selecting numeric variables while excludying count variable
 
 penguins_wo_NAs |> 
   select(where(is.numeric), -year)
 
-#* Using where() for selecting character variables. For penguins database the 
-#* characters were defined as factor
+#Scenario 2: selecting variables that are factors
 
 penguins_wo_NAs |> 
   select(where(is.factor))
 
 
-#* For selecting factor and character variables use the following
+# Scenario 3: selecting factor and character variables
 
 penguins_wo_NAs |> 
   select(where(is.factor), where(is.character))
 
 ```
 
-Alternatively, you can define a custom function. Inside the `where()` function you can use the anonymous function. Combine the two with an or \|\|. Consequently the defined function is TRUE if the corresponding column/variable is a factor or a character. If numeric, it would yield a FALSE.
+### Using anonymous functions inside `where()`
+
+Alternatively, you can define a custom function. Inside the `where()` function you can use the anonymous function. Combine the two with an or \|\|.
+
+Consequently the defined function is TRUE if the corresponding column/variable is a factor or a character. If numeric, it would return a FALSE.
 
 ```{r custom_function_where}
 #| echo: true
@@ -1046,9 +1058,9 @@ Alternatively, you can define a custom function. Inside the `where()` function y
 penguins_wo_NAs |> 
   select(where(function(x) is.factor(x) || is.character(x)) )
 
-
-
 ```
+
+### Anonymous functions and if conditions for selecting variables
 
 Defining custom function to identify numeric columns. And we could add another condition such as identifying the mean to be above a particular value.
 
@@ -1064,6 +1076,8 @@ penguins_wo_NAs |>
 
 ```
 
+### Anonymous function to identify NAs
+
 Another handy option is to get columns where specific percentage of values are missing. In this case asking for variables with more than 1% of missing cases.
 
 It usually practical to name this function for future use.
@@ -1073,6 +1087,16 @@ It usually practical to name this function for future use.
 
 palmerpenguins::penguins |> 
   select(where(function(x) mean(is.na(x)) > 0.01) )
+
+
+```
+
+### Creating function to identify variables with missing cases
+
+Sometimes is better to save a function and give it a name for future use. The name should tell what the function does. In this case, we want to save a function that identifies the columns or variables having more than 1% missing cases. We label it `more_than_one_percent_missing`.
+
+```{r anonimous_function_missing_cases}
+#| echo: true
 
 #Creating function
 more_than_one_percent_missing <- function(x) mean(is.na(x)) > 0.01
@@ -1086,40 +1110,76 @@ palmerpenguins::penguins |>
 
 ## Lesson 16
 
-Select the right data by column name
+This lesson further examines tidy helpers for selecting columns based on names or strings embedded into the column/variable.
 
-1.  Selecting consecutive columns. Between bill_length and sex column
+1.  Select the right data by column name
 
-2.  Selecting columns by specific variable's labels. Selecting variables ending with `_mm`
+2.  Selecting consecutive columns. Between bill_length and sex column
 
-3.  Selecting columns with start with a particular string. Selecting variables starting with \`bill\`.
+3.  Selecting columns by specific variable's labels.
 
-4.  Selecting columns that contain similar strings. Selecting variables with the string `lenght`
+    1.  Selecting variables ending with `_mm`
 
-```{r select_right_data}
+4.  Selecting columns with start with a particular string.
+
+    1.  Selecting variables starting with the string `bill`.
+
+5.  Selecting columns that contain similar strings.
+
+    1.  Selecting variables with the string `lenght`
+
+### Selecting consecutive columns
+
+Selecting columns from bill_length_mm to sex.
+
+```{r selecting_consecutive_columns}
 #| echo: true
-
 #Selecting consecutive columns
 penguins_wo_NAs |> 
   select(bill_length_mm:sex)
+
+```
+
+### Selecting columns ending with a particular string
+
+```{r selecting_columns_end_string}
+#| echo: true
 
 #Selecting columns ending with _mm
 penguins_wo_NAs |> 
   select(ends_with('_mm'))
 
+```
+
+### Selecting columns that start with a particular string
+
+Selecting variables containing the string `bill`.
+
+```{r selecting_columns_start_string}
+#| echo: true
+
 #Selecting columns starting with bill
+
 penguins_wo_NAs |> 
   select(starts_with('bill'))
+
+```
+
+### Selecting columns contain a particular string
+
+```{r selecting_columns_string_length}
+#| echo: true
 
 #Selecting columns the string lenght
 penguins_wo_NAs |> 
   select(contains('length'))
 
 
-
 ```
 
-Using regular expression to extend the gamma and scope of search for variables. For instance search for variables that start with the letters f or b, and are followed by any amount of characters `.*` and then end with the string `_mm`. Or `.*(_mm)$`
+### Extending gamma and scope column search
+
+Using regular expressions to extend the scope of the search for variables. For instance searching for variables that start with the letters f or b, and are followed by any amount of characters `.*` and then end (`$`) with the string `_mm`. The corresponding regular expression is: `^[fb].*(_mm)$`
 
 ```{r select_regex}
 #| echo: true
@@ -1129,32 +1189,45 @@ penguins_wo_NAs |>
 
 ```
 
-Two more ways to select columns/variables based on a vector that contains the names. You can use this vector to select the columns or variables of interest. Two optional functions `any_of()` or `all_of()` functions to select the components of the vector.
+Two more ways to select columns/variables based on a vector that contains the names. You can use a vector to select the columns or variables of interest. Two optional functions `any_of()` or `all_of()` functions to select the components of the vector.
 
-```{r vector_names_any_of}
+#### Selecting all function
+
+```{r select_all_function}
 #| echo: true
 
-my_cols <-  c("bill_lenght_mm", "bill_depth_mm")
+#Vector with the names of columns of interest
+
+my_cols <-  c("bill_length_mm", "bill_depth_mm")
+
+
+palmerpenguins::penguins |>
+  select(all_of(my_cols))
+
+```
+
+#### Selecting any of function
+
+`any_of( )` tidy helper is preferred to the `all_of( )` tidy helper. It helps to discriminate the variables you want to search when you list includes many columns.
+
+```{r select_any}
+#| echo: true
+
+#Vector with the names of columns of interest
+
+my_cols <-  c("bill_length_mm", "bill_depth_mm", "marital_status")
+
 
 # any_of
-penguins_wo_NAs |> 
+penguins_wo_NAs |>
   select(any_of(my_cols))
-
-
-# palmerpenguins::penguins |> 
-#   select(all_of(my_cols))
-
-# # all_of
-# my_cols <-  c("bill_lenght_mm", "bill_depth_mm")
-# penguins_wo_NAs |> 
-#   select(all_of(my_cols))
 
 
 ```
 
 ## Lesson 17
 
-Bringing it all together.
+### Bringing it all together.
 
 Using the housing dataset from the `ames` database from `modeldata` library.
 
@@ -1165,10 +1238,13 @@ library(modeldata)
 library(janitor)
 library(skimr)
 library(modeldata)
+library(gt)
+library(gtExtras)
 
 ames <- modeldata::ames |> 
-  clean_names() |> 
-  as_tibble()
+  janitor::clean_names()
+
+
   
 #Examining dataset using skimr
 
@@ -1176,9 +1252,18 @@ ames |>
   clean_names() |> 
   skim()
 
+#Examining a couple of numeric variables using gt_plt_summary
+ames |> 
+  clean_names() |> 
+  select(sale_price,garage_cars) |> 
+  gt_plt_summary()
+
+
 ```
 
-Focusing our attention to the numeric variables. We can also transform the variables a tibble
+### Transforming columns as tibble
+
+Focusing our attention to numeric variables. We can also transform the variables a tibble while accessing the `ames` file. We select those `ames`' variables that are numeric.
 
 ```{r ames_numeric_variables}
 #| echo: true
@@ -1198,14 +1283,11 @@ ames_numeric <- ames |>
   select(where(is.numeric)) |> 
   as_tibble()
 
-
-           
-
 ```
 
-Conducting summary statistics by focusing on variables that are continuos. To do so we define to define a custom function that checks for those variables that are counts. Notice the function screens weather the values of the variable range from 0 to 10. This anonymous function would give us a string of FALSE or TRUE values. Using the `all()` function to check if the values of the variables range from 0 to 10.
+Conducting summary statistics by focusing on variables that are counts. To do so we define a custom function that checks for those variables that are counts. Notice the function screens whether the values of the variable range from 0 to 10. This anonymous function would give us a string of FALSE or TRUE values. Using the `all()` function to check if the values of the variables range from 0 to 10. Notice the tidy helper `all_of()` is not applied, just `all`
 
-Next we can use this information to identify continuous variables. The ames_numeric anonymous function identified 9 count variables. iIf you want to identify continuous variables negage the `!all(x %in% 0:10)`. This revised anonymous function yielded 25 variables that are continous
+Next we can use this information to identify continuous variables. The `ames_numeric` anonymous function identified 9 count variables. If you want to identify continuous variables negate the `!all(x %in% 0:10)`. This revised anonymous function yielded 25 variables that are continuous.
 
 ```{r checking_for_counting_variables}
 #| echo: true
@@ -1215,13 +1297,14 @@ library(janitor)
 library(skimr)
 library(modeldata)
 
+#Selecting counting variables whose values range from 0 to 10
 
 ames_numeric |> 
-  #Checking that the range of values goes from 0 to 10 across all variables
+  #Selecting columns with integers from 0 to 10
   select(where(function(x) all(x %in% 0:10) ) )
 
 
-#If you want to identify continuous variables negate the !all(x %in% 0:10)
+#To identify continuous variables negate the !all(x %in% 0:10)
 
 ames_non_counts <- ames_numeric |> 
   select(where(function(x) !all(x %in% 0:10) ) )
@@ -1240,17 +1323,53 @@ ames_non_counts |>
 ames_non_counts |> 
   select(contains('sf'))
 
-#Examining  if some variables are the summ of two others
+```
+
+Eyeballing, it appears that garage and living area variables are the product of adding first floor square feet and second floor square feet. If this hypothesis is true excluding observations that result in adding these two variables would produce an empty rows across all variables.
+
+The hypothesis was true for some rows or cases but not for 40 cases.
+
+```{r testing_hypothesis_about_gr_liv_area}
+#|echo: true
+
+#* Examining if garage and living area variable is the product of adding
+#* firts floor square feet and second floor square fit
 
 ames_non_counts |> 
   filter(gr_liv_area != first_flr_sf + second_flr_sf
   )
-
 ```
 
-Focusing on sale price, and calculating averages. Notice, Albert introduces the function to request skewness. Skewness belongs to the e1071 library. And to displayed in a nice format, we could pivot_longer the results.
+### Sale price and calculating averages
+
+#### Focusing on sale price.
+
+```{r focusing_on_sale_price}
+#| echo: true
+#| warning: false
+
+ames |> 
+  skim(sale_price)
+
+#* Checking sale price distribution as well. Notice median < mean 
+#* suggesting the distribution is posotively skewed.
+
+ames |> 
+  select(sale_price) |> 
+  gt_plt_summary()
+```
+
+#### Calculating average prices
+
+Notice, Albert introduces the function to request skewness. Skewness belongs to the e1071 library. And to have it displayed in a nice format, we could pivot_longer.
+
+Using across to estimate min, max, average, median, sd, and skeweness.
+
+To have a nice display of the summary statistics, we could opt for pivoting longer the dataset.
 
 In pivoting_longer, we opt to arrange all of the columns using `cols = everything()`. Notice the median is lower than the mean signifying the distribution is positively skewed.
+
+The end result is a summary statistics table
 
 ```{r sale_price_summ_table}
 #| echo: true
@@ -1281,7 +1400,9 @@ ames |>
 
 ```
 
-The neighborhood column has 28 values, which makes it difficult to handle. Consequently, we could lump together the values. The function`fct_lump_n()` lumps all levels except for the `n` most frequent (or least frequent if `n < 0`). In this case, we are focusing on the top 5 most frequent categories lumping together the rest. It produces 6 neighborhoods. Other is a collection of many neighborhoods.
+#### Focusing on the neighborhood column
+
+The neighborhood column has 28 values, which makes it difficult to handle. Consequently, we could lump together values. The function`fct_lump_n()` lumps all levels except for the `n` most frequent (or least frequent if `n < 0`). In this case, we are focusing on the top 5 most frequent neighborhoods lumping together the rest. It produces 6 neighborhoods. Other is a collection of many neighborhoods.
 
 ```{r neighborhood_lumped}
 #| echo: true
@@ -1314,6 +1435,8 @@ ames_top_five |>
   print(n = Inf)
 ```
 
+#### Visualizing the data
+
 With this new database, we can do data visualizations comparing the house prices across those 5 neighborhoods. We can use facet_wrap for the neighborhood. We can also use the `scale_x_log10()` to normalize the x-axis.
 
 ```{r visualizing_prices_neighborhoods}
@@ -1329,14 +1452,15 @@ ames_top_five |>
     base_size = 16
   )
 
-
 ```
 
-We can make this figure more informative by adding labels for the minimum and maximum sale price. To do so, we can add a geom_text() layer. The values for the layer can be extrated from the function `reframe()` .
+#### Refraining data visualization with minimum and maximum sale price
 
-The `reframe()` function allows to calculate the sale price range. It would give a tibble that has the range of prices . Next we can add the label type to capture the labels minimum and maximum. And lets create those values by neighborhood.
+We can make this figure more informative by adding labels for the minimum and maximum sale price. To do so, we can add a geom_text() layer. The values for the layer can be extracted from the function `reframe()` .
 
-We can save the values in a dataframe, say ranges
+The `reframe()` function allows one to calculate the sale price range. It would give a tibble that has the range of prices. Next we can add the label type to capture the labels minimum and maximum via `type = c("min", "max")`. And lets create those values by neighborhood using the function `.by = neighborhood`.
+
+We can save the values in a dataframe, say `ranges`. In short, the `reframe( )` function generates a long data file containing the min and max sale prices across neighborhoods.
 
 ```{r reframe_informative_labels}
 #| echo: true
@@ -1354,10 +1478,13 @@ ranges <- ames_top_five |>
     sale_price = range(sale_price),
     .by = neighborhood
   )
-
 ```
 
-Modifying ggplot to add a `geom_text()` layer that captures the labels associated to each of the 5 neighborhoods. In the `geom_text()`, we specify the data, the aes(). For y we specify -1 and for x we rely on sale_price's ranges, and for label we refer to the variable containing the sale price. Notice we rely on y = -1 to place the labels below the chart.
+#### Adding text layer
+
+Modifying ggplot to add a `geom_text()` layer capturing the labels associated to each of the 5 neighborhoods.
+
+In the `geom_text()`, we specify the data, the aes(). For y we specify -1 and for x we rely on sale_price's ranges, and for label we refer to the variable containing the sale price. Notice we rely on y = -1 to place the labels below the chart.
 
 ```{r label_layer_geom_text}
 #| echo: true
@@ -1376,7 +1503,9 @@ ames_top_five |>
 
 ```
 
-Our first attempt with the labels produce characters to big. We can do this legend nicer by passing it to `scales::dollar()` function.
+#### Improving the legend
+
+Our first attempt with the labels produce characters too big. We can do this legend nicer by passing it to `scales::dollar()` function.
 
 ```{r adjusting_geom_label}
 #| echo: true
@@ -1394,10 +1523,9 @@ ames_top_five |>
     base_size = 16
   )
 
-
 ```
 
-To make it more obvious what those labels are, we can add another `geom_point()` layer. It adds points to the min and max. We can also shape as a triangle-like instead of a point (shape = 5).
+To make it more obvious what those labels stand for, we can add another `geom_point()` layer. It adds points to the min and max ranges in the chart. We can also shape as a triangle-like instead of a point (shape = 5).
 
 ```{r passing_labels}
 #| echo: true
@@ -1412,7 +1540,6 @@ ames_top_five |>
   geom_text(data = ranges, 
             aes(y = -1.2, label = sale_price |> 
                   scales::dollar()), size = 2.5 ) + 
-  
   facet_wrap(~ neighborhood, nrow = 6) +
   scale_x_log10(labels = scales::label_dollar()) +
   theme_minimal(
@@ -1422,255 +1549,280 @@ ames_top_five |>
 
 ```
 
-Another data visualization, but this time dealing with count variables. In this case, we identified 9 count variables. Let's check the column names. There are variables that have `sf` and
+### Visualizing count variables
+
+Another data visualization dealing with count variables. In this case, we identified 9 count variables. Let's check the column names. There are variables that include kitchen and basement
 
 ```{r viz_count_variables}
 #| echo: true
 
-# ames_numeric |> 
-#   select(where(function(x) all(x %in% 0:10) ) ) |> 
-#  colnames()
-#   
+ames_numeric |>
+  select(where(function(x) all(x %in% 0:10) ) ) |>
+  colnames()
 
 ```
 
-We can reduce the number of counts lower. We end up with 7 variables instead of 9. We can also exclude variables related to basement and kitchen
+We can reduce the number of count variables We end up with 7 variables instead of 9 by excluding variables related to basement and kitchen. Keeping variables with less than 6 values reduces the number of variables to 4.
+
+As shown by skim, the values for the 4 variables range from 0 to 5.
 
 ```{r reduced_var_counts}
 #| echo: true
 
-# selected_counts <- ames_numeric |> 
-#   select(where(function(x) all(x %in% 0:5) ) ) |> 
-#   select(
-#     -contains('bsmt'),
-#     -contains('kitchen')
-#   ) 
-# 
-# selected_counts |> 
-#   skim()
+selected_counts <- ames_numeric |>
+  select(where(function(x) all(x %in% 0:5) ) ) |>
+  select(
+    -contains('bsmt'),
+    -contains('kitchen')
+  )
+
+selected_counts |>
+  skim()
 ```
 
-We can mutate again and with `across()`, and transforming the count variables into factor variables. Notice that for most variables the frequencies gravitate around 0 or 1. Consequently, we could lump together the variables.
+We can mutate again with `across()`, and transforming the count variables into factor variables using the `.fns = factor`. Notice that for most variables the frequencies gravitate around 0 or 1. Consequently, we could lump together the variables.
 
 ```{r viz_counts_vars}
 #| echo: true
 
-# selected_counts |> 
-#   mutate(
-#     across(
-#       .cols = everything(),
-#       .fns = factor ) 
-#     ) |> 
-#   skim()
+selected_counts |>
+  mutate(
+    across(
+      .cols = everything(),
+      .fns = factor )
+    ) |>
+  skim()
 
 ```
 
-### Lumping factor variables
+#### Lumping factor variables
 
 Lumping together factor variables with limited range. Instead of using `fct_lump_n`, we could use if_else to create variables capturing the lump sum. In so doing, we can use `across()` along an anonymous or custom function that leaves numbers smaller than 2 as is, but numbers greater than 2 are replaced with the text `2+`. The function to do so is `if_else().`
 
 ```{r changing_factors_lim_range}
 #| echo: true
 
-# selected_counts |> 
+# selected_counts |>
 #   mutate(
 #     across(
 #       .cols = everything(),
 #       .fns = function(x) if_else(x < 2, x, '2+')
-#   ) )
+#   ) ) |>
+#   skim()
 
 ```
 
-However, our function generated an error since we are dealing with numeric values not characters. Consequently, we need to transform all the variablse into a character format. And the `skim()` function reveals we have three unique values
+#### Transforming numeric values into characters
+
+Notice the function generated an error. Using '2+' along with factor variables prompted R to report not being able to combine integers with characters in the same function.
+
+Consequently, we need to transform all the value labels into a character format. We can do so by using `as.character( )` function in the anonymous function. Notice the `as.character(x), '2+'` indicates that values equal or greater than 2 would be coded with the character '2+' .
+
+The `skim()` function reveals there are three unique values. The range goes from 0 to 1. Notice the character '2+' is not listed in the range. However, skim reports 3 unique values, '2+' being one of them (0, 1, "2+").
 
 ```{r changing_factor_into_character}
 #| echo: true
 
-# selected_counts |> 
-#   mutate(
-#     across(
-#       .cols = everything(),
-#       .fns = function(x) if_else(x < 2, 
-#                                  as.character(x), '2+')
-#   ) ) |> 
-#   skim()
+selected_counts |>
+  mutate(
+    across(
+      .cols = everything(),
+      .fns = function(x) if_else(x < 2,
+                                 as.character(x), '2+')
+  ) ) |>
+  skim()
 
 
 ```
 
-And then we could also transform back into a factor by adding the `factor()` function at the end.
+Next, we need to transform back the 3 values as factors by adding the `factor()` function at the end. Notice the levels = c(0:1, '2+')
 
 ```{r back_into_factor}
 #| echo: true
 
-# selected_counts |> 
-#   mutate(
-#     across(
-#       .cols = everything(),
-#       .fns = function(x) if_else(x < 2, 
-#                                  as.character(x), 
-#                                  '2+'
-#                                  ) |> 
-#         factor(levels = c(0:1,'2+')) ) ) |> 
-#   skim()
+selected_counts |>
+  mutate(
+    across(
+      .cols = everything(),
+      .fns = function(x) if_else(x < 2,
+                                 as.character(x),
+                                 '2+'
+                                 ) |>
+        factor(levels = c(0:1,'2+')) ) ) |>
+  skim()
 
 ```
 
-We can modify the dataset to include the house sale price
+We can modify the dataset to include the house sale price, while excluding variables whose values are greater than 6. We also exclude basement and kitchen variables.
 
 ```{r house_sale_counts}
+#| echo: true
 
-# selected_counts <- ames_numeric |> 
-#   select(
-#     sale_price,
-#     where(function(x) all(x %in% 0:5) ) ) |> 
-#   select(
-#     -contains('bsmt'),
-#     -contains('kitchen')
-#   ) 
+selected_counts <- ames_numeric |>
+  select(
+    sale_price,
+    where(function(x) all(x %in% 0:5) ) ) |>
+  select(
+    -contains('bsmt'),
+    -contains('kitchen')
+  )
 
-
+selected_counts
 ```
 
-And then, we have to make sure our `across()` call includes all variables, but the sale_price column. And now we have all count variables but sale_price which is a continuous variable.
+And then, we have to make sure our `across()` call includes all count variables, while excluding sale_price column `across(.cols = -sale_price)`. The end result is the `grouped_counts` which includes count variables and the sale_price, which is a continuous variable.
+
+#### Grouped accounts using `across(.cols = -sale_price)`
 
 ```{r includying_house_price_factors}
+#| echo: true
 
-# selected_counts |> 
-#   mutate(
-#     across(
-#       .cols = -sale_price,
-#       .fns = function(x) if_else(x < 2, 
-#                                  as.character(x), 
-#                                  '2+'
-#                                  ) |> 
-#         factor(levels = c(0:1,'2+')) ) ) |> 
-#   skim()
-# 
-# grouped_counts <- selected_counts |> 
-#   mutate(
-#     across(
-#       .cols = -sale_price,
-#       .fns = function(x) if_else(x < 2, 
-#                                  as.character(x), 
-#                                  '2+'
-#                                  ) |> 
-#         factor(levels = c(0:1,'2+')) ) )
+selected_counts |>
+  mutate(
+    across(
+      .cols = -sale_price,
+      .fns = function(x) if_else(x < 2, as.character(x),'2+') |>
+        factor(levels = c(0:1,'2+')) ) ) |>
+  skim()
+
+grouped_counts <- selected_counts |>
+  mutate(
+    across(
+      .cols = -sale_price,
+      .fns = function(x) if_else(x < 2,
+                                 as.character(x),
+                                 '2+'
+                                 ) |>
+        factor(levels = c(0:1,'2+')) ) )
+
+grouped_counts
 
 ```
 
-The dataset needs to be transformed into a long format for ggplot(). We need to rearrange everything but the sale price.
+#### Displaying counts
+
+The `grouped_counts` dataset needs to be transformed into a long format for ggplot(). We need to rearrange everything but the sale price.
 
 ```{r grp_count_pivot_longer}
 #| echo: true
 
-# grouped_counts |> 
-#   pivot_longer(
-#     cols = -sale_price
-#   ) |> 
-#   ggplot(aes(x = sale_price)) +
-#   geom_density(fill = 'grey80')
-# 
-# grouped_counts |> 
-#   pivot_longer(
-#     cols = -sale_price
-#   ) |> 
-#   ggplot(aes(x = sale_price)) +
-#   geom_density(fill = 'grey80') +
-#   scale_x_log10(label = scales::label_dollar()) +
-#   facet_grid(
-#     rows = vars(name),
-#     cols = vars(value)
-#     ) +
-#   theme_minimal(
-#     base_family = 'Source Sans Pro',
-#     base_size = 16
-#   )
-
+grouped_counts |>
+  pivot_longer(
+    cols = -sale_price
+  ) |>
+  ggplot(aes(x = sale_price)) +
+  geom_density(fill = 'grey80')
 
 
 ```
 
-We can center all distributions to their mean price using the `scale()` function. But we need to scale the distributions by the type of amenity. Notice we got lots of warning messages because of negative values that led to infinite values during the log-10 transformation.
+#### Faceting the count data set
+
+In the pivoted_longer version of the grouped_counts data set, the column name contains the values associated to baths, fireplace and garages. The value column displays the number of units, a factor variable ranging from 1, 0 to 2+.
+
+```{r group_counts_facet_grid}
+
+grouped_counts |>
+  pivot_longer(
+    cols = -sale_price
+  ) |>
+  ggplot(aes(x = sale_price)) +
+  geom_density(fill = 'grey80') +
+  scale_x_log10(label = scales::label_dollar()) +
+  facet_grid(
+    rows = vars(name),
+    cols = vars(value)
+    ) +
+  theme_minimal(
+    base_family = 'Source Sans Pro',
+    base_size = 16
+  )
+
+```
+
+#### Centering by amenities
+
+We can center all distributions to their mean price using the `scale()` function. But we need to scale the distributions by the type of amenity. Notice we got lots of warning messages because of negative values that led to infinite values during the log-10 transformation. In other words, we should not use the log10 transformation.
 
 ```{r scaling_price_ammenities}
 #| echo: true
 
-# grouped_counts |> 
-#   pivot_longer(
-#     cols = -sale_price
-#   ) |> 
-#   mutate(
-#     sale_price = scale(sale_price),
-#     .by = name
-#   ) |> 
-#   ggplot(aes(x = sale_price)) +
-#   geom_density(fill = 'grey80') +
-#   scale_x_log10(label = scales::label_dollar()) +
-#   facet_grid(
-#     rows = vars(name),
-#     cols = vars(value)
-#     ) +
-#   theme_minimal(
-#     base_family = 'Source Sans Pro',
-#     base_size = 16
-#   )
-
+grouped_counts |>
+  pivot_longer(
+    cols = -sale_price
+  ) |>
+  mutate(
+    sale_price = scale(sale_price),
+    .by = name
+  ) |>
+  ggplot(aes(x = sale_price)) +
+  geom_density(fill = 'grey80') +
+  scale_x_log10(label = scales::label_dollar()) +
+  facet_grid(
+    rows = vars(name),
+    cols = vars(value)
+    ) +
+  theme_minimal(
+    base_family = 'Source Sans Pro',
+    base_size = 16
+  )
 
 ```
 
-Changing the log-10 transformation
+##### Changing the log-10 transformation
+
+Replacing the log_10 transformation by declaring x-axis scale as continuous: `scale_x_continuous()`
 
 ```{r repalcing_log_10}
 #| echo: true
 
-# grouped_counts |> 
-#   pivot_longer(
-#     cols = -sale_price
-#   ) |> 
-#   mutate(
-#     sale_price = scale(sale_price),
-#     .by = name
-#   ) |> 
-#   ggplot(aes(x = sale_price)) +
-#   geom_density(fill = 'grey80') +
-#   scale_x_continuous() +
-#   facet_grid(
-#     rows = vars(name),
-#     cols = vars(value)
-#     ) +
-#   theme_minimal(
-#     base_family = 'Source Sans Pro',
-#     base_size = 16
-#   )
-
+grouped_counts |>
+  pivot_longer(
+    cols = -sale_price
+  ) |>
+  mutate(
+    sale_price = scale(sale_price),
+    .by = name
+  ) |>
+  ggplot(aes(x = sale_price)) +
+  geom_density(fill = 'grey80') +
+  scale_x_continuous() +
+  facet_grid(
+    rows = vars(name),
+    cols = vars(value)
+    ) +
+  theme_minimal(
+    base_family = 'Source Sans Pro',
+    base_size = 16
+  )
 
 ```
 
-However, the scaling works better if you log scale the variable before
+#### log_transform variable
+
+However, the scaling works better if you log10 scale the variable before using visualizing.
 
 ```{r log_before}
 #| echo: true
 
-# grouped_counts |> 
-#   pivot_longer(
-#     cols = -sale_price
-#   ) |> 
-#   mutate(
-#     sale_price = scale(sale_price |> 
-#                          log()),
-#     .by = name
-#   ) |> 
-#   ggplot(aes(x = sale_price)) +
-#   geom_density(fill = 'grey80') +
-#   scale_x_continuous() +
-#   facet_grid(
-#     rows = vars(name),
-#     cols = vars(value)
-#     ) +
-#   theme_minimal(
-#     base_family = 'Source Sans Pro',
-#     base_size = 16
-#   )
+grouped_counts |>
+  pivot_longer(
+    cols = -sale_price
+  ) |>
+  mutate(
+    sale_price = scale(sale_price |> log()),
+    .by = name
+  ) |>
+  ggplot(aes(x = sale_price)) +
+  geom_density(fill = 'grey80') +
+  scale_x_continuous() +
+  facet_grid(
+    rows = vars(name),
+    cols = vars(value)
+    ) +
+  theme_minimal(
+    base_family = 'Source Sans Pro',
+    base_size = 16
+  )
 
 ```
