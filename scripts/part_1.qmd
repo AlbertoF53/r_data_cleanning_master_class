@@ -346,8 +346,6 @@ penguins_wo_NAs |>
     flipper_lengths = list(flipper_length_mm),
     .groups = 'drop')
 
-
-
 ```
 
 Another alternative to `.groups = "drop"` is the function `.by = c(species,island)` , which also restores the original data structure. Notice that in this case, the .`by =` function replaces the `group_by()` function.
@@ -826,18 +824,20 @@ penguins_wo_NAs |>
 
 ### Getting to know the `reframe()` function
 
-`reframe()` is a function sitting between mutate and summarize. This function has an arbitrary length between one, which is associated with `summarise()` and multiple, which is associated with `mutate()`.
+`reframe()` is a function sitting between mutate and summarize. This function has an arbitrary length between one, which is associated with `summarise(),` and multiple, which is associated with `mutate()`.
 
 The `range()` function is relevant. It tells you the minimum and maximum values of a column.
 
 If we use range() within summarise() we get an error message, asking to use `reframe()` instead.
+
+In short, `reframe()` is a highly flexible function that replicates many of the flexibility of `summarise()` function. It can generate labels and grouping by another variable. It can also accommodate `across()`and its multiple options.
 
 ```{r reframe_function}
 #| echo: true
 
 range(penguins_wo_NAs$bill_length_mm)
 
-# penguins_wo_NAs |> 
+# penguins_wo_NAs |>
 #   summarise(range_bill_lenght_mm = range(bill_length_mm))
 
 #Using reframe() function instead of summarise()
@@ -845,6 +845,8 @@ penguins_wo_NAs |>
   reframe(range_bill_lenght_mm = range(bill_length_mm))
 
 ```
+
+### Adding labels via `type( )` to `reframe()`
 
 Since `reframe()` along `range()` would return unnamed results, we could add `type()` for adding the labels to be added into the output.
 
@@ -857,6 +859,8 @@ penguins_wo_NAs |>
     range_bill_lenght_mm = range(bill_length_mm))
 
 ```
+
+### Grouping with reframe( ) 
 
 We can do more things with `reframe( )`. We can use group statistics as well.
 
@@ -888,6 +892,8 @@ penguins_wo_NAs |>
     .by = species)
 
 ```
+
+### Creating tables with `reframe()`
 
 But we could also format it as a table. To do so, we need to call upon `pivot _longer( )` function as well as the and `pivot_wider( )` function.
 
