@@ -1,0 +1,21 @@
+SupplierID,SupplierName,SupplierCountry,ContactPerson,ContactEmail,ContractStartDate,ContractEndDate,SupplierRating
+SUP001,Supplier A,Germany,Contact 1,contact1@supplier.com,2020-07-03,2021-07-03,4.2
+SUP002,Supplier B,India,Contact 2,contact2@supplier.com,2020-02-24,2021-02-24,4.5
+SUP003,Supplier C,India,Contact 3,contact3@supplier.com,2020-07-14,2023-07-14,4
+SUP004,Supplier D,Brazil,Contact 4,contact4@supplier.com,2020-08-30,2023-08-30,3.9
+SUP005,Supplier E,China,Contact 5,contact5@supplier.com,2020-12-22,2024-12-22,4.8
+SUP006,Supplier F,China,Contact 6,contact6@supplier.com,2020-10-22,2021-10-22,4.8
+SUP007,Supplier G,Brazil,Contact 7,contact7@supplier.com,2020-07-11,2023-07-11,5
+SUP008,Supplier H,USA,Contact 8,contact8@supplier.com,2020-07-16,2025-07-16,3.2
+SUP009,Supplier I,Brazil,Contact 9,contact9@supplier.com,2020-02-02,2023-02-02,4.7
+SUP010,Supplier J,Brazil,Contact 10,contact10@supplier.com,2020-06-24,2021-06-24,3.3
+SUP011,Supplier K,China,Contact 11,contact11@supplier.com,2020-10-29,2025-10-29,4.3
+SUP012,Supplier L,Brazil,Contact 12,contact12@supplier.com,2020-10-09,2023-10-09,3.4
+SUP013,Supplier M,China,Contact 13,contact13@supplier.com,2020-01-11,2025-01-11,3.7
+SUP014,Supplier N,China,Contact 14,contact14@supplier.com,2020-10-31,2025-10-31,4.3
+SUP015,Supplier O,China,Contact 15,contact15@supplier.com,2020-09-08,2022-09-08,3.8
+SUP016,Supplier P,Germany,Contact 16,contact16@supplier.com,2020-10-20,2022-10-20,3.7
+SUP017,Supplier Q,China,Contact 17,contact17@supplier.com,2020-11-25,2025-11-25,4.8
+SUP018,Supplier R,India,Contact 18,contact18@supplier.com,2020-09-08,2023-09-08,4.5
+SUP019,Supplier S,Germany,Contact 19,contact19@supplier.com,2020-12-07,2023-12-07,4.9
+SUP020,Supplier T,Brazil,Contact 20,contact20@supplier.com,2020-10-22,2023-10-22,4.9

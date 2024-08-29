@@ -1,0 +1,761 @@
+[
+  {
+    "fruit": "apple",
+    "letter": "n",
+    "hrs": 482,
+    "min": 14,
+    "dates": "2024-07-16 02:14:00",
+    "missing_numbers": 751,
+    "missing_NULL": "(null)",
+    "missing_dates": "2024-07-16 02:14:00"
+  },
+  {
+    "fruit": "apricot",
+    "letter": "d",
+    "hrs": 129,
+    "min": 38,
+    "dates": "2024-07-01 09:38:00",
+    "missing_numbers": 657,
+    "missing_NULL": "948",
+    "missing_dates": "Unknown"
+  },
+  {
+    "fruit": "avocado",
+    "letter": "m",
+    "hrs": 248,
+    "min": 42,
+    "dates": "2024-07-06 08:42:00",
+    "missing_NULL": "1065",
+    "missing_dates": "2024-07-06 08:42:00"
+  },
+  {
+    "fruit": "banana",
+    "letter": "z",
+    "hrs": 985,
+    "min": 23,
+    "dates": "2024-08-06 01:23:00",
+    "missing_numbers": 34,
+    "missing_NULL": "109",
+    "missing_dates": "2024-08-06 01:23:00"
+  },
+  {
+    "fruit": "bell pepper",
+    "letter": "s",
+    "hrs": 34,
+    "min": 45,
+    "dates": "2024-06-27 10:45:00",
+    "missing_NULL": "(null)",
+    "missing_dates": "2024-06-27 10:45:00"
+  },
+  {
+    "fruit": "bilberry",
+    "letter": "s",
+    "hrs": 337,
+    "min": 23,
+    "dates": "2024-07-10 01:23:00",
+    "missing_NULL": "1006",
+    "missing_dates": "2024-07-10 01:23:00"
+  },
+  {
+    "fruit": "blackberry",
+    "letter": "a",
+    "hrs": 186,
+    "min": 58,
+    "dates": "2024-07-03 18:58:00",
+    "missing_NULL": "(null)",
+    "missing_dates": "2024-07-03 18:58:00"
+  },
+  {
+    "fruit": "blackcurrant",
+    "letter": "t",
+    "hrs": 1219,
+    "min": 46,
+    "dates": "2024-08-15 19:46:00",
+    "missing_NULL": "(null)",
+    "missing_dates": "2024-08-15 19:46:00"
+  },
+  {
+    "fruit": "blood orange",
+    "letter": "w",
+    "hrs": 1061,
+    "min": 54,
+    "dates": "2024-08-09 05:54:00",
+    "missing_NULL": "289",
+    "missing_dates": "2024-08-09 05:54:00"
+  },
+  {
+    "fruit": "blueberry",
+    "letter": "y",
+    "hrs": 274,
+    "min": 28,
+    "dates": "2024-07-07 10:28:00",
+    "missing_NULL": "(null)",
+    "missing_dates": "2024-07-07 10:28:00"
+  },
+  {
+    "fruit": "boysenberry",
+    "letter": "n",
+    "hrs": 1183,
+    "min": 18,
+    "dates": "2024-08-14 07:18:00",
+    "missing_numbers": 283,
+    "missing_NULL": "(null)",
+    "missing_dates": "2024-08-14 07:18:00"
+  },
+  {
+    "fruit": "breadfruit",
+    "letter": "e",
+    "hrs": 1237,
+    "min": 28,
+    "dates": "2024-08-16 13:28:00",
+    "missing_NULL": "1412",
+    "missing_dates": "2024-08-16 13:28:00"
+  },
+  {
+    "fruit": "canary melon",
+    "letter": "r",
+    "hrs": 1028,
+    "min": 31,
+    "dates": "2024-08-07 20:31:00",
+    "missing_numbers": 289,
+    "missing_NULL": "46",
+    "missing_dates": "2024-08-07 20:31:00"
+  },
+  {
+    "fruit": "cantaloupe",
+    "letter": "t",
+    "hrs": 663,
+    "min": 39,
+    "dates": "2024-07-23 15:39:00",
+    "missing_numbers": 391,
+    "missing_NULL": "(null)",
+    "missing_dates": "2024-07-23 15:39:00"
+  },
+  {
+    "fruit": "cherimoya",
+    "letter": "n",
+    "hrs": 1105,
+    "min": 47,
+    "dates": "2024-08-11 01:47:00",
+    "missing_NULL": "(null)",
+    "missing_dates": "2024-08-11 01:47:00"
+  },
+  {
+    "fruit": "cherry",
+    "letter": "h",
+    "hrs": 126,
+    "min": 41,
+    "dates": "2024-07-01 06:41:00",
+    "missing_numbers": 274,
+    "missing_NULL": "(null)",
+    "missing_dates": "2024-07-01 06:41:00"
+  },
+  {
+    "fruit": "chili pepper",
+    "letter": "b",
+    "hrs": 1053,
+    "min": 12,
+    "dates": "2024-08-08 21:12:00",
+    "missing_NULL": "(null)",
+    "missing_dates": "2024-08-08 21:12:00"
+  },
+  {
+    "fruit": "clementine",
+    "letter": "a",
+    "hrs": 1385,
+    "min": 29,
+    "dates": "2024-08-22 17:29:00",
+    "missing_numbers": 749,
+    "missing_NULL": "1140",
+    "missing_dates": "2024-08-22 17:29:00"
+  },
+  {
+    "fruit": "cloudberry",
+    "letter": "l",
+    "hrs": 1062,
+    "min": 22,
+    "dates": "2024-08-09 06:22:00",
+    "missing_NULL": "1105",
+    "missing_dates": "2024-08-09 06:22:00"
+  },
+  {
+    "fruit": "coconut",
+    "letter": "x",
+    "hrs": 372,
+    "min": 26,
+    "dates": "2024-07-11 12:26:00",
+    "missing_numbers": 1183,
+    "missing_NULL": "(null)",
+    "missing_dates": "2024-07-11 12:26:00"
+  },
+  {
+    "fruit": "cranberry",
+    "letter": "q",
+    "hrs": 450,
+    "min": 31,
+    "dates": "2024-07-14 18:31:00",
+    "missing_NULL": "1061",
+    "missing_dates": "Unknown"
+  },
+  {
+    "fruit": "cucumber",
+    "letter": "b",
+    "hrs": 691,
+    "min": 0,
+    "dates": "2024-07-24 19:00:00",
+    "missing_numbers": 126,
+    "missing_NULL": "516",
+    "missing_dates": "2024-07-24 19:00:00"
+  },
+  {
+    "fruit": "currant",
+    "letter": "a",
+    "hrs": 256,
+    "min": 0,
+    "dates": "2024-07-06 16:00:00",
+    "missing_NULL": "485",
+    "missing_dates": "2024-07-06 16:00:00"
+  },
+  {
+    "fruit": "damson",
+    "letter": "n",
+    "hrs": 563,
+    "min": 15,
+    "dates": "2024-07-19 11:15:00",
+    "missing_numbers": 46,
+    "missing_NULL": "242",
+    "missing_dates": "Unknown"
+  },
+  {
+    "fruit": "date",
+    "letter": "n",
+    "hrs": 1011,
+    "min": 14,
+    "dates": "2024-08-07 03:14:00",
+    "missing_numbers": 1105,
+    "missing_NULL": "1053",
+    "missing_dates": "2024-08-07 03:14:00"
+  },
+  {
+    "fruit": "dragonfruit",
+    "letter": "z",
+    "hrs": 770,
+    "min": 57,
+    "dates": "2024-07-28 02:57:00",
+    "missing_numbers": 918,
+    "missing_NULL": "148",
+    "missing_dates": "2024-07-28 02:57:00"
+  },
+  {
+    "fruit": "durian",
+    "letter": "h",
+    "hrs": 342,
+    "min": 31,
+    "dates": "2024-07-10 06:31:00",
+    "missing_numbers": 242,
+    "missing_NULL": "(null)",
+    "missing_dates": "2024-07-10 06:31:00"
+  },
+  {
+    "fruit": "eggplant",
+    "letter": "a",
+    "hrs": 577,
+    "min": 39,
+    "dates": "2024-07-20 01:39:00",
+    "missing_NULL": "(null)",
+    "missing_dates": "2024-07-20 01:39:00"
+  },
+  {
+    "fruit": "elderberry",
+    "letter": "g",
+    "hrs": 516,
+    "min": 43,
+    "dates": "2024-07-17 12:43:00",
+    "missing_NULL": "(null)",
+    "missing_dates": "Unknown"
+  },
+  {
+    "fruit": "feijoa",
+    "letter": "q",
+    "hrs": 1006,
+    "min": 19,
+    "dates": "2024-08-06 22:19:00",
+    "missing_numbers": 691,
+    "missing_NULL": "(null)",
+    "missing_dates": "2024-08-06 22:19:00"
+  },
+  {
+    "fruit": "fig",
+    "letter": "z",
+    "hrs": 109,
+    "min": 21,
+    "dates": "2024-06-30 13:21:00",
+    "missing_NULL": "(null)",
+    "missing_dates": "Unknown"
+  },
+  {
+    "fruit": "goji berry",
+    "letter": "j",
+    "hrs": 589,
+    "min": 4,
+    "dates": "2024-07-20 13:04:00",
+    "missing_NULL": "126",
+    "missing_dates": "2024-07-20 13:04:00"
+  },
+  {
+    "fruit": "gooseberry",
+    "letter": "c",
+    "hrs": 148,
+    "min": 18,
+    "dates": "2024-07-02 04:18:00",
+    "missing_NULL": "283",
+    "missing_dates": "2024-07-02 04:18:00"
+  },
+  {
+    "fruit": "grape",
+    "letter": "r",
+    "hrs": 1140,
+    "min": 35,
+    "dates": "2024-08-12 12:35:00",
+    "missing_NULL": "(null)",
+    "missing_dates": "Unknown"
+  },
+  {
+    "fruit": "grapefruit",
+    "letter": "d",
+    "hrs": 319,
+    "min": 0,
+    "dates": "2024-07-09 07:00:00",
+    "missing_NULL": "(null)",
+    "missing_dates": "2024-07-09 07:00:00"
+  },
+  {
+    "fruit": "guava",
+    "letter": "v",
+    "hrs": 949,
+    "min": 32,
+    "dates": "2024-08-04 13:32:00",
+    "missing_numbers": 206,
+    "missing_NULL": "265",
+    "missing_dates": "2024-08-04 13:32:00"
+  },
+  {
+    "fruit": "honeydew",
+    "letter": "m",
+    "hrs": 444,
+    "min": 57,
+    "dates": "2024-07-14 12:57:00",
+    "missing_NULL": "(null)",
+    "missing_dates": "2024-07-14 12:57:00"
+  },
+  {
+    "fruit": "huckleberry",
+    "letter": "t",
+    "hrs": 250,
+    "min": 55,
+    "dates": "2024-07-06 10:55:00",
+    "missing_numbers": 563,
+    "missing_NULL": "444",
+    "missing_dates": "Unknown"
+  },
+  {
+    "fruit": "jackfruit",
+    "letter": "m",
+    "hrs": 1245,
+    "min": 11,
+    "dates": "2024-08-16 21:11:00",
+    "missing_NULL": "1079",
+    "missing_dates": "2024-08-16 21:11:00"
+  },
+  {
+    "fruit": "jambul",
+    "letter": "x",
+    "hrs": 252,
+    "min": 25,
+    "dates": "2024-07-06 12:25:00",
+    "missing_NULL": "(null)",
+    "missing_dates": "2024-07-06 12:25:00"
+  },
+  {
+    "fruit": "jujube",
+    "letter": "g",
+    "hrs": 1034,
+    "min": 35,
+    "dates": "2024-08-08 02:35:00",
+    "missing_NULL": "(null)",
+    "missing_dates": "2024-08-08 02:35:00"
+  },
+  {
+    "fruit": "kiwi fruit",
+    "letter": "v",
+    "hrs": 522,
+    "min": 30,
+    "dates": "2024-07-17 18:30:00",
+    "missing_NULL": "(null)",
+    "missing_dates": "Unknown"
+  },
+  {
+    "fruit": "kumquat",
+    "letter": "p",
+    "hrs": 657,
+    "min": 47,
+    "dates": "2024-07-23 09:47:00",
+    "missing_numbers": 1103,
+    "missing_NULL": "(null)",
+    "missing_dates": "2024-07-23 09:47:00"
+  },
+  {
+    "fruit": "lemon",
+    "letter": "x",
+    "hrs": 922,
+    "min": 22,
+    "dates": "2024-08-03 10:22:00",
+    "missing_NULL": "129",
+    "missing_dates": "Unknown"
+  },
+  {
+    "fruit": "lime",
+    "letter": "x",
+    "hrs": 1147,
+    "min": 24,
+    "dates": "2024-08-12 19:24:00",
+    "missing_NULL": "1094",
+    "missing_dates": "2024-08-12 19:24:00"
+  },
+  {
+    "fruit": "loquat",
+    "letter": "e",
+    "hrs": 1079,
+    "min": 58,
+    "dates": "2024-08-09 23:58:00",
+    "missing_numbers": 450,
+    "missing_NULL": "(null)",
+    "missing_dates": "2024-08-09 23:58:00"
+  },
+  {
+    "fruit": "lychee",
+    "letter": "t",
+    "hrs": 391,
+    "min": 22,
+    "dates": "2024-07-12 07:22:00",
+    "missing_numbers": 1146,
+    "missing_NULL": "(null)",
+    "missing_dates": "Unknown"
+  },
+  {
+    "fruit": "mandarine",
+    "letter": "t",
+    "hrs": 265,
+    "min": 59,
+    "dates": "2024-07-07 01:59:00",
+    "missing_numbers": 847,
+    "missing_NULL": "(null)",
+    "missing_dates": "2024-07-07 01:59:00"
+  },
+  {
+    "fruit": "mango",
+    "letter": "i",
+    "hrs": 834,
+    "min": 36,
+    "dates": "2024-07-30 18:36:00",
+    "missing_numbers": 1034,
+    "missing_NULL": "(null)",
+    "missing_dates": "Unknown"
+  },
+  {
+    "fruit": "mulberry",
+    "letter": "o",
+    "hrs": 1065,
+    "min": 37,
+    "dates": "2024-08-09 09:37:00",
+    "missing_numbers": 265,
+    "missing_NULL": "(null)",
+    "missing_dates": "Unknown"
+  },
+  {
+    "fruit": "nectarine",
+    "letter": "i",
+    "hrs": 885,
+    "min": 4,
+    "dates": "2024-08-01 21:04:00",
+    "missing_numbers": 589,
+    "missing_NULL": "(null)",
+    "missing_dates": "Unknown"
+  },
+  {
+    "fruit": "nut",
+    "letter": "i",
+    "hrs": 509,
+    "min": 45,
+    "dates": "2024-07-17 05:45:00",
+    "missing_NULL": "(null)",
+    "missing_dates": "Unknown"
+  },
+  {
+    "fruit": "olive",
+    "letter": "p",
+    "hrs": 1412,
+    "min": 41,
+    "dates": "2024-08-23 20:41:00",
+    "missing_NULL": "589",
+    "missing_dates": "2024-08-23 20:41:00"
+  },
+  {
+    "fruit": "orange",
+    "letter": "m",
+    "hrs": 289,
+    "min": 45,
+    "dates": "2024-07-08 01:45:00",
+    "missing_numbers": 949,
+    "missing_NULL": "(null)",
+    "missing_dates": "2024-07-08 01:45:00"
+  },
+  {
+    "fruit": "pamelo",
+    "letter": "r",
+    "hrs": 918,
+    "min": 33,
+    "dates": "2024-08-03 06:33:00",
+    "missing_numbers": 223,
+    "missing_NULL": "909",
+    "missing_dates": "2024-08-03 06:33:00"
+  },
+  {
+    "fruit": "papaya",
+    "letter": "s",
+    "hrs": 485,
+    "min": 54,
+    "dates": "2024-07-16 05:54:00",
+    "missing_NULL": "(null)",
+    "missing_dates": "2024-07-16 05:54:00"
+  },
+  {
+    "fruit": "passionfruit",
+    "letter": "m",
+    "hrs": 1146,
+    "min": 15,
+    "dates": "2024-08-12 18:15:00",
+    "missing_NULL": "1146",
+    "missing_dates": "Unknown"
+  },
+  {
+    "fruit": "peach",
+    "letter": "u",
+    "hrs": 242,
+    "min": 42,
+    "dates": "2024-07-06 02:42:00",
+    "missing_numbers": 948,
+    "missing_NULL": "482",
+    "missing_dates": "2024-07-06 02:42:00"
+  },
+  {
+    "fruit": "pear",
+    "letter": "k",
+    "hrs": 1037,
+    "min": 39,
+    "dates": "2024-08-08 05:39:00",
+    "missing_NULL": "(null)",
+    "missing_dates": "2024-08-08 05:39:00"
+  },
+  {
+    "fruit": "persimmon",
+    "letter": "l",
+    "hrs": 206,
+    "min": 38,
+    "dates": "2024-07-04 14:38:00",
+    "missing_NULL": "(null)",
+    "missing_dates": "Unknown"
+  },
+  {
+    "fruit": "physalis",
+    "letter": "a",
+    "hrs": 223,
+    "min": 28,
+    "dates": "2024-07-05 07:28:00",
+    "missing_NULL": "(null)",
+    "missing_dates": "Unknown"
+  },
+  {
+    "fruit": "pineapple",
+    "letter": "r",
+    "hrs": 1257,
+    "min": 39,
+    "dates": "2024-08-17 09:39:00",
+    "missing_numbers": 256,
+    "missing_NULL": "(null)",
+    "missing_dates": "2024-08-17 09:39:00"
+  },
+  {
+    "fruit": "plum",
+    "letter": "t",
+    "hrs": 713,
+    "min": 0,
+    "dates": "2024-07-25 17:00:00",
+    "missing_numbers": 337,
+    "missing_NULL": "1034",
+    "missing_dates": "2024-07-25 17:00:00"
+  },
+  {
+    "fruit": "pomegranate",
+    "letter": "z",
+    "hrs": 46,
+    "min": 22,
+    "dates": "2024-06-27 22:22:00",
+    "missing_numbers": 663,
+    "missing_NULL": "(null)",
+    "missing_dates": "Unknown"
+  },
+  {
+    "fruit": "pomelo",
+    "letter": "n",
+    "hrs": 834,
+    "min": 0,
+    "dates": "2024-07-30 18:00:00",
+    "missing_numbers": 522,
+    "missing_NULL": "885",
+    "missing_dates": "Unknown"
+  },
+  {
+    "fruit": "purple mangosteen",
+    "letter": "r",
+    "hrs": 751,
+    "min": 34,
+    "dates": "2024-07-27 07:34:00",
+    "missing_numbers": 909,
+    "missing_NULL": "(null)",
+    "missing_dates": "Unknown"
+  },
+  {
+    "fruit": "quince",
+    "letter": "y",
+    "hrs": 948,
+    "min": 18,
+    "dates": "2024-08-04 12:18:00",
+    "missing_NULL": "(null)",
+    "missing_dates": "2024-08-04 12:18:00"
+  },
+  {
+    "fruit": "raisin",
+    "letter": "l",
+    "hrs": 1103,
+    "min": 18,
+    "dates": "2024-08-10 23:18:00",
+    "missing_numbers": 1237,
+    "missing_NULL": "(null)",
+    "missing_dates": "Unknown"
+  },
+  {
+    "fruit": "rambutan",
+    "letter": "q",
+    "hrs": 847,
+    "min": 24,
+    "dates": "2024-07-31 07:24:00",
+    "missing_numbers": 250,
+    "missing_NULL": "847",
+    "missing_dates": "2024-07-31 07:24:00"
+  },
+  {
+    "fruit": "raspberry",
+    "letter": "w",
+    "hrs": 399,
+    "min": 3,
+    "dates": "2024-07-12 15:03:00",
+    "missing_NULL": "(null)",
+    "missing_dates": "2024-07-12 15:03:00"
+  },
+  {
+    "fruit": "redcurrant",
+    "letter": "l",
+    "hrs": 283,
+    "min": 11,
+    "dates": "2024-07-07 19:11:00",
+    "missing_NULL": "(null)",
+    "missing_dates": "2024-07-07 19:11:00"
+  },
+  {
+    "fruit": "rock melon",
+    "letter": "u",
+    "hrs": 46,
+    "min": 22,
+    "dates": "2024-06-27 22:22:00",
+    "missing_numbers": 1028,
+    "missing_NULL": "(null)",
+    "missing_dates": "Unknown"
+  },
+  {
+    "fruit": "salal berry",
+    "letter": "h",
+    "hrs": 1094,
+    "min": 21,
+    "dates": "2024-08-10 14:21:00",
+    "missing_numbers": 1011,
+    "missing_NULL": "770",
+    "missing_dates": "Unknown"
+  },
+  {
+    "fruit": "satsuma",
+    "letter": "r",
+    "hrs": 733,
+    "min": 17,
+    "dates": "2024-07-26 13:17:00",
+    "missing_NULL": "(null)",
+    "missing_dates": "Unknown"
+  },
+  {
+    "fruit": "star fruit",
+    "letter": "k",
+    "hrs": 993,
+    "min": 10,
+    "dates": "2024-08-06 09:10:00",
+    "missing_numbers": 148,
+    "missing_NULL": "509",
+    "missing_dates": "Unknown"
+  },
+  {
+    "fruit": "strawberry",
+    "letter": "x",
+    "hrs": 749,
+    "min": 47,
+    "dates": "2024-07-27 05:47:00",
+    "missing_NULL": "(null)",
+    "missing_dates": "Unknown"
+  },
+  {
+    "fruit": "tamarillo",
+    "letter": "c",
+    "hrs": 568,
+    "min": 12,
+    "dates": "2024-07-19 16:12:00",
+    "missing_numbers": 342,
+    "missing_NULL": "(null)",
+    "missing_dates": "Unknown"
+  },
+  {
+    "fruit": "tangerine",
+    "letter": "s",
+    "hrs": 909,
+    "min": 22,
+    "dates": "2024-08-02 21:22:00",
+    "missing_NULL": "922",
+    "missing_dates": "2024-08-02 21:22:00"
+  },
+  {
+    "fruit": "ugli fruit",
+    "letter": "z",
+    "hrs": 1019,
+    "min": 55,
+    "dates": "2024-08-07 11:55:00",
+    "missing_numbers": 1147,
+    "missing_NULL": "(null)",
+    "missing_dates": "2024-08-07 11:55:00"
+  },
+  {
+    "fruit": "watermelon",
+    "letter": "y",
+    "hrs": 568,
+    "min": 0,
+    "dates": "2024-07-19 16:00:00",
+    "missing_NULL": "(null)",
+    "missing_dates": "2024-07-19 16:00:00"
+  }
+]

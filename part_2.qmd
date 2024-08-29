@@ -1,0 +1,543 @@
+---
+title: "Part 2"
+author: "Albert Rapp"
+date: August 28, 2024
+format:
+  html:
+    code-link: true
+    code-fold: true
+    self-contained: true
+    embed-resources: true
+    toc: true
+    theme: Zephyr
+    number-sections: false
+execute: 
+  warning: false
+  message: false
+  echo: false
+editor_options: 
+  chunk_output_type: console
+---
+
+# Part 2
+
+## Lesson 1
+
+Overview of different formats for the same database. Those are csv, csv with header, csv semicolon separator, tsv space separator, csv metadata, excel files, json files, which are annoying looking
+
+## Lesson 2: Same data in in different formats
+
+Loading csv files. It is recommended that you Rstudio project which set up the relative paths. You don't need to use here::here(path)
+
+```{r loading_csv_files}
+#| echo: true
+#| warning: false
+#| code-fold: true
+
+library(tidyverse)
+
+
+read_csv('data/Part_2/02_exibble.csv')
+
+getwd()
+
+```
+
+## Lesson 3: Read standard csv-files
+
+### How to read csv files with no headers.
+
+Loading it directly the first row will be interpreted as the names of the columns. This is not what we want. Instead we need to tell `read_csv()` function that there are no column names.
+
+By default, csv will assign generic column names.
+
+```{r loading_csv_no_headers}
+#| echo: true
+#| warning: false
+#| code-fold: true
+
+read_csv('data/Part_2/01_exibble_no_headers.csv', 
+         col_names = FALSE)
+
+
+```
+
+Instead, we can create a vector with the column names
+
+```{r column_names}
+#| echo: true
+#| warning: false
+#| code-fold: true
+
+desired_colnames <-  c("fuit",
+                       "letter",
+                       "hrs",
+                       "min",
+                       "dates",
+                       "missing_numbers",
+                       "missing_NULL",
+                       "missing_dates")
+
+read_csv('data/Part_2/01_exibble_no_headers.csv', 
+         col_names = desired_colnames)
+
+```
+
+### Reading a metadata csv file.
+
+It displays a message with illegible data.
+
+```{r reading_}
+#| echo: true
+#| warning: false
+#| code-fold: true
+
+read_csv("data/Part_2/05_exibble_with_metadata.csv")
+
+
+```
+
+We need to skip the first two rows, which are not relevant. And now the file is correctly displayed.
+
+```{r skipping_rows_csv}
+#| echo: true
+#| warning: false
+#| code-fold: true
+
+read_csv("data/Part_2/05_exibble_with_metadata.csv",
+         skip = 2)
+```
+
+### Read csv files in European format
+
+Problem the first row has the name of the variables, but they are not recognized because of the use of ";" as delimiter. You need to replace the `read_csv()`function with the `read_csv2()`function.
+
+```{r read_csv_european}
+#| echo: true
+#| warning: false
+#| code-fold: true
+
+read_csv2("data/Part_2/03_exibble_european.csv")
+
+```
+
+### Reading files with line breaks
+
+RStudio reads this file as having two columns. Reading the quote file that appears to be connected with the line_break file
+
+```{r reading_line_breaks}
+#| echo: true
+#| warning: false
+#| code-fold: true
+
+read_csv("data/Part_2/09_line_break.csv")
+
+here::here()
+read_csv("data/Part_2/10_quote.csv")
+
+```
+
+Instead, we need to use the `read_delim()` function. And we need to specify we want as a delimiter a `,`.
+
+```{r read_delim_function}
+#| echo: true
+#| warning: false
+#| code-fold: true
+
+read_delim("data/Part_2/10_quote.csv",
+           delim = ',',
+           escape_backslash = TRUE)
+
+#Another option
+
+read_delim("data/Part_2/11_quote_doubled.csv",
+           delim = ',',
+           escape_double = TRUE)
+
+
+
+```
+
+## Lesson 4: Reading tsv and txt files
+
+### Loading tsv files which have a separeted value
+
+```{r loading_tsv_files}
+#| echo: true
+#| warning: false
+#| code-fold: true
+
+read_tsv('data/Part_2/04_exibble.tsv')
+
+```
+
+### Loading arbitrary text files
+
+```{r loading_arbitrary_text_files}
+#| echo: true
+#| warning: false
+#| code-fold: true
+
+read_delim('data/Part_2/12_weird_delimiter.txt',
+           delim = '|')
+
+
+```
+
+## Lesson 5: Reading Excel Files
+
+One package useful for reading excel files is `oepnxls`. However, the data frame looks weird. This is why we transform it into tibble.
+
+```{r read_excel_files}
+#| echo: true
+#| warning: false
+#| code-fold: true
+
+
+library(openxlsx)
+
+openxlsx::read.xlsx('data/Part_2/06_exibble.xlsx') |> 
+  as_tibble()
+
+```
+
+However, the column with dates is not treated as a date but with a weird number. Consequently we could recode the variable dates as a date format using `lubridate`
+
+```{r transforming_dates_excel}
+#| echo: true
+#| warning: false
+#| code-fold: true
+
+
+library(lubridate)
+
+openxlsx::read.xlsx('data/Part_2/06_exibble.xlsx') |> 
+  as_tibble() |> 
+  mutate(dates = as_date(dates))
+
+
+```
+
+We could also use the `janitor` package to transfer dates into a date format
+
+```{r janitor_date_transform}
+#| echo: true
+#| warning: false
+#| code-fold: true
+
+openxlsx::read.xlsx('data/Part_2/06_exibble.xlsx') |> 
+  as_tibble() |> 
+  mutate(dates = janitor::excel_numeric_to_date(dates))
+
+```
+
+## Lesson 6: Reading JSON files
+
+JSON files require a particular package: `jsonlite` package. Notice that json files have a nested structure. Notice that json file contains \[\[80\]\].
+
+The `str()` function comes handy. It displays the list signifying rows. Each row displays the names of the columns, and their contents.
+
+### Using glimpse
+
+You can also use the `glimpse` function.
+
+```{r reading_json_files}
+#| echo: true
+#| warning: false
+#| code-fold: true
+
+library(jsonlite)
+
+jsonlite::read_json('data/Part_2/07_exibble.json') |>
+  str()
+
+
+```
+
+Using glimpse function to describe the organization of the json files
+
+```{r json_glimpse}
+#| echo: true
+#| warning: false
+#| code-fold: true
+
+library(jsonlite)
+
+jsonlite::read_json('data/Part_2/07_exibble.json') |>
+  glimpse()
+
+
+
+```
+
+### Using bind_rows() function
+
+Use bind rows function to find together the different rows that make up the json file. It allows us to create a nice tibble file.
+
+```{r binding_rows_json}
+#| echo: true
+#| warning: false
+#| code-fold: true
+
+library(jsonlite)
+
+jsonlite::read_json('data/Part_2/07_exibble.json') |>
+  bind_rows()
+
+
+
+```
+
+### GLIMPSE and bind_rows functions
+
+You can use both of them to describe the components of the file. And, then create the tibble file
+
+```{r glimpse_bind_json}
+
+#| echo: true
+#| warning: false
+#| code-fold: true
+
+library(jsonlite)
+
+jsonlite::read_json('data/Part_2/07_exibble.json') |>
+  glimpse() |> 
+  bind_rows()
+
+#OR we can request glimpse after binding the rows
+
+jsonlite::read_json('data/Part_2/07_exibble.json') |>
+  bind_rows() |> 
+  glimpse()
+
+```
+
+### Reading a second json file
+
+This file is a special case. It has three columns. You cannot use`bind_rows()` function for this kind of file. But you can extract information from it
+
+```{r another_json_file}
+#| echo: true
+#| warning: false
+#| code-fold: true
+
+library(jsonlite)
+jsonlite::read_json('data/Part_2/08_nested_example.json') |> 
+  glimpse()
+
+```
+
+Extracting information from `08_nested_example/json` using the `pluck()` function, which can go to a particular column. In this case, we want to go to the information column and then the origin column.
+
+```{r extract_info_json}
+
+#| echo: true
+#| warning: false
+#| code-fold: true
+
+library(jsonlite)
+
+jsonlite::read_json('data/Part_2/08_nested_example.json') |> 
+  pluck('information','origin') |> 
+  glimpse()
+
+
+```
+
+### Next we could pass this information as tibble
+
+We need to unnest them, though.
+
+```{r passing_structure_tibble}
+#| echo: true
+#| warning: false
+#| code-fold: true
+
+jsonlite::read_json('data/Part_2/08_nested_example.json') |> 
+  pluck('information','origin') |> 
+  as_tibble() |> 
+  unnest(cols = c(country,season))
+
+#Or
+
+jsonlite::read_json('data/Part_2/08_nested_example.json') |> 
+  pluck('information','origin') |> 
+  as_tibble() |> 
+  unnest(cols = everything())
+
+
+
+```
+
+## Lesson 7: Turning missing values into true NAs
+
+```{r finding_na}
+#| echo: true
+#| warning: false
+#| code-fold: true
+
+read_csv("data/Part_2/02_exibble.csv") |> 
+  select(1:6)
+
+
+```
+
+### Problematic variables
+
+Notice that these two columns have values that need to be recoded as missing.
+
+```{r encounter_na_values}
+#| echo: true
+#| warning: false
+#| code-fold: true
+
+read_csv("data/Part_2/02_exibble.csv") |> 
+  select(-(1:6))
+
+```
+
+### Recoding missing while reading a file
+
+Notice that once we recoded the missing values correctly, the type of variable changes from being a character to numeric or date
+
+```{r recoding_missing_reading}
+#| echo: true
+#| warning: false
+#| code-fold: true
+
+read_csv("data/Part_2/02_exibble.csv",
+         na = c("", "(null)", "Unknown")) |>
+  select(-(1:6)) |> 
+  glimpse()
+
+
+```
+
+### Handling missing values in excel files
+
+Notice variables missing_Null and missing_dates are incorrectly identified as characters.
+
+```{r handling_na_excel}
+#| echo: true
+#| warning: false
+#| code-fold: true
+
+openxlsx::read.xlsx("data/Part_2/06_exibble.xlsx") |> 
+  as_tibble() |> 
+  select(7:8) |> 
+  glimpse()
+
+```
+
+### Recoding missing in an excel file
+
+```{r recoding_na_excel}
+#| echo: true
+#| warning: false
+#| code-fold: true
+
+openxlsx::read.xlsx("data/Part_2/06_exibble.xlsx",
+                    na.strings = c("", "(null)", "Unknown")) |> 
+  as_tibble() |> 
+  select(-c(1:6))
+
+
+```
+
+However, the `na.strings()` conversion do not transform the variables back to their correct format: numeric and date
+
+## Lesson 8: Transforming/Parsing numbers
+
+Correcting or parsing numbers in an excel file
+
+```{r correct_na_format_excel}
+#| echo: true
+#| warning: false
+#| code-fold: true
+
+openxlsx::read.xlsx(
+  "data/Part_2/06_exibble.xlsx"
+  ) |> 
+  as_tibble() |> 
+  select(-c(1:6)) |> 
+  mutate(missing_NULL = parse_number(
+    missing_NULL,
+    na = c("", "NA", "(null)", "Unknown")
+  ))
+
+
+```
+
+## Lesson 9: Transforming/Parsing dates & datetimes
+
+```{r parsin_dates_datetimes}
+
+#| echo: true
+#| warning: false
+#| code-fold: true
+
+openxlsx::read.xlsx(
+  "data/Part_2/06_exibble.xlsx"
+  ) |> 
+  as_tibble() |> 
+  select(-c(1:6)) |> 
+  mutate(missing_NULL = parse_number(
+    missing_NULL,
+    na = c("", "NA", "(null)", "Unknown")
+  ),
+  missing_dates = lubridate::ymd_hms(missing_dates, 
+                                     quiet = TRUE)
+  )
+
+
+```
+
+Extracting only dates without times
+
+```{r parse_dates_readr}
+#| echo: true
+#| warning: false
+#| code-fold: true
+
+openxlsx::read.xlsx(
+  "data/Part_2/06_exibble.xlsx"
+  ) |> 
+  as_tibble() |> 
+  select(-c(1:6)) |> 
+  mutate(missing_NULL = parse_number(
+    missing_NULL,
+    na = c("", "NA", "(null)", "Unknown")
+  ),
+  missing_dates = parse_datetime(
+    missing_dates,
+    format = '%Y-%m-%d %H:%M:%S',
+    na = "Unknown"
+  )
+  )
+
+```
+
+For extracting just dates, use the readr function `parse_date()` as shown below
+
+```{r parse_dates_no_time}
+#| echo: true
+#| warning: false
+#| code-fold: true
+
+openxlsx::read.xlsx(
+  "data/Part_2/06_exibble.xlsx"
+  ) |> 
+  as_tibble() |> 
+  select(-c(1:6)) |> 
+  mutate(missing_NULL = parse_number(
+    missing_NULL,
+    na = c("", "NA", "(null)", "Unknown")
+  ),
+  missing_dates = parse_date(
+    missing_dates,
+    format = '%Y-%m-%d %H:%M:%S',
+    na = "Unknown"
+  )
+  )
+
+```

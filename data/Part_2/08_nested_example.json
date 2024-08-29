@@ -1,0 +1,11 @@
+{
+  "fruit": ["some_fruit"],
+  "information": {
+    "origin": {
+      "country": ["Some country", "Other country"],
+      "season": ["Summer", "Winter"]
+    },
+    "price": [432.23],
+    "currency": ["EUR"]
+  }
+}

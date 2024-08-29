@@ -50,7 +50,7 @@ The dimensions of the penguins database: 344 observations and 7 columns or varia
 dim(penguins)
 ```
 
-To have a good overview of the database, we can use the `skim()` function from the skimr package. It provides a summary statistics, ad report the proportion of missing cases
+To have a good overview of the database, we can use the `skim()` function from the skimr package. It provides a summary statistics, and report the proportion of missing cases
 
 ```{r skimr_penguins}
 #| echo: true
@@ -122,7 +122,7 @@ skimr::skim(penguins_wo_NAs)
 
 ### Handling vectors
 
-**Mutate** *is a* *vectorised function*. This means that it takes the two vectors listed in the mutate function as a whole. In other words the values of each column are not taken one-by-one. The values are handled as a vecto, and then they are operated via a vectorized division (/).
+**Mutate** *is a* *vectorised function*. This means that it takes the two vectors listed in the mutate function as a whole. In other words the values of each column are not taken one-by-one. The values are handled as a vector, and then they are operated via a vectorized division (/).
 
 Imagine these two vectors are "smashed together" and the result is divided.
 
@@ -249,7 +249,7 @@ test
 
 ## Lesson 3
 
-This section covers the `summarise()`function. This function is the opposite of the `mutate()` function. It also works with vectors, but the difference is the amount of output. While mutate can be used to produce vectors, summarise turns out single elements, or atomic values.
+This section covers the `summarise()`function. This function is the opposite of the `mutate()` function. It also works with vectors, but the difference is the amount of output. While mutate can be used to produce vectors, **summarise** *turns* out **single elements**, or **atomic values**.
 
 ```{r summarise_function}
 #| echo: true
@@ -333,7 +333,7 @@ penguins_wo_NAs |>
 
 ```
 
-To remove the underlying grouping structure, remove the grouping using the option .groups = "drop' in the `summarise()` function. This option restores the original tibble table of 5 X 6.
+To remove the underlying grouping structure, remove the grouping using the option .groups = "drop' in the `summarise()` function. This option restores the original tibble table of 5 X 5.
 
 ```{r eliminating_underscore_grouping}
 #| echo: true
@@ -415,7 +415,7 @@ palmerpenguins::penguins |>
 
 ### Centering a variable by its mean
 
-Centering a variable represents an ideal situation to use the function `.by =` in a mutate operator instead of using summarise. A situation to use the scale function instead of reporting the means for each group as we did with mutate(). "`scale` is a generic *R* function whose default method centers and/or scales the columns of a numeric matrix."
+Centering, using `scale()` function, a variable represents an ideal situation to use the function `.by =` in a mutate operator instead of using summarise. A situation to use the `scale()` instead of reporting the means for each group as we did with mutate(). `scale()` is a generic *R* function whose default method centers and/or scales the columns of a numeric matrix."
 
 Notice, we are centering, or scaling each penguin's species bill length to its mean. Assuring transparency by requesting alpha = 0.5.
 
@@ -512,7 +512,7 @@ penguins_wo_NAs |>
 
 ### Using across() + mutate() instead of repetitions.
 
-Original mutate
+**Original mutate**
 
 ```{r orginal_mutate}
 #| echo: true
@@ -589,9 +589,10 @@ penguins_wo_NAs |>
               "flipper_length_mm",
               "body_mass_g"),
     .fns = mean,
-    .names = 'mean_{.col |> str_remove("_mm") |> str_remove("_g")}'
+    .names = 'mean_{.col |> 
+    str_remove("_mm") |> 
+    str_remove("_g")}'
   ))
-
 
 ```
 
@@ -856,11 +857,13 @@ Since `reframe()` along `range()` would return unnamed results, we could add `ty
 penguins_wo_NAs |> 
   reframe(
     type = c("min", "max"),
-    range_bill_lenght_mm = range(bill_length_mm))
+    range_bill_lenght_mm = range(bill_length_mm),
+    .by = c(species,island))
+
 
 ```
 
-### Grouping with reframe( ) 
+### Grouping with reframe( )
 
 We can do more things with `reframe( )`. We can use group statistics as well.
 
@@ -897,8 +900,13 @@ penguins_wo_NAs |>
 
 But we could also format it as a table. To do so, we need to call upon `pivot _longer( )` function as well as the and `pivot_wider( )` function.
 
+Note: We could have used this option for the CHCI report documenting entering years across cohorts by programs.
+
 ```{r table_reframe}
 #| echo: true
+
+library(gt)
+library(gtExtras)
 
 #Pivot longer
 penguins_wo_NAs |> 
@@ -920,7 +928,8 @@ penguins_wo_NAs |>
     id_cols = c(quantity),
     names_from = c(species,type),
     values_from = value
-  )
+  ) |> 
+  gt()
 
 ```
 
@@ -1064,6 +1073,7 @@ Consequently the defined function is TRUE if the corresponding column/variable i
 penguins_wo_NAs |> 
   select(where(function(x) is.factor(x) || is.character(x)) )
 
+
 ```
 
 ### Anonymous functions and if conditions for selecting variables
@@ -1185,7 +1195,7 @@ penguins_wo_NAs |>
 
 ### Extending gamma and scope column search
 
-Using regular expressions to extend the scope of the search for variables. For instance searching for variables that start with the letters f or b, and are followed by any amount of characters `.*` and then end (`$`) with the string `_mm`. The corresponding regular expression is: `^[fb].*(_mm)$`
+Using regular expressions to extend the scope of the search for variables. For instance searching for variables that start with the letters **f** or **b**, and are followed by any amount of characters `.*` and then end (`$`) with the string `_mm`. The corresponding regular expression is: `^[fb].*(_mm)$`
 
 ```{r select_regex}
 #| echo: true
