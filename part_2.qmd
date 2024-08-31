@@ -21,6 +21,18 @@ editor_options:
 
 # Part 2
 
+```{r loading_libraries}
+#| echo: false
+
+library(tidyverse)
+library(janitor)
+library(lubridate)
+library(openxlsx)
+library(jsonlite)
+
+
+```
+
 ## Lesson 1
 
 Overview of different formats for the same database. Those are csv, csv with header, csv semicolon separator, tsv space separator, csv metadata, excel files, json files, which are annoying looking
@@ -160,7 +172,7 @@ read_delim("data/Part_2/11_quote_doubled.csv",
 
 ## Lesson 4: Reading tsv and txt files
 
-### Loading tsv files which have a separeted value
+### Loading tsv files which have a separated value
 
 ```{r loading_tsv_files}
 #| echo: true
@@ -539,5 +551,413 @@ openxlsx::read.xlsx(
     na = "Unknown"
   )
   )
+
+```
+
+## Lesson 10: Handling a mix of date(time) formats
+
+Example below displays a vector with dates with different formats.
+
+```{r mix_formats}
+#| echo: true
+#| warning: false
+#| code-fold: true
+
+tibble(
+  mixed_datetimes = c(
+    '23.12.2024 12:23',
+    '23.12.2024',
+    '2023-12-23',
+    'NULL'
+  )
+)
+
+
+```
+
+The previous functions such as `parse_datetime()` and `parse_number()` won't work for this example. On the other hand, the `lubridate` package works best for this situation.
+
+The option `orders` can tell lubridate the correct order of the date to be followed. This option save us the complicated format `format = '%Y-%m-%d %H:%M:%S'` used in parse_date from read.xlsx. Instead we use lubridate to specify day, month, year and hour "c(`dmyHM`)". And then we specify the correct format for each element of the vector.
+
+Notice there is no option to handle missing values. This is why we need to use the quite argument, which codes the string `NULL` as missing.
+
+```{r handling_mix_date_formats}
+#| echo: true
+#| warning: false
+#| code-fold: true
+
+tibble(
+  mixed_datetimes = c(
+    '23.12.2024 12:23',
+    '23.12.2024',
+    '2023-12-23',
+    'NULL'
+  )
+) |> 
+  mutate(
+   mixed_datetimes = lubridate::parse_date_time(
+     mixed_datetimes,
+     orders = c('dmyHM','dmy','ymd')
+     ),
+   quiet = TRUE
+  )
+
+
+
+```
+
+## Lesson 11: Combining data sets column-wise & row-wise
+
+This lesson introduces the equivalent concepts of merging from Stata and SPSS
+
+### Binding rows
+
+Binding rows is flexible. You do not need to order the columns in a particular manner provided they have the same label. binding rows use the column label from the first dataset.
+
+```{r combining_rows}
+#| echo: true
+#| warning: false
+#| code-fold: true
+
+tib1 <-  tibble(a = 1:5, b = 1:5)
+tib2 <-  tibble(a = 6:10, b = 6:10)
+
+bind_rows(tib1,tib2)
+
+tib1 <-  tibble(b = 1:5, a = 1:5)
+tib2 <-  tibble(a = 6:10, b = 6:10)
+
+bind_rows(tib1,tib2)
+
+#Another option of adding a column c with incomplete cases
+
+tib1 <-  tibble(b = 1:5, a = 1:5)
+tib2 <-  tibble(a = 6:10, b = 6:10, c = 6:10)
+
+bind_rows(tib1,tib2)
+
+```
+
+### Binding columns
+
+The only difference between binding columns and binding rows is that the former is strict about the number of rows. They have to have the same number
+
+```{r binding_columns}
+#| echo: true
+#| warning: false
+#| code-fold: true
+
+
+tib1 <-  tibble(x = 1:5)
+tib2 <-  tibble(y = fruit[1:5])
+
+bind_cols(tib1,tib2)
+
+```
+
+## Lesson 12: Combining datasets by left\_ and right_join
+
+This lesson illustrates how to combine two data sets. Each dataset has different rows, and different names for the key variable. In the flights dataset the key variable is `origin`. In the airports dataset the key variable is `faa`.
+
+### Creating flights data set
+
+```{r flights_data}
+#| echo: true
+
+flights <-  nycflights23::flights |> 
+  as_tibble()
+
+```
+
+### Creating airlines datnamea set
+
+```{r airlines_data}
+#| echo: true
+#| warning: false
+#| code-fold: true
+
+airlines <-  nycflights23::airlines |> 
+  as_tibble()
+
+```
+
+### left_join
+
+Selecting some variables from the flights dataset. We want to add the name of the carrier. They key matching variable in both data sets is `carrier`.
+
+```{r selecting_columns_flights_dataset}
+#| echo: true
+#| warning: false
+#| code-fold: true
+
+flights |> 
+  select(year:dep_time, carrier) |> 
+  left_join(airlines, by = 'carrier')
+
+```
+
+Another example of left join that may not be as easier as the previous example. In this example we have abbreviations for airport destinations. For merging, we need another database with the full name of the airports. This name is found in the `airports` data set under the label `faa`.
+
+In the example below, we are filtering from the airports' column faa the names that appear in the flights dataset variable origin. In other words the two variables are the same (faa = origin). The trick is to eliminate duplicates.
+
+If we try to merge the two files as before a mistake will occur because R does not know that faa is the same as origin.
+
+```{r left_join_calling_for_key}
+#| echo: true
+#| warning: false
+#| code-fold: true
+
+#* Eliminating duplicate names of airports.  
+#* The end result of filtering is selecting NY airports only
+
+
+airports <- nycflights23::airports |> 
+  filter(faa %in% unique(flights$origin))
+
+#The following script generates an error. There is no common key
+flights |> 
+  select(year:dep_time, origin) |> 
+  left_join(airports)
+  
+
+
+```
+
+### Adding key in left_join.
+
+The last script generated an error when trying to merge flights with airports. There is no common key across the two data sets. The key is has a different label. Under the flights data set the airport abbreviation appears under the variable `origin`. In the `airport` data set the abbreviation is `faa`. In other words `origin == faa`.
+
+```{r adding_key_left_join}
+#| echo: true
+#| warning: false
+#| code-fold: true
+
+flights |> 
+  select(year:dep_time, origin) |> 
+  left_join(airports, by = join_by(origin == faa))
+
+
+
+```
+
+### Adding key in right_join.
+
+We get exactly the same dataset made up of 435,352 rows. The reason it produced the same results is the filtering we applied to the airports dataset `filter(faa %in% unique(flights$origin))`
+
+```{r right_join_adding_key}
+#| echo: true
+#| warning: false
+#| code-fold: true
+
+flights |> 
+  select(year:dep_time, origin) |> 
+  right_join(airports,
+             by = join_by(origin == faa))
+  
+```
+
+Let's see what happens when eliminating the filtering that allowed both dataset to have the same airports.
+
+Redoing the right and left join don't produce the same number of rows. The left join yield 435,342 rows while the right produces 436,590 rows.
+
+```{r right_join_no_filtering}
+#| echo: true
+#| warning: false
+#| code-fold: true
+
+airports <- nycflights23::airports
+
+flights |> 
+  select(year:dep_time, origin) |> 
+  left_join(airports,
+             by = join_by(origin == faa))
+
+
+flights |> 
+  select(year:dep_time, origin) |> 
+  right_join(airports,
+             by = join_by(origin == faa))
+
+
+
+```
+
+Notice there is a discrepancy of about 1,000 airports. The number of airports produced under left_join is smaller than the one produced by right_join.
+
+Providing a more detailed explanation about the discrepancies on the number of cases.
+
+The **left_join** makes the number of cases in the first database to **prevail** in the **merger**. The contrary is true when doing right_join.
+
+```{r illustrating_rows_merged_left_join}
+#| echo: true
+#| warning: false
+#| code-fold: true
+
+reduced_left <- flights |> 
+  select(year:dep_time, origin) |> 
+  slice(1, .by = origin) |> 
+  left_join(airports,
+             by = join_by(origin == faa))
+
+reduced_left
+
+```
+
+Reducing the airports by right_join. It produces 1,248 missing rows.
+
+```{r illustrating_reduced_right}
+#| echo: true
+#| warning: false
+#| code-fold: true
+
+reduced_right <- flights |> 
+  select(year:dep_time, origin) |> 
+  slice(1, .by = origin) |> 
+  right_join(airports,
+             by = join_by(origin == faa))
+
+reduced_right
+
+```
+
+## Lesson 13: Other join types
+
+Other joins being illustrated with a small dataset. In this example the left_join kept all the airports from the `flights` data set, or 1,251. But the columns are empty except for the New York airports that are contained in the `flights` dataset.
+
+```{r other_joins}
+#| echo: true
+#| warning: false
+#| code-fold: true
+
+flights |> 
+  select(year:dep_time, origin) |> 
+  slice(1, .by = origin) |> 
+  left_join(airports,
+             by = join_by(origin == faa))
+
+airports |> 
+  left_join(
+    flights |> 
+      select(year:dep_time, origin) |> 
+      slice(1, .by = origin), 
+    by = join_by(faa == origin))
+
+
+
+```
+
+### Full join
+
+Using two rows, or two rows per airpot
+
+```{r full_join}
+
+airports |> 
+  full_join(
+    flights |> 
+      select(year:dep_time, origin) |> 
+      slice(1:2, .by = origin), 
+    by = join_by(faa == origin))
+
+
+```
+
+### Anti join
+
+It is more useful than full join because it can tell where unexpected things may go wrong. In this case it tells you the airports that could not be matched. In this case, 1,248 airports that could not be matched.
+
+```{r anti_join}
+#| echo: true
+#| warning: false
+#| code-fold: true
+
+airports |> 
+  anti_join(
+    flights |> 
+      select(year:dep_time, origin) |> 
+      slice(1, .by = origin), 
+    by = join_by(faa == origin))
+
+
+```
+
+## Lesson 14: Join by multiple criteria
+
+Using join based on multiple criteria.
+
+### Creating wind speeds dataset
+
+```{r wind_speeds_df}
+#| echo: true
+#| warning: false
+#| code-fold: true
+
+
+wind_speeds <-  nycflights23::weather |> 
+  select(origin:hour, wind_speed)
+
+wind_speeds
+
+```
+
+Matching based on multiple criteria instead of just two columns. We want to enrich the flights data set with information about wind speeds.
+
+```{r multiple_criteria_join}
+#| echo: true
+#| warning: false
+#| code-fold: true
+
+flights |> 
+  select(year:day,hour,origin,tailnum) |> 
+  left_join(wind_speeds)
+
+
+```
+
+Notice that without specifying the matching criteria the left_join worked. It did so because the two data set share some variables in common as shown in the output:
+
+by = join_by(year, month, day, hour, origin)\`
+
+```{r explicit_multiple_join_criteria}
+#| echo: true
+#| warning: false
+#| code-fold: true
+
+
+flights |> 
+  select(year:day,hour,origin,tailnum) |> 
+  left_join(wind_speeds,
+            by = join_by(year,month,day,hour,origin)) 
+
+```
+
+Matching on a certain types of column names. Simulating that the flight's column origin is labeled `dep_airport` . If we try to match these two files it won't work.
+
+```{r incorrect_selective_multiple_matching}
+#| echo: true
+#| warning: false
+#| code-fold: true
+
+flights |> 
+  select(year:day,hour,dep_airport = origin,tailnum) |> 
+  left_join(wind_speeds,
+            by = join_by(year,month,day,hour,origin)) 
+
+
+
+```
+
+To make it match, you have to specify that dep_airport == origin in the join_by statement.
+
+```{r correct_selective_matching}
+#| echo: true
+#| warning: false
+#| code-fold: true
+
+flights |> 
+  select(year:day,hour,dep_airport = origin,tailnum) |> 
+  left_join(wind_speeds,
+            by = join_by(year,month,day,hour,dep_airport == origin)) 
+
 
 ```
