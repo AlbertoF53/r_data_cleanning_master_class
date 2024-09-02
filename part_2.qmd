@@ -1057,7 +1057,7 @@ scores |>
 
 In the payments example, we have suffixes that need to be removed. Under the name column, the suffix `_payment_date` needs to be removed. This string appears at the end of the column. Unfortunately pivot longer does not have suffix function, however, it has `names_pattern()` function, which works similarly to `str_extract()`. We need to add a group `(\\w*)` of characters preceding the strings to be removed. This group of characters is to be kept.
 
-Another option is to use the regular expression find me anything `(.)`. But one dot stands for only one letter. But adding `+` makes it plural.
+Another option is to use the regular expression find me anything `(.)`. But one dot stands for only one letter. But adding `+` makes it plural. Or of this dot or character, find me as many as you can find.
 
 ```{r cleaing_payments_example}
 #| echo: true
