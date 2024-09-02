@@ -6,6 +6,7 @@ format:
   html:
     code-link: true
     code-fold: true
+    code-summary: "Show the code"
     self-contained: true
     embed-resources: true
     toc: true
@@ -707,6 +708,8 @@ If we try to merge the two files as before a mistake will occur because R does n
 #| warning: false
 #| code-fold: true
 
+library(nycflights23)
+
 #* Eliminating duplicate names of airports.  
 #* The end result of filtering is selecting NY airports only
 
@@ -715,10 +718,10 @@ airports <- nycflights23::airports |>
   filter(faa %in% unique(flights$origin))
 
 #The following script generates an error. There is no common key
-flights |> 
-  select(year:dep_time, origin) |> 
-  left_join(airports)
-  
+# flights |> 
+#   select(year:dep_time, origin) |> 
+#   left_join(airports)
+#   
 
 
 ```
@@ -907,6 +910,8 @@ Matching based on multiple criteria instead of just two columns. We want to enri
 #| warning: false
 #| code-fold: true
 
+library(nycflights23)
+
 flights |> 
   select(year:day,hour,origin,tailnum) |> 
   left_join(wind_speeds)
@@ -916,7 +921,7 @@ flights |>
 
 Notice that without specifying the matching criteria the left_join worked. It did so because the two data set share some variables in common as shown in the output:
 
-by = join_by(year, month, day, hour, origin)\`
+\`by = join_by(year, month, day, hour, origin)\`
 
 ```{r explicit_multiple_join_criteria}
 #| echo: true
@@ -938,10 +943,10 @@ Matching on a certain types of column names. Simulating that the flight's column
 #| warning: false
 #| code-fold: true
 
-flights |> 
-  select(year:day,hour,dep_airport = origin,tailnum) |> 
-  left_join(wind_speeds,
-            by = join_by(year,month,day,hour,origin)) 
+# flights |> 
+#   select(year:day,hour,dep_airport = origin,tailnum) |> 
+#   left_join(wind_speeds,
+#             by = join_by(year,month,day,hour,origin)) 
 
 
 
@@ -960,4 +965,128 @@ flights |>
             by = join_by(year,month,day,hour,dep_airport == origin)) 
 
 
+```
+
+## Lesson 15: Rearranging data from wide to long format with pivot_longer()
+
+Differences between wide and long format
+
+![](images/differences_wide_longer.PNG){fig-align="center" width="352"}
+
+### Pivot longer
+
+illustrating these two concepts using the scores data set titled scores, which is in a wide format. Accordingly, date is the id, scores A to C are the key and the values are the score.
+
+Let's illustrate the utility of pivot_longer by summarizing
+
+```{r changing_wide_to_longer}
+#| echo: true
+#| warning: false
+#| code-fold: true
+
+scores <- read_csv('data/Part_2/13_scores_by_date.csv')
+
+scores |> 
+  #Other options for cols: cols = 2:5 cols = contains('score')
+  pivot_longer(cols = -date, 
+               names_to = "score_category",
+               values_to = "score")
+
+scores |> 
+  pivot_longer(cols = -date, #cols = 2:5 cols = contains('score')
+               names_to = "score_category",
+               values_to = "score") |> 
+  summarise(
+    mean_score = mean(score),
+    .by = score_category
+  )
+
+
+
+```
+
+### Another example
+
+This file needs to be rearrange before pivoting longer. Notice that `payment` the value column appears first.
+
+```{r pivot_longer_example_payments}
+#| echo: true
+#| warning: false
+#| code-fold: true
+
+payments <-  read_csv('data/Part_2/14_payments.csv')
+
+payments |> 
+  pivot_longer(
+    cols = contains('date')
+  )
+
+#We need meaning names for the new columns
+
+payments |> 
+  pivot_longer(
+    cols = contains('date'),
+    names_to = "payment_date",
+    values_to = "date"
+  )
+
+```
+
+## Lesson 16: Advanced column name tricks with pivot_longer()
+
+### scores data set example
+
+Regarding the scores data set. The end result of the pivot longer is to have score categories with the label score_cat repeated. This does not make sense afterwards. We could do some cleaning. We can target the score_category column and using regex to remove unwanted strings. The `names_prefix()` can be used to removed unwanted `score_` text.
+
+```{r cleaning_scores_dataset}
+#| echo: true
+#| warning: false
+#| code-fold: true
+
+scores |> 
+  pivot_longer(cols = -date, 
+               names_to = "score_category",
+               values_to = "score",
+               names_prefix = "score_")
+
+
+
+```
+
+### payments example
+
+In the payments example, we have suffixes that need to be removed. Under the name column, the suffix `_payment_date` needs to be removed. This string appears at the end of the column. Unfortunately pivot longer does not have suffix function, however, it has `names_pattern()` function, which works similarly to `str_extract()`. We need to add a group `(\\w*)` of characters preceding the strings to be removed. This group of characters is to be kept.
+
+Another option is to use the regular expression find me anything `(.)`. But one dot stands for only one letter. But adding `+` makes it plural.
+
+```{r cleaing_payments_example}
+#| echo: true
+#| warning: false
+#| code-fold: true
+
+#One option to handle the group of characters
+payments |> 
+  pivot_longer(
+    cols = contains('date'),
+    names_pattern = "(\\w*)_payment_date"
+  )
+
+#The next option is to list the characters
+
+payments |> 
+  pivot_longer(
+    cols = contains('date'),
+    names_pattern = "(last|next|final)_payment_date"
+  ) |> 
+  arrange(utility,value)
+
+# Another regular expression
+# Find me anything (.)
+
+payments |> 
+  pivot_longer(
+    cols = contains('date'),
+    names_pattern = "(.+)_payment_date"
+  ) |> 
+  arrange(utility,value)
 ```
