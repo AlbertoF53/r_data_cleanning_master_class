@@ -1036,7 +1036,7 @@ payments |>
 
 ### scores data set example
 
-Regarding the scores data set. The end result of the pivot longer is to have score categories with the label score_cat repeated. This does not make sense afterwards. We could do some cleaning. We can target the score_category column and using regex to remove unwanted strings. The `names_prefix()` can be used to removed unwanted `score_` text.
+Regarding the scores data set. The end result of the pivot longer is to have score categories with the label score_cat repeated. This does not make sense afterwards. We could do some cleaning. We can target the score_category column and using regex to remove unwanted strings. The `names_prefix()` can be used to removed the unwanted `score_` at the start of the string.
 
 ```{r cleaning_scores_dataset}
 #| echo: true
@@ -1057,7 +1057,7 @@ scores |>
 
 In the payments example, we have suffixes that need to be removed. Under the name column, the suffix `_payment_date` needs to be removed. This string appears at the end of the column. Unfortunately pivot longer does not have suffix function, however, it has `names_pattern()` function, which works similarly to `str_extract()`. We need to add a group `(\\w*)` of characters preceding the strings to be removed. This group of characters is to be kept.
 
-Another option is to use the regular expression find me anything `(.)`. But one dot stands for only one letter. But adding `+` makes it plural. Or of this dot or character, find me as many as you can find.
+Another option is to use the regular expression find me anything `(.)`. But one dot stands for only one letter. But adding `+` makes it plural. This means: "of this dot or character, find me as many as you can". Notice the dot signifies to count at the end of the string.
 
 ```{r cleaing_payments_example}
 #| echo: true
@@ -1068,7 +1068,9 @@ Another option is to use the regular expression find me anything `(.)`. But one 
 payments |> 
   pivot_longer(
     cols = contains('date'),
-    names_pattern = "(\\w*)_payment_date"
+    names_to = "payment_date",
+    values_to = 'date',
+    names_pattern = "(\\w+)_payment_date"
   )
 
 #The next option is to list the characters
@@ -1076,9 +1078,11 @@ payments |>
 payments |> 
   pivot_longer(
     cols = contains('date'),
+    names_to = "payment_date",
+    values_to = 'date',
     names_pattern = "(last|next|final)_payment_date"
   ) |> 
-  arrange(utility,value)
+  arrange(utility,date)
 
 # Another regular expression
 # Find me anything (.)
@@ -1086,7 +1090,111 @@ payments |>
 payments |> 
   pivot_longer(
     cols = contains('date'),
+    names_to = "payment_date",
+    values_to = 'date',
     names_pattern = "(.+)_payment_date"
   ) |> 
-  arrange(utility,value)
+  arrange(utility,date)
 ```
+
+## Lesson 17: Making long data wide with pivot_wider()
+
+Pivot longer is more frequently used than `pivot-wider()` . However, pivot_wider is extremely useful when creating tables. In pivot wider you need to revert the `names_to` and `values_to`.
+
+```{r making_long_data_pivot_wider}
+#| echo: true
+#| warning: false
+#| code-fold: true
+
+
+payments |> 
+  pivot_longer(
+    cols = contains('date'),
+    names_to = "payment_date",
+    values_to = "date",
+    names_pattern = "(.+)_payment_date"
+  ) |> 
+  pivot_wider(
+    names_from = 'payment_date',
+    values_from = 'date'
+  )
+
+
+
+```
+
+Next is a reserve name, this is why the label appears with ticks. We can use the pivot_wider function `names_glue()`. If we want a variable name we use curly brackets `{ }`. And then we write the text we want to add outside the curly brackets. In this case we want to rebuild the original value labels last_payment_date, next_payment_date and final_payment_date. Thus we add the name of the variable containing the labels; namely, payment_date
+
+```{r removing_reserve_label_pivot_wider}
+#| echo: true
+#| warning: false
+#| code-fold: true
+
+payments |> 
+  pivot_longer(
+    cols = contains('date'),
+    names_to = "payment_date",
+    values_to = "date",
+    names_pattern = "(.+)_payment_date"
+  ) |> 
+  pivot_wider(
+    names_from = 'payment_date',
+    values_from = 'date',
+    #identify variable within {}, then add legend outside {}
+    names_glue = '{payment_date}_payment_date'
+  )
+
+```
+
+### Identifying id column
+
+pivot_wider has an option to identify the variable or variables that are key. It is identified as `id_cols()`. By identifying utility as id column eliminates the payment column.
+
+```{r pivot_longwer_id_columns}
+#| echo: true
+#| warning: false
+#| code-fold: true
+
+payments |> 
+  pivot_longer(
+    cols = contains('date'),
+    names_to = "payment_date",
+    values_to = "date",
+    names_pattern = "(.+)_payment_date"
+  ) |> 
+  pivot_wider(
+    id_cols = c('utility'),
+    names_from = 'payment_date',
+    values_from = 'date',
+    #identify variable within {}, then add legend outside {}
+    names_glue = '{payment_date}_payment_date'
+  )
+
+#Includying payment as an id column
+
+payments |> 
+  pivot_longer(
+    cols = contains('date'),
+    names_to = "payment_date",
+    values_to = "date",
+    names_pattern = "(.+)_payment_date"
+  ) |> 
+  pivot_wider(
+    id_cols = c('utility', 'payment'),
+    names_from = 'payment_date',
+    values_from = 'date',
+    #identify variable within {}, then add legend outside {}
+    names_glue = '{payment_date}_payment_date'
+  )
+
+```
+
+## Lesson 18: Cleaning up Excel Pivot Tables
+
+```{r}
+#| echo: true
+#| warning: false
+#| code-fold: true
+```
+
+## 
