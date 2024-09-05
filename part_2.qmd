@@ -29,7 +29,8 @@ library(tidyverse)
 library(janitor)
 library(lubridate)
 library(openxlsx)
-library(jsonlite)
+library(tidyxl)
+library(unpivotr)
 
 
 ```
@@ -1191,10 +1192,336 @@ payments |>
 
 ## Lesson 18: Cleaning up Excel Pivot Tables
 
-```{r}
+Watch [tidyxl](https://nacnudus.github.io/tidyxl/) animation. More information on tidyxl is [here](https://cran.r-project.org/web/packages/tidyxl/vignettes/tidyxl.html).
+
+Using `xlsx_cells()` function from tidyxl package. The tidyxl package is new. The `xlsx_cells()` function imports data from spreadsheets without coercing it into a rectangle. Each cell is represented by a row in a data frame, giving the cell's address, contents, formula, height, width, and keys to look up the cell's formatting in the return value of `xlsx_formats()`.
+
+The original file, 17_rand_numbers.xlsx, is a pivot table. Variables are organized by country, region, age and gender. The tidyxl package help us to prepare the excel pivot data to be processed by other packages, like unpivotr with its function `rectify()`. The function transform the data into a rectangular fashion.
+
+```{r cleaning_pivot_part_1}
 #| echo: true
 #| warning: false
 #| code-fold: true
+
+library(tidyxl)
+library(unpivotr)
+
+rand_numbers_cells <- tidyxl::xlsx_cells(
+  'data/Part_2/17_rand_numbers.xlsx')
+
+rand_numbers_cells |> 
+  unpivotr::rectify()
+
 ```
 
-## 
+Once the file is rectified we can strip the labels step by step. We can get rid of the Country A and Country B labels. They are located under the column labeled "3(C)". Then we can get rid of the regions. And so on.
+
+We start by stripping the labels step by step. The first is to target Gender, Male, Female and NAs. These descriptors are metadata, not data. To get rid off those entries, we need to eliminate those entries under the character column that have the words, gender and age. We need to filter the cells where we have missing values or things are not gender or age.
+
+Next we can start rectifying it by `behading` it. [`behead()`](http://127.0.0.1:42565/help/library/unpivotr/help/behead) takes one level of headers from a pivot table and makes it part of the data. The main purpose is to eliminate 3(C) column. We want to behave on the left style, because the country labels are at the left of our original pivot table. So we use `left-up`. And then we want to assign the contents into a column we would label `country`.
+
+But, if we look at the cells, we discover where the column country is.
+
+```{r cleaning_pivot_part_2}
+#| echo: true
+#| warning: false
+#| code-fold: true
+
+rand_numbers_cells |> 
+  filter(
+    is.na(character) | !(
+      character %in% c('Gender', 'Age')
+      )
+    ) |>
+  unpivotr::rectify()
+  
+#Now we can start behading this 
+  
+test3 <- rand_numbers_cells |> 
+  filter(is.na(character) | !(character %in% c('Gender', 'Age')
+      )
+    ) |>
+  unpivotr::behead('left-up', name = 'country') |> 
+  unpivotr::rectify()
+
+```
+
+Next step eliminating the extra country column. And we put the values in a new column label 'region'.
+
+```{r cleaning_pivot_part_3}
+#| echo: true
+#| warning: false
+#| code-fold: true
+
+rand_numbers_cells |> 
+  filter(
+    is.na(character) | !(
+      character %in% c('Gender', 'Age')
+      )
+    ) |>
+  unpivotr::behead('left-up',name = 'country'
+  ) |> 
+   unpivotr::behead('left',name = 'region'
+  ) |> 
+  unpivotr::rectify()
+
+
+```
+
+Doing the same for gender.
+
+```{r cleaning_pivot_part_4}
+#| echo: true
+#| warning: false
+#| code-fold: true
+
+rand_numbers_cells |> 
+  filter(
+    is.na(character) | !(
+      character %in% c('Gender', 'Age')
+      )
+    ) |>
+  unpivotr::behead('left-up',name = 'country'
+  ) |>
+   unpivotr::behead('left',name = 'region'
+  ) |>
+  unpivotr::behead('up-left',name = 'gender'
+  ) |>
+  unpivotr::rectify()
+  
+  
+  
+  unpivotr::behead('up-left',name = 'age'
+  ) |>
+  unpivotr::rectify()
+
+
+
+```
+
+Next we need to do the same for age
+
+```{r cleaning_pivot_part_5}
+#| echo: true
+#| warning: false
+#| code-fold: true
+
+rand_numbers_cells |> 
+  filter(
+    is.na(character) | !(
+      character %in% c('Gender', 'Age')
+      )
+    ) |>
+  unpivotr::behead('left-up',name = 'country'
+  ) |>
+   unpivotr::behead('left',name = 'region'
+  ) |>
+  unpivotr::behead('up-left',name = 'gender'
+  ) |>
+  unpivotr::behead('up',name = 'age'
+  ) |>
+  unpivotr::rectify()
+  
+
+```
+
+### Final data creation
+
+We no longer need to rectify. All what we need is to select the new columns. Those are located at the end of the data frame. To see those 4 new columns (country, region, gender and age) you need to create a temporary file. And also include the variable/column numeric. For this procedure to work, you need to eliminate the rectify function.
+
+```{r cleaning_pivot_part_final}
+#| echo: true
+#| warning: false
+#| code-fold: true
+
+
+rand_numbers_cells |> 
+  filter(
+    is.na(character) | !(
+      character %in% c('Gender', 'Age')
+      )
+    ) |>
+  unpivotr::behead('left-up',name = 'country'
+  ) |>
+   unpivotr::behead('left',name = 'region'
+  ) |>
+  unpivotr::behead('up-left',name = 'gender'
+  ) |>
+  unpivotr::behead('up',name = 'age'
+  ) |>
+  unpivotr::rectify()
+
+#Selecting country, region, age, gender, numeric columns
+
+rand_numbers_cells |> 
+  filter(
+    is.na(character) | !(
+      character %in% c('Gender', 'Age')
+      )
+    ) |>
+  unpivotr::behead('left-up',name = 'country'
+  ) |>
+   unpivotr::behead('left',name = 'region'
+  ) |>
+  unpivotr::behead('up-left',name = 'gender'
+  ) |>
+  unpivotr::behead('up',name = 'age'
+  ) |>
+  #Excludying rectity
+  #unpivotr::rectify() |>
+  select(country:age,numeric)
+
+```
+
+## Lesson 19 Beheading with multiple data formats
+
+### Locating unwanted labels
+
+Dealing with a complex and unbalanced spreadsheet with several pivot tables. Under the column `1(A)` we have a couple of labels, City, Department, that are not part of the data, but they describe the data
+
+```{r beheading_multiple_formats_1}
+#| echo: true
+#| warning: false
+#| code-fold: true
+
+library(tidyxl)
+
+sales_cells <- tidyxl::xlsx_cells('data/Part_2/16_faker_sales_modified.xlsx')
+
+test <- sales_cells |> 
+  unpivotr::rectify()
+
+sales_cells |> 
+  unpivotr::rectify()
+
+
+```
+
+### Eliminating unwanted labels
+
+We first want to focus our attention to the second column and on only. The first column refers to the excel spreadsheet (sheet 1)
+
+```{r beheading_multiple_formats_2}
+#| echo: true
+#| warning: false
+#| code-fold: true
+
+sales_cells |> 
+  filter(col > 1) |> 
+  unpivotr::rectify()
+
+
+
+```
+
+### Cleaning city rows
+
+Using up-left again mode. The next row under 2(B) displays the sales department, groceries. We are left with the data observations displaying customer number, name, gender, etc.
+
+```{r beheading_multiple_formats_3}
+#| echo: true
+#| warning: false
+#| code-fold: true
+
+sales_cells |> 
+  filter(col > 1) |> 
+   unpivotr::behead(
+     'up-left',
+     name = 'city') |>
+  unpivotr::behead(
+     'up-left',
+     name = 'department') |>
+  unpivotr::behead(
+     'up',
+     name = 'variable') |>
+    unpivotr::rectify()
+
+
+
+
+```
+
+### Displaying variables created
+
+The variables created are city, department and variable.
+
+```{r displaying_variables_created}
+#| echo: true
+#| warning: false
+#| code-fold: true
+
+test <- sales_cells |> 
+  filter(col > 1) |> 
+   unpivotr::behead(
+     'up-left',
+     name = 'city') |>
+  unpivotr::behead(
+     'up-left',
+     name = 'department') |>
+  unpivotr::behead(
+     'up',
+     name = 'variable')
+
+
+behaded_sales_cells <- sales_cells |> 
+  filter(col > 1) |> 
+   unpivotr::behead(
+     'up-left',
+     name = 'city') |>
+  unpivotr::behead(
+     'up-left',
+     name = 'department') |>
+  unpivotr::behead(
+     'up',
+     name = 'variable') |> 
+  select(city:variable, character,numeric,row)
+```
+
+### Further cleaning the file
+
+We want to have the character and numeric columns in one single column using the function `coalesce()`. Given a set of vectors, `coalesce()` finds the first non-missing value at each position. It's inspired by the SQL `COALESCE` function which does the same thing for SQL `NULL`s. We need to temporarily convert the numeric variable as character otherwise coalesce won't work.
+
+After the merging or coalescing of character and numeric columns into cell values, we won't need the two columns.
+
+```{r cleaning_the_file_behaded}
+#| echo: true
+#| warning: false
+#| code-fold: true
+
+behaded_sales_cells |> 
+  mutate(
+    cell_values = coalesce(character, as.character(numeric))
+  ) |> 
+  select(-c(character,numeric))
+
+
+
+```
+
+### Wider transforming
+
+Now we can transform the database into a wider format. Take the names of the column `variable` and the values from the `cell_values` column. The rest of the variables, `city` and `department`, would serve as unique identifier.
+
+```{r widening_behaded_file}
+#| echo: true
+#| warning: false
+#| code-fold: true
+
+
+behaded_sales_cells |> 
+  mutate(
+    cell_values = coalesce(character, as.character(numeric))
+  ) |> 
+  select(-c(character,numeric)) |> 
+  pivot_wider(
+    names_from = 'variable',
+    values_from = 'cell_values'
+  ) |> 
+  #Getting rid of the row column
+  select(-row) |> 
+  #Recoding price as numeric
+  mutate(price = parse_number(price))
+
+
+
+```
