@@ -31,6 +31,7 @@ library(lubridate)
 library(openxlsx)
 library(tidyxl)
 library(unpivotr)
+library(skimr)
 
 
 ```
@@ -1194,6 +1195,10 @@ payments |>
 
 Watch [tidyxl](https://nacnudus.github.io/tidyxl/) animation. More information on tidyxl is [here](https://cran.r-project.org/web/packages/tidyxl/vignettes/tidyxl.html).
 
+![](images/original_table.png "Original table"){width="208"}
+
+![](images/coerced_table.png){fig-align="center" width="303"}
+
 Using `xlsx_cells()` function from tidyxl package. The tidyxl package is new. The `xlsx_cells()` function imports data from spreadsheets without coercing it into a rectangle. Each cell is represented by a row in a data frame, giving the cell's address, contents, formula, height, width, and keys to look up the cell's formatting in the return value of `xlsx_formats()`.
 
 The original file, 17_rand_numbers.xlsx, is a pivot table. Variables are organized by country, region, age and gender. The tidyxl package help us to prepare the excel pivot data to be processed by other packages, like unpivotr with its function `rectify()`. The function transform the data into a rectangular fashion.
@@ -1289,13 +1294,6 @@ rand_numbers_cells |>
   ) |>
   unpivotr::rectify()
   
-  
-  
-  unpivotr::behead('up-left',name = 'age'
-  ) |>
-  unpivotr::rectify()
-
-
 
 ```
 
@@ -1522,6 +1520,782 @@ behaded_sales_cells |>
   #Recoding price as numeric
   mutate(price = parse_number(price))
 
+
+
+```
+
+## Lesson 20 Beheading colored cells
+
+In the previous example the data were well organized. Country and Region had their our column, while gender and age had their own row. But the data set below is organized in a subheading manner; this is to say Region information is listed under Country column. The only thing that helps to distinguish country from region is the use of blue color for the row Country.
+
+```{r behading_colored_cells_1}
+#| echo: true
+#| warning: false
+#| code-fold: true
+
+rand_cells <- tidyxl::xlsx_cells('data/Part_2/18_rand_numbers_harder.xlsx')
+
+#Passing rand_cells to unpivotr & rectify it
+
+rand_cells |> 
+  unpivotr::rectify()
+
+
+```
+
+After rectify it, the file shows that Region and Country are in the same column labeled `3(C)` . We can proceed by telling `behade()`function to treat Regions as missing values under specific conditions. For that we need to add another `behead_if()` to specify those conditions. We can create a logical column to aid in the selection of the variable.
+
+Notice that after specifying the behead_condition, the characters of Country are recoded as NAs in the column `3(C).`
+
+```{r behading_colored_cells_2}
+#| echo: true
+#| warning: false
+#| code-fold: true
+
+#Creating a logical condition to aid in beheading
+
+behead_condition <- str_detect(
+  rand_cells$character,	'Country')
+
+rand_cells |> 
+  #Adding special conditions to treat Regions as NAs
+  unpivotr::behead_if(
+    behead_condition,
+    direction = 'left-up',
+    name = "country"
+  ) |> 
+  unpivotr::rectify()
+
+
+
+```
+
+Next we could take the code we had in a previous example
+
+```{r behading_colored_cells_3}
+#| echo: true
+#| warning: false
+#| code-fold: true
+
+behead_condition <- str_detect(
+  rand_cells$character,	'Country')
+
+rand_cells |> 
+  #Adding special conditions to treat Regions as NAs
+  unpivotr::behead_if(
+    behead_condition,
+    direction = 'left-up',
+    name = "country"
+  ) |> 
+  unpivotr::behead('left',
+                   name = 'region'
+  ) |>
+  unpivotr::behead('up-left',
+                   name = 'gender'
+  ) |>
+  unpivotr::behead('up',
+                   name = 'age'
+  ) |> 
+  select(country:age,numeric)
+
+#We can also address the missing values
+
+rand_cells |> 
+  #Adding special conditions to treat Regions as NAs
+  unpivotr::behead_if(
+    behead_condition,
+    direction = 'left-up',
+    name = "country"
+  ) |> 
+  unpivotr::behead('left',
+                   name = 'region'
+  ) |>
+  unpivotr::behead('up-left',
+                   name = 'gender'
+  ) |>
+  unpivotr::behead('up',
+                   name = 'age'
+  ) |> 
+  select(country:age,numeric) |> 
+  #Replacing NA for the label Total in region column
+  mutate(
+    region = if_else(is.na(region), 'Total', region)
+  )
+
+
+```
+
+This approach works if we have the excel file `18_rand_numbers_harder.xlsx` neatly organized. We can do so by relying on the cell colors as identifier. For that we can recalculate the behead_condition based on the background colors used in the excel file. For that we use the excel format `xlsx_format()` function. Executing this it reveals the hidden features using glimpse as well.
+
+Notice glimpse reveals there is an entry `$fill` which can tell us the color. We can pluck the value.
+
+```{r revealing_color_codes}
+#| echo: true
+#| warning: false
+#| code-fold: true
+
+tidyxl::xlsx_formats(
+  'data/Part_2/18_rand_numbers_harder.xlsx') |> 
+  pluck('local','fill') |> 
+  glimpse()
+
+```
+
+The pluck function along glimpse reveals that the fill has four colors: "FFDEE7E5", "FFDEE6EF", "FFDEE7E5" and "FFDEE6EF". Next we can provide the address as to where to find the colors.
+
+```{r plucking_4_colors_rows}
+#| echo: true
+#| warning: false
+#| code-fold: true
+
+#Plucking the 4 colors used in the excel file
+
+#Creating a vector of background colors
+
+bg_colors <- tidyxl::xlsx_formats(
+  'data/Part_2/18_rand_numbers_harder.xlsx') |> 
+  pluck('local','fill','patternFill','fgColor', 'rgb') |> 
+  glimpse()
+
+```
+
+Notice Albert was able to identify the color code using excel fill color. I consulted [YouTube](https://www.youtube.com/watch?v=iCB-IV6SVOQ) on identifying RGB and HEX color in EXCEL for Mac users. In this case, the first color was `DEE6EF`.
+
+In our original `rand_cells` dataframe we have a column labeled `local_format_id`. If we look at rand_cells\$local_format_id we discover a bunch of numbers, most of it with the number 8.
+
+If we look at `bg_colors` vector, we find 8 entries. We can find the color each cell has by just going into bg_colors vector, and then using `rand_cells' local_format_id` as the index as follows:
+
+`bg_colors[rand_cells$local_format_id]`
+
+It gives us a whole bunch of colors and missing values.
+
+Next we want to check in which of those cells can I find this string `DEE6EF`
+
+Then we can do this our next behead condition. This option works as well as the previous version of beheading, but in this occasion we have made the condition dependent of the color of the cell.
+
+```{r background_colors}
+#| echo: true
+#| warning: false
+#| code-fold: true
+
+#Depicting the background colors
+bg_colors[rand_cells$local_format_id]
+
+#Checking the cell location of the string DEE6EF
+
+str_detect(
+  bg_colors[rand_cells$local_format_id], 'DEE6EF'
+)
+
+#Making this string our new behead condition
+
+behead_condition <- str_detect(
+  bg_colors[rand_cells$local_format_id], 'DEE6EF'
+)
+
+rand_cells |> 
+  #Adding new behead condition to detect DEE6EF color
+  unpivotr::behead_if(
+    behead_condition,
+    direction = 'left-up',
+    name = "country"
+  ) |> 
+  unpivotr::behead('left',
+                   name = 'region'
+  ) |>
+  unpivotr::behead('up-left',
+                   name = 'gender'
+  ) |>
+  unpivotr::behead('up',
+                   name = 'age'
+  ) |> 
+  select(country:age,numeric) |> 
+  #Replacing NA for the label Total in region column
+  mutate(
+    region = if_else(is.na(region), 'Total', region)
+  )
+
+
+```
+
+## Lesson 21 Putting it together
+
+Albert put together three dataset to clean. The first two files are excel files. The third file is an csv file. The first two data sets describe the location of the warehouse, the product and the supplier id. The third data set provides information about the supplier itself (id, name, contact person, email, contract dates, and supplier rating. All three data sets are interconnected.
+
+First step is to clean the each of the three data sets. Then, we would conduct some data analysis.
+
+### First data set
+
+#### Creating a tibble file
+
+Loading the data set, and transform it as tibble. Doing so it duplicates the variable labels or headers.
+
+```{r first_data_clean_1}
+#| echo: true
+#| warning: false
+#| code-fold: true
+
+openxlsx::read.xlsx(
+  'data/Part_2/19a_Shipments_Details_mod.xlsx') |> 
+  as_tibble()
+
+```
+
+#### Eliminating unwanted header
+
+The headers added by tibble are not needed. We can use the r`ead.xlsx` function `startRow` = 2. Next we can use janitor to clean names. We can also use skimr library `skim()` function to request summary statistics.
+
+```{r removing_first_header}
+#| echo: true
+#| warning: false
+#| code-fold: true
+
+openxlsx::read.xlsx(
+  'data/Part_2/19a_Shipments_Details_mod.xlsx',
+  startRow = 2) |> 
+  as_tibble() |> 
+  janitor::clean_names() |> 
+  skimr::skim()
+
+```
+
+skim reveals that inside the numeric part we have all of the dates (e.g., shipment, expected delivery, actual delivery and weight). However, all dates were transformed into numbers. They need to be recoded as dates.
+
+```{r recoding_numbers_as_dates}
+#| echo: true
+#| warning: false
+#| code-fold: true
+
+openxlsx::read.xlsx(
+  'data/Part_2/19a_Shipments_Details_mod.xlsx',
+  startRow = 2) |> 
+  as_tibble() |> 
+  janitor::clean_names() |> 
+  mutate(
+    across(.cols = contains('date'),
+           function(x) as_date(x))
+  )
+
+#* Another option to transform numeric into date is using 
+#* janitor::excel_numeric_to_date()
+
+openxlsx::read.xlsx(
+  'data/Part_2/19a_Shipments_Details_mod.xlsx',
+  startRow = 2) |> 
+  as_tibble() |> 
+  janitor::clean_names() |> 
+  mutate(
+    across(.cols = contains('date'),
+           function(x) janitor::excel_numeric_to_date(x))
+  )
+
+#* Option followed by Albert Rapp
+
+openxlsx::read.xlsx(
+  'data/Part_2/19a_Shipments_Details_mod.xlsx',
+  startRow = 2) |> 
+  as_tibble() |> 
+  janitor::clean_names() |> 
+  mutate( 
+    across(contains('date'),
+           janitor::excel_numeric_to_date))
+
+    
+
+```
+
+#### days_shipped_to_delivered
+
+Next we create a new column labeled day_shipped_to_delivered, which is going to be an interval. For this we use `lubridate` . Once we have an interval, we can divide it by an interval of length 1, or one day. We rely on the `days()` function `/days(1)`.
+
+Using `skim()` reveals that the mean of days_shipped_to_delivered is 19.5 days, ranging from 5 to 35 days.
+
+```{r interval_dates_to_delivered}
+#| echo: true
+#| warning: false
+#| code-fold: true
+
+library(lubridate)
+
+openxlsx::read.xlsx(
+  'data/Part_2/19a_Shipments_Details_mod.xlsx',
+  startRow = 2) |> 
+  as_tibble() |> 
+  janitor::clean_names() |> 
+  mutate(
+    across(.cols = contains('date'),
+           function(x) as_date(x)),
+    dates_shipped_to_delivered = interval(
+      start = shipment_date,
+      end =  actual_delivery_date) / days(x = 1)
+  ) |> 
+  skimr::skim()
+  
+```
+
+#### Using expected delivery date
+
+We can estimate the difference between expected delivery date and the actual one.
+
+The average days expected to actual delivery is 1.41, and the minimum is to expect the package to be delivered 3 days before. The highest delay is 7 days.
+
+```{r days_expectedt_to_actual}
+#| echo: true
+#| warning: false
+#| code-fold: true
+
+library(lubridate)
+
+openxlsx::read.xlsx(
+  'data/Part_2/19a_Shipments_Details_mod.xlsx',
+  startRow = 2) |> 
+  as_tibble() |> 
+  janitor::clean_names() |> 
+  mutate(
+    across(.cols = contains('date'),
+           function(x) as_date(x)),
+    days_shipped_to_delivered = interval(
+      start = shipment_date,
+      end =  actual_delivery_date) / days(x = 1),
+    days_expected_to_actual = interval(
+      start = expected_delivery_date,
+      end =  actual_delivery_date) / days(x = 1)
+  ) |> 
+  skimr::skim()
+
+```
+
+#### Additional calculations
+
+Calculating mean delivery days and expected days to delivered by country of origin. We can save the resulting table
+
+```{r deliveries_by_country}
+#| echo: true
+#| warning: false
+#| code-fold: true
+
+shipments <- openxlsx::read.xlsx(
+  'data/Part_2/19a_Shipments_Details_mod.xlsx',
+  startRow = 2) |> 
+  as_tibble() |> 
+  janitor::clean_names() |> 
+  mutate(
+    across(.cols = contains('date'),
+           function(x) as_date(x)),
+    days_shipped_to_delivered = interval(
+      start = shipment_date,
+      end =  actual_delivery_date) / days(x = 1),
+    days_expected_to_actual = interval(
+      start = expected_delivery_date,
+      end =  actual_delivery_date) / days(x = 1)
+  )
+
+shipments |> 
+  summarise(
+    mean_delivery_days = mean(
+      days_shipped_to_delivered, na.rm = TRUE),
+    mean_expected_days = mean(
+      days_expected_to_actual, na.rm = TRUE
+    ),
+    .by = origin_country
+  )
+
+mean_delays_by_country <- shipments |> 
+  summarise(
+    mean_delivery_days = mean(
+      days_shipped_to_delivered, na.rm = TRUE),
+    mean_expected_days = mean(
+      days_expected_to_actual, na.rm = TRUE
+    ),
+    .by = origin_country
+  )
+
+```
+
+### Second data set
+
+#### *Dealing with duplicated id using .name_repair*
+
+The first time the first script below runs, we get a data set instead of a tibble. As before, in this script we create a tibble, clean the variable names and eliminate the first row. Notice we have two variables with the same name of id. We get the following error message:
+
+**Error in `as_tibble()`: ! Column name `ID` must not be duplicated. Use `.name_repair` to specify repair.**
+
+We could start eliminating the first row. However, we get an error message due to the fact two variables are labeled ID (locations 1 and 3 columns). However, error message suggests using tibble's `.name_repair =` function.
+
+We can create a custom function to repair the names of the variables `name_repair` within the as_tibble function. Steps:
+
+1.  Calculate the position of the column or name using `seq_along()`. Basically numbers each column in the database. For more information about seq_along() see [**seq_along in R: A Comprehensive Guide**](https://sqlpad.io/tutorial/seq_along-r-comprehensive-guide/)
+
+2.  Next we can say that comes in the first two columns, Warehouse and ID. And then the things that are in the 3th and 6th columns. We can add a prefix
+
+3.  If the case number is less or equal to 2, assign the prefix `warehouse_` to the variable and if the number is less than 7, assign the prefix \`product\_\`. In all cases, we don't use prefix.
+
+4.  Given the prefix, we use the `paste0` function to affix the labels `warehouse_` and`product_`to concatenate things
+
+5.  Then we can clean the names using janitor::clean_names() function
+
+6.  Finally, we can transform date variables are dates
+
+```{r second_data_function_approach_duplicate}
+#| echo: true
+#| warning: false
+#| code-fold: true
+
+#* This option generates error due to duplicated IDs
+
+# openxlsx::read.xlsx(
+#   'data/Part_2/19b_Warehouse_Inventory_mod.xlsx',
+#   startRow = 2 ) |>
+#   as_tibble()
+
+
+#* Using .name_repair()
+openxlsx::read.xlsx(
+  'data/Part_2/19b_Warehouse_Inventory_mod.xlsx',
+  startRow = 2) |>
+  as_tibble(
+    #Creating a function within .name_repair
+    .name_repair = function(x) {
+    #Sequencing the variables or counting them
+      nmbr <-  seq_along(x)
+      prefix <-  case_when(
+        nmbr <= 2 ~ 'warehouse_',
+        nmbr < 7 ~ 'product_',
+        TRUE ~ ""
+      )
+      #Putting prefix and variable together
+      paste0(prefix,x)
+    }
+  ) |> 
+  janitor::clean_names() |> 
+  #Transforming character variable into date
+  mutate(
+    product_last_restocked_date = 
+      as_date(product_last_restocked_date)
+  )
+
+```
+
+#### *Dealing with duplicated id using beheading style*
+
+Using `tidyxl` library with the `xlsx_cells()` function instead of openxlsx library. Procedure:
+
+1.  Get rid of the first row that only has Warehouse and Product
+
+2.  We behead the first raw and end up with a column labeled `variable_type` after eliminating the label Warehouse. Using unpivotr reveals that the content of `variable_type` is the label `Warehouse`.
+
+3.  Using beheading using up moves ID and Location labels under the label variable. Last column
+
+```{r second_data_beheading_style}
+#| echo: true
+#| warning: false
+#| code-fold: true
+
+warehouse_cells <- tidyxl::xlsx_cells(
+  'data/Part_2/19b_Warehouse_Inventory_mod.xlsx')
+
+warehouse_cells |> 
+  unpivotr::rectify()
+
+#* Creating variable_type which contains the labels 
+#* Warehouse and Product via up-left
+warehouse_cells |> 
+  unpivotr::behead(
+    direction = 'up-left',
+    name = 'variable_type'
+  ) |> 
+  unpivotr::rectify()
+
+#Now we are beheading at the up mode
+
+warehouse_cells |> 
+  unpivotr::behead(
+    direction = 'up-left',
+    name = 'variable_type'
+  ) |> 
+  unpivotr::behead(
+    direction = 'up',
+    'variable'
+  ) |> 
+  unpivotr::rectify()
+
+#* Time to select the variables we need
+
+warehouse_cells |> 
+  unpivotr::behead(
+    direction = 'up-left',
+    name = 'variable_type'
+  ) |> 
+  unpivotr::behead(
+    direction = 'up',
+    'variable'
+  ) |> 
+  select(
+    variable,
+    variable_type,
+    character,
+    numeric,
+    date,
+    row
+  )
+
+#We need to stich things together again
+
+warehouse_cells |> 
+  unpivotr::behead(
+    direction = 'up-left',
+    name = 'variable_type'
+  ) |> 
+  unpivotr::behead(
+    direction = 'up',
+    'variable'
+  ) |> 
+  select(
+    variable,
+    variable_type,
+    character,
+    numeric,
+    date,
+    row
+  ) |> 
+#* We need to coalesce or stich things together the columms
+#* or variables character and date
+#* Notice we are declaring date as numeric
+  mutate(
+    cell_value = coalesce(
+      character,
+      as.character(numeric),
+      as.character(date)
+    ),
+    variable_id = paste0(
+      variable_type,
+      '_',
+      variable
+    )
+  ) |> 
+  select(variable_id,cell_value,row ) |> 
+  pivot_wider(
+    names_from = variable_id,
+    values_from = cell_value
+    ) |> 
+  select(-row) |> 
+  janitor::clean_names() |> 
+  mutate(
+    product_last_restocked_date = ymd(
+      product_last_restocked_date),
+    product_stock_level = as.numeric(
+      product_stock_level)
+    ) |> 
+  skimr::skim()
+
+#Saving the data
+
+warehouses <- warehouse_cells |> 
+  unpivotr::behead(
+    direction = 'up-left',
+    name = 'variable_type'
+  ) |> 
+  unpivotr::behead(
+    direction = 'up',
+    'variable'
+  ) |> 
+  select(
+    variable,
+    variable_type,
+    character,
+    numeric,
+    date,
+    row
+  ) |> 
+  mutate(
+    cell_value = coalesce(
+      character,
+      as.character(numeric),
+      as.character(date)
+    ),
+    variable_id = paste0(
+      variable_type,
+      '_',
+      variable
+    )
+  ) |> 
+  select(variable_id,cell_value,row ) |> 
+  pivot_wider(
+    names_from = variable_id,
+    values_from = cell_value
+    ) |> 
+  select(-row) |> 
+  janitor::clean_names() |> 
+  mutate(
+    product_last_restocked_date = ymd(
+      product_last_restocked_date),
+    product_stock_level = as.numeric(
+      product_stock_level)
+    )
+
+```
+
+### Third data set
+
+#### Suppliers
+
+Moving to the supplier information dataset. While the dataset was loaded without a problem, the column names need to be cleaned.
+
+1.  Cleaning variable names using janitor
+
+2.  Saving cleaned file
+
+3.  Do a subset of the suppliers dataset with the supplier id as well as supplier rating.
+
+4.  Notice that the supplier id is very similar to the product_supplier_id in the warehouses dataset. Consequently, we could rename it as supplier_id
+
+```{r third_data_suppliers}
+#| echo: true
+#| warning: false
+#| code-fold: true
+
+suppliers <- read_csv(
+  'data/Part_2/19c_Suppliers_Info.csv') |> 
+  janitor::clean_names()
+
+#* Subsetting suppliers dataset to include supplier id
+#* and supplier rating
+
+suppliers |> 
+  select(supplier_id, supplier_rating)
+
+# Renaming product_supplier_id in warehouses dataset 
+warehouses <- warehouses |> 
+  rename(supplier_id = product_supplier_id)
+
+```
+
+#### Summary information
+
+Merging warehouses and suppliers rating dataset. Notice we are selecting our smaller subset of suppliers dataset.
+
+Next we can do some data wrangling requesting summary information
+
+```{r merging_ratings_supplies}
+#| echo: true
+#| warning: false
+#| code-fold: true
+
+warehouses |> 
+  left_join(
+    suppliers |> 
+  select(supplier_id, supplier_rating),
+  by = 'supplier_id'
+  ) |>
+  summarise(
+    mean_supplier_rating = mean(supplier_rating, na.rm = TRUE),
+    n = n(),
+    .by = warehouse_location
+  )
+
+
+```
+
+We can also include the supplier country and warehouse location as part of the summary of ratings. Next, we create a mean ratings by location table
+
+```{r merging_ratings_supplies_country}
+#| echo: true
+#| warning: false
+#| code-fold: true
+
+warehouses |> 
+  left_join(
+    suppliers |> 
+  select(supplier_id, supplier_rating, supplier_country),
+  by = 'supplier_id'
+  ) |>
+  summarise(
+    mean_supplier_rating = mean(supplier_rating, na.rm = TRUE),
+    n = n(),
+    .by = c(warehouse_location, supplier_country)
+  )
+
+#Creating a mean ratings by location table
+
+mean_ratings_by_location <- warehouses |> 
+  left_join(
+    suppliers |> 
+  select(supplier_id, supplier_rating, supplier_country),
+  by = 'supplier_id'
+  ) |>
+  summarise(
+    mean_supplier_rating = mean(supplier_rating, na.rm = TRUE),
+    n = n(),
+    .by = c(warehouse_location, supplier_country)
+  )
+
+
+```
+
+#### Merging & visualizing
+
+Since we have the countries now, we could look at our shipments dataset. In this dataset we have country as well. So it would be possible to examine if the ratings are associated with delivery delays. We create a new merged dataset labeled join_dat
+
+Next we can visualize the association between supplier average ratings and average delay in package deliveries. And displaying what country each point belongs to.
+
+```{r merging_shipments_with_mean_country_delays }
+#| echo: true
+#| warning: false
+#| code-fold: true
+
+join_dat <- mean_delays_by_country |> 
+  left_join(
+    mean_ratings_by_location,
+#Notice the key in the 2 data sets have different names
+    by = join_by('origin_country' == 'supplier_country')
+  )
+
+join_dat |> 
+  rename(mean_delay_days = mean_expected_days) |> 
+  ggplot(aes(x = mean_supplier_rating,
+              y = mean_delay_days)) +
+  geom_point(size = 5) +
+  geom_text(
+    aes(label = origin_country),
+    size = 5,
+    hjust = 0,
+    vjust = 0,
+    nudge_x = 0.02
+  ) +
+  theme_minimal(
+    base_size = 18,
+    base_family = 'Source Sans Pro'
+  ) +
+  labs(x = "Mean supplier rating",
+       y = "Mean delay in days")
+
+
+```
+
+#### Visualizing shipments with ratings
+
+Notice that points are over one another requiring the use of jitter
+
+```{r another_visualization}
+#| echo: true
+#| warning: false
+#| code-fold: true
+
+shipments |> 
+  left_join(
+    mean_ratings_by_location,
+    by = join_by('origin_country' == 'supplier_country')
+  ) |> 
+  ggplot(aes(x = mean_supplier_rating,
+              y = days_expected_to_actual)) +
+  geom_violin(aes(group = origin_country)) +
+  geom_jitter(size = 3, alpha = 0.5) +
+  theme_minimal(
+    base_size = 18,
+    base_family = 'Source Sans Pro'
+  ) +
+  labs(x = "Mean supplier rating",
+       y = "Delay in days")
 
 
 ```
