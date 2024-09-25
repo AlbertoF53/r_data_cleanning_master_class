@@ -32,17 +32,18 @@ library(openxlsx)
 library(tidyxl)
 library(unpivotr)
 library(skimr)
+library(tidyxl)
 
 
 ```
 
 ## Lesson 1
 
-Overview of different formats for the same database. Those are csv, csv with header, csv semicolon separator, tsv space separator, csv metadata, excel files, json files, which are annoying looking
+Overview of different formats for the same database. Those are **csv**, **csv** **with header**, **csv semicolon separator**, **tsv space separator**, **csv metadata,** **excel files,** **json files**, which are annoying looking
 
 ## Lesson 2: Same data in in different formats
 
-Loading csv files. It is recommended that you Rstudio project which set up the relative paths. You don't need to use here::here(path)
+Loading csv files. It is recommended that you Rstudio project sets up to relative paths. You don't need to use here::here(path)
 
 ```{r loading_csv_files}
 #| echo: true
@@ -62,7 +63,7 @@ getwd()
 
 ### How to read csv files with no headers.
 
-Loading it directly the first row will be interpreted as the names of the columns. This is not what we want. Instead we need to tell `read_csv()` function that there are no column names.
+Loading the csv file directly will cause R to read the first row as the names of the columns. This is not what we want. Instead we need to tell `read_csv()` function that there are no column names using the option `col_names = FALSE`
 
 By default, csv will assign generic column names.
 
@@ -77,7 +78,7 @@ read_csv('data/Part_2/01_exibble_no_headers.csv',
 
 ```
 
-Instead, we can create a vector with the column names
+Instead, we can create a vector with the column names.
 
 ```{r column_names}
 #| echo: true
@@ -100,7 +101,7 @@ read_csv('data/Part_2/01_exibble_no_headers.csv',
 
 ### Reading a metadata csv file.
 
-It displays a message with illegible data.
+It displays a message with illegible data. Notice that the first two columns contain no relevant information. The second row lists the names of the columns or variables, however.
 
 ```{r reading_}
 #| echo: true
@@ -109,10 +110,9 @@ It displays a message with illegible data.
 
 read_csv("data/Part_2/05_exibble_with_metadata.csv")
 
-
 ```
 
-We need to skip the first two rows, which are not relevant. And now the file is correctly displayed.
+We need to skip the first two rows using `skip =2`, which are not relevant. After which, the file is correctly displayed.
 
 ```{r skipping_rows_csv}
 #| echo: true
@@ -123,7 +123,7 @@ read_csv("data/Part_2/05_exibble_with_metadata.csv",
          skip = 2)
 ```
 
-### Read csv files in European format
+### Read csv files in European format using read_csv2
 
 Problem the first row has the name of the variables, but they are not recognized because of the use of ";" as delimiter. You need to replace the `read_csv()`function with the `read_csv2()`function.
 
@@ -138,7 +138,7 @@ read_csv2("data/Part_2/03_exibble_european.csv")
 
 ### Reading files with line breaks
 
-RStudio reads this file as having two columns. Reading the quote file that appears to be connected with the line_break file
+RStudio reads this file as having two columns. Reading the quote file that appears to be connected with the line_break file.
 
 ```{r reading_line_breaks}
 #| echo: true
@@ -147,8 +147,6 @@ RStudio reads this file as having two columns. Reading the quote file that appea
 
 read_csv("data/Part_2/09_line_break.csv")
 
-here::here()
-read_csv("data/Part_2/10_quote.csv")
 
 ```
 
@@ -159,23 +157,19 @@ Instead, we need to use the `read_delim()` function. And we need to specify we w
 #| warning: false
 #| code-fold: true
 
-read_delim("data/Part_2/10_quote.csv",
-           delim = ',',
-           escape_backslash = TRUE)
-
 #Another option
 
 read_delim("data/Part_2/11_quote_doubled.csv",
            delim = ',',
            escape_double = TRUE)
 
-
-
 ```
 
 ## Lesson 4: Reading tsv and txt files
 
 ### Loading tsv files which have a separated value
+
+The file is separated by spaces
 
 ```{r loading_tsv_files}
 #| echo: true
@@ -187,6 +181,8 @@ read_tsv('data/Part_2/04_exibble.tsv')
 ```
 
 ### Loading arbitrary text files
+
+The columns are separated with `|`
 
 ```{r loading_arbitrary_text_files}
 #| echo: true
@@ -201,13 +197,12 @@ read_delim('data/Part_2/12_weird_delimiter.txt',
 
 ## Lesson 5: Reading Excel Files
 
-One package useful for reading excel files is `oepnxls`. However, the data frame looks weird. This is why we transform it into tibble.
+One package useful for reading excel files is `oepnxls`. However, the data frame looks weird. This is why we transform it into tibble with the following function `as_tibble()`.
 
 ```{r read_excel_files}
 #| echo: true
 #| warning: false
 #| code-fold: true
-
 
 library(openxlsx)
 
@@ -216,7 +211,7 @@ openxlsx::read.xlsx('data/Part_2/06_exibble.xlsx') |>
 
 ```
 
-However, the column with dates is not treated as a date but with a weird number. Consequently we could recode the variable dates as a date format using `lubridate`
+Notice the column `dates` not treated as a date but with a weird number. Consequently we could recode the variable dates as a date format using lubridate's function `as_dates()`. Notice we need to identify the column or variable with the dates information.
 
 ```{r transforming_dates_excel}
 #| echo: true
@@ -228,7 +223,7 @@ library(lubridate)
 
 openxlsx::read.xlsx('data/Part_2/06_exibble.xlsx') |> 
   as_tibble() |> 
-  mutate(dates = as_date(dates))
+  mutate(dates = lubridate::as_date(dates))
 
 
 ```
@@ -250,7 +245,7 @@ openxlsx::read.xlsx('data/Part_2/06_exibble.xlsx') |>
 
 JSON files require a particular package: `jsonlite` package. Notice that json files have a nested structure. Notice that json file contains \[\[80\]\].
 
-The `str()` function comes handy. It displays the list signifying rows. Each row displays the names of the columns, and their contents.
+The string `str()` function comes handy. It displays the list signifying rows. Each row displays the names of the columns, and their contents.
 
 ### Using glimpse
 
@@ -329,7 +324,7 @@ jsonlite::read_json('data/Part_2/07_exibble.json') |>
 
 ### Reading a second json file
 
-This file is a special case. It has three columns. You cannot use`bind_rows()` function for this kind of file. But you can extract information from it
+This file is a special case. It has three columns. You cannot use `bind_rows()` function for this kind of file. But you can extract information from it
 
 ```{r another_json_file}
 #| echo: true
@@ -386,6 +381,8 @@ jsonlite::read_json('data/Part_2/08_nested_example.json') |>
 
 ## Lesson 7: Turning missing values into true NAs
 
+A simple procedure to recode several values as missing using CSV files
+
 ```{r finding_na}
 #| echo: true
 #| warning: false
@@ -399,7 +396,7 @@ read_csv("data/Part_2/02_exibble.csv") |>
 
 ### Problematic variables
 
-Notice that these two columns have values that need to be recoded as missing.
+Notice that these two columns have values that need to be re-coded as missing.
 
 ```{r encounter_na_values}
 #| echo: true
@@ -411,9 +408,22 @@ read_csv("data/Part_2/02_exibble.csv") |>
 
 ```
 
-### Recoding missing while reading a file
+This means that while the numbers look like they could do what numbers do, they can’t. The following mutate will prompt the error message: "non-numeric argument to binary operator"
 
-Notice that once we recoded the missing values correctly, the type of variable changes from being a character to numeric or date
+```{r mutate_with_not_NAs_correctly_coded}
+#| echo: true
+#| warning: false
+#| code-fold: true
+
+# read_csv("data/Part_2/02_exibble.csv") |> 
+#   select(-(1:6)) |> 
+#   mutate(number = missing_NULL + 2)
+
+```
+
+### Recoding missing while reading a csv file
+
+One can actually tell `read_csv()` what constitutes a missing value. With the `na` argument, you can specify a vector of strings that should be treated as `NA`. See also [Albert Rapp'](https://3mw.albert-rapp.de/p/loading-csv-with-na?utm_source=3mw.albert-rapp.de&utm_medium=newsletter&utm_campaign=loading-files-with-missing-numbers&_bhlid=0c880d03679a6b7398f77d3c6766fec6142212af)s 3 minutes Wednesday. In this case, spaces, '(null)', and Unknown are alternative codes for missing.
 
 ```{r recoding_missing_reading}
 #| echo: true
@@ -424,7 +434,6 @@ read_csv("data/Part_2/02_exibble.csv",
          na = c("", "(null)", "Unknown")) |>
   select(-(1:6)) |> 
   glimpse()
-
 
 ```
 
@@ -444,7 +453,9 @@ openxlsx::read.xlsx("data/Part_2/06_exibble.xlsx") |>
 
 ```
 
-### Recoding missing in an excel file
+### Recoding missing in a xlsx file at the outset
+
+You can actually tell `read_xlsx()` what constitutes a missing value. With the `na` argument, you can specify a vector of strings that should be treated as `NA`.
 
 ```{r recoding_na_excel}
 #| echo: true
@@ -459,20 +470,21 @@ openxlsx::read.xlsx("data/Part_2/06_exibble.xlsx",
 
 ```
 
-However, the `na.strings()` conversion do not transform the variables back to their correct format: numeric and date
+However, the `na.strings()` conversion do not transform the variables back to their correct format. In this case, the missing_dates column is reported to be a character, but it is a date.
 
 ## Lesson 8: Transforming/Parsing numbers
 
-Correcting or parsing numbers in an excel file
+Correcting or parsing numbers in an excel file. Notice that this option codes missing values for the variable missing_NULL while recoding from character to numeric. However, it did not recode the value of Unknown in missing_dates as missing. The `parse_number(x, na = c("", "NA"))` function is part of the `readr` package.
 
 ```{r correct_na_format_excel}
 #| echo: true
 #| warning: false
 #| code-fold: true
 
+#* Notice this option codes missing values for one missing_NULL only
+
 openxlsx::read.xlsx(
-  "data/Part_2/06_exibble.xlsx"
-  ) |> 
+  "data/Part_2/06_exibble.xlsx") |> 
   as_tibble() |> 
   select(-c(1:6)) |> 
   mutate(missing_NULL = parse_number(
@@ -480,12 +492,35 @@ openxlsx::read.xlsx(
     na = c("", "NA", "(null)", "Unknown")
   ))
 
+```
+
+The alternative script below re-codes the missing values for both missing_NULL and missing_dates at the outset, while recoding missing_NULL and missing_dates as numeric and dates respectively thereafter.
+
+```{r alternative_correct_na_format_excel}
+#| echo: true
+#| warning: false
+#| code-fold: true
+
+library(lubridate)
+
+openxlsx::read.xlsx(
+  "data/Part_2/06_exibble.xlsx",
+  na.strings = c("", '(null)', "Unknown")) |> 
+  as_tibble() |> 
+  select(-c(1:6)) |> 
+  mutate(missing_NULL = parse_number(missing_NULL),
+         missing_dates = ymd_hms(missing_dates))
+
 
 ```
 
-## Lesson 9: Transforming/Parsing dates & datetimes
+## Lesson 9: Transforming/Parsing dates & date times
 
-```{r parsin_dates_datetimes}
+Notice the use of quiet in the recoding of missing_dates variable as date. There is no option in the lubridate function to handle missing values. This is why we need to use the quite argument, which codes the string `NULL` or "Unknown" as missing. However, in the previous example, it is depicted how to code all variables missing values at the outset, and then recode them accordingly as numeric and date formats.
+
+Notice that the readr's `parse_number()` function allows one to specify missing values using `na =`.
+
+```{r parsing_dates_datetimes}
 
 #| echo: true
 #| warning: false
@@ -496,18 +531,19 @@ openxlsx::read.xlsx(
   ) |> 
   as_tibble() |> 
   select(-c(1:6)) |> 
-  mutate(missing_NULL = parse_number(
-    missing_NULL,
-    na = c("", "NA", "(null)", "Unknown")
-  ),
-  missing_dates = lubridate::ymd_hms(missing_dates, 
-                                     quiet = TRUE)
-  )
+  mutate(
+    missing_NULL = parse_number(
+      missing_NULL,
+      #Notice parse_function allows one to report missing values
+      na = c("", "NA", "(null)", "Unknown")),
+    missing_dates = 
+      #Notice lubridate has no option for NAs instead use quite = TRUE
+      lubridate::ymd_hms(missing_dates, quiet = TRUE))
 
 
 ```
 
-Extracting only dates without times
+For extracting dates and times using the readr function parse_datetime. Notice this function allows one to specify the missing values.
 
 ```{r parse_dates_readr}
 #| echo: true
@@ -526,13 +562,14 @@ openxlsx::read.xlsx(
   missing_dates = parse_datetime(
     missing_dates,
     format = '%Y-%m-%d %H:%M:%S',
+#Notice the readr function parse_time allows one to specify missing values
     na = "Unknown"
   )
   )
 
 ```
 
-For extracting just dates, use the readr function `parse_date()` as shown below
+For extracting just dates, use the readr function `parse_date()` as shown below. Notice the `parse_date()` function allows one to specify the value standing for missing values using the option `na =`
 
 ```{r parse_dates_no_time}
 #| echo: true
@@ -555,6 +592,7 @@ openxlsx::read.xlsx(
   )
   )
 
+
 ```
 
 ## Lesson 10: Handling a mix of date(time) formats
@@ -572,17 +610,15 @@ tibble(
     '23.12.2024',
     '2023-12-23',
     'NULL'
-  )
-)
-
+  ) )
 
 ```
 
-The previous functions such as `parse_datetime()` and `parse_number()` won't work for this example. On the other hand, the `lubridate` package works best for this situation.
+The readr functions such as `parse_datetime()` and `parse_number()` won't work for this example. On the other hand, the `lubridate` package works best for this situation.
 
-The option `orders` can tell lubridate the correct order of the date to be followed. This option save us the complicated format `format = '%Y-%m-%d %H:%M:%S'` used in parse_date from read.xlsx. Instead we use lubridate to specify day, month, year and hour "c(`dmyHM`)". And then we specify the correct format for each element of the vector.
+The option `orders` can tell lubridate the correct order of the date to be followed. This option save us the complicated format `format = '%Y-%m-%d %H:%M:%S'` used in parse_date from readr. Instead we use lubridate to specify day, month, year and hour "c(`dmyHM`)". And then we specify the correct format for each element of the vector.
 
-Notice there is no option to handle missing values. This is why we need to use the quite argument, which codes the string `NULL` as missing.
+Notice there is no option in the lubridate date function to handle missing values. This is why we need to use the `quiet` argument, which codes the string `NULL` as missing.
 
 ```{r handling_mix_date_formats}
 #| echo: true
@@ -594,18 +630,10 @@ tibble(
     '23.12.2024 12:23',
     '23.12.2024',
     '2023-12-23',
-    'NULL'
-  )
-) |> 
-  mutate(
-   mixed_datetimes = lubridate::parse_date_time(
-     mixed_datetimes,
-     orders = c('dmyHM','dmy','ymd')
-     ),
-   quiet = TRUE
-  )
-
-
+    'NULL')) |> 
+  mutate(mixed_datetimes = parse_date_time(mixed_datetimes,
+                                           orders = c('dmyHM','dmy','ymd'),
+                                            quiet = TRUE)) 
 
 ```
 
@@ -615,7 +643,7 @@ This lesson introduces the equivalent concepts of merging from Stata and SPSS
 
 ### Binding rows
 
-Binding rows is flexible. You do not need to order the columns in a particular manner provided they have the same label. binding rows use the column label from the first dataset.
+Binding rows is flexible. You do not need to order the columns in a particular manner provided they have the same label. `binding rows` function use the column label from the first dataset.
 
 ```{r combining_rows}
 #| echo: true
@@ -623,11 +651,13 @@ Binding rows is flexible. You do not need to order the columns in a particular m
 #| code-fold: true
 
 tib1 <-  tibble(a = 1:5, b = 1:5)
+
 tib2 <-  tibble(a = 6:10, b = 6:10)
 
 bind_rows(tib1,tib2)
 
 tib1 <-  tibble(b = 1:5, a = 1:5)
+
 tib2 <-  tibble(a = 6:10, b = 6:10)
 
 bind_rows(tib1,tib2)
@@ -635,6 +665,7 @@ bind_rows(tib1,tib2)
 #Another option of adding a column c with incomplete cases
 
 tib1 <-  tibble(b = 1:5, a = 1:5)
+
 tib2 <-  tibble(a = 6:10, b = 6:10, c = 6:10)
 
 bind_rows(tib1,tib2)
@@ -643,7 +674,7 @@ bind_rows(tib1,tib2)
 
 ### Binding columns
 
-The only difference between binding columns and binding rows is that the former is strict about the number of rows. They have to have the same number
+The only difference between binding columns and binding rows is that the former is strict about the number of rows. They have to have the same number of rows.
 
 ```{r binding_columns}
 #| echo: true
@@ -652,6 +683,7 @@ The only difference between binding columns and binding rows is that the former 
 
 
 tib1 <-  tibble(x = 1:5)
+
 tib2 <-  tibble(y = fruit[1:5])
 
 bind_cols(tib1,tib2)
@@ -668,11 +700,11 @@ This lesson illustrates how to combine two data sets. Each dataset has different
 #| echo: true
 
 flights <-  nycflights23::flights |> 
-  as_tibble()
+  as_tibble() 
 
 ```
 
-### Creating airlines datnamea set
+### Creating airlines data set
 
 ```{r airlines_data}
 #| echo: true
@@ -680,7 +712,8 @@ flights <-  nycflights23::flights |>
 #| code-fold: true
 
 airlines <-  nycflights23::airlines |> 
-  as_tibble()
+  as_tibble() 
+
 
 ```
 
@@ -695,13 +728,13 @@ Selecting some variables from the flights dataset. We want to add the name of th
 
 flights |> 
   select(year:dep_time, carrier) |> 
-  left_join(airlines, by = 'carrier')
+  left_join(airlines, by = join_by('carrier') )
 
 ```
 
 Another example of left join that may not be as easier as the previous example. In this example we have abbreviations for airport destinations. For merging, we need another database with the full name of the airports. This name is found in the `airports` data set under the label `faa`.
 
-In the example below, we are filtering from the airports' column faa the names that appear in the flights dataset variable origin. In other words the two variables are the same (faa = origin). The trick is to eliminate duplicates.
+In the example below, we are filtering from the airports' column faa the names that appear in the flights dataset variable origin. In other words the two variables are the same (faa = origin) but have different labels. The trick is to eliminate duplicates.
 
 If we try to merge the two files as before a mistake will occur because R does not know that faa is the same as origin.
 
@@ -710,27 +743,29 @@ If we try to merge the two files as before a mistake will occur because R does n
 #| warning: false
 #| code-fold: true
 
-library(nycflights23)
+library(nycflights23) 
 
 #* Eliminating duplicate names of airports.  
 #* The end result of filtering is selecting NY airports only
 
 
 airports <- nycflights23::airports |> 
+  #Eliminating duplicate airports using unique function
   filter(faa %in% unique(flights$origin))
 
-#The following script generates an error. There is no common key
-# flights |> 
-#   select(year:dep_time, origin) |> 
+# The following script generates an error. There is no common key
+
+# flights |>
+#   select(year:dep_time, origin) |>
 #   left_join(airports)
-#   
+
 
 
 ```
 
 ### Adding key in left_join.
 
-The last script generated an error when trying to merge flights with airports. There is no common key across the two data sets. The key is has a different label. Under the flights data set the airport abbreviation appears under the variable `origin`. In the `airport` data set the abbreviation is `faa`. In other words `origin == faa`.
+The last script generated an error when trying to merge flights with airports. There is no common key across the two data sets. The key has a different label across the two databases. Under the flights data set the airport abbreviation appears under the variable `origin`. In the `airport` data set the abbreviation is `faa`. In other words `origin == faa`.
 
 ```{r adding_key_left_join}
 #| echo: true
@@ -739,9 +774,7 @@ The last script generated an error when trying to merge flights with airports. T
 
 flights |> 
   select(year:dep_time, origin) |> 
-  left_join(airports, by = join_by(origin == faa))
-
-
+  left_join(airports, by = join_by(origin == faa) )
 
 ```
 
@@ -757,20 +790,21 @@ We get exactly the same dataset made up of 435,352 rows. The reason it produced 
 flights |> 
   select(year:dep_time, origin) |> 
   right_join(airports,
-             by = join_by(origin == faa))
+             by = join_by(origin == faa) )
   
 ```
 
 Let's see what happens when eliminating the filtering that allowed both dataset to have the same airports.
 
-Redoing the right and left join don't produce the same number of rows. The left join yield 435,342 rows while the right produces 436,590 rows.
+Redoing the right and left join does not produce the same number of rows. The left join yield 435,342 rows while the right produces 436,590 rows.
 
 ```{r right_join_no_filtering}
 #| echo: true
 #| warning: false
 #| code-fold: true
 
-airports <- nycflights23::airports
+airports <- nycflights23::airports 
+
 
 flights |> 
   select(year:dep_time, origin) |> 
@@ -804,6 +838,7 @@ reduced_left <- flights |>
   left_join(airports,
              by = join_by(origin == faa))
 
+
 reduced_left
 
 ```
@@ -819,9 +854,10 @@ reduced_right <- flights |>
   select(year:dep_time, origin) |> 
   slice(1, .by = origin) |> 
   right_join(airports,
-             by = join_by(origin == faa))
+             by = join_by(origin == faa))  
 
 reduced_right
+
 
 ```
 
@@ -838,7 +874,7 @@ flights |>
   select(year:dep_time, origin) |> 
   slice(1, .by = origin) |> 
   left_join(airports,
-             by = join_by(origin == faa))
+             by = join_by(origin == faa)) 
 
 airports |> 
   left_join(
@@ -865,6 +901,7 @@ airports |>
     by = join_by(faa == origin))
 
 
+
 ```
 
 ### Anti join
@@ -884,6 +921,7 @@ airports |>
     by = join_by(faa == origin))
 
 
+
 ```
 
 ## Lesson 14: Join by multiple criteria
@@ -901,6 +939,7 @@ Using join based on multiple criteria.
 wind_speeds <-  nycflights23::weather |> 
   select(origin:hour, wind_speed)
 
+
 wind_speeds
 
 ```
@@ -913,6 +952,7 @@ Matching based on multiple criteria instead of just two columns. We want to enri
 #| code-fold: true
 
 library(nycflights23)
+
 
 flights |> 
   select(year:day,hour,origin,tailnum) |> 
@@ -935,6 +975,7 @@ flights |>
   select(year:day,hour,origin,tailnum) |> 
   left_join(wind_speeds,
             by = join_by(year,month,day,hour,origin)) 
+
 
 ```
 
@@ -967,13 +1008,16 @@ flights |>
             by = join_by(year,month,day,hour,dep_airport == origin)) 
 
 
+
 ```
 
 ## Lesson 15: Rearranging data from wide to long format with pivot_longer()
 
 Differences between wide and long format
 
-![](images/differences_wide_longer.PNG){fig-align="center" width="352"}
+Notice that in the long format variables are reported as key while the cell contents are reported as values.
+
+![](images/differences_wide_longer.PNG){fig-align="center" width="414"}
 
 ### Pivot longer
 
@@ -987,6 +1031,7 @@ Let's illustrate the utility of pivot_longer by summarizing
 #| code-fold: true
 
 scores <- read_csv('data/Part_2/13_scores_by_date.csv')
+
 
 scores |> 
   #Other options for cols: cols = 2:5 cols = contains('score')
@@ -1003,13 +1048,11 @@ scores |>
     .by = score_category
   )
 
-
-
 ```
 
 ### Another example
 
-This file needs to be rearrange before pivoting longer. Notice that `payment` the value column appears first.
+This file needs to be rearranged before pivoting longer. Notice that `payment` the value column appears first. In this file, the first row lists the name of the columns.
 
 ```{r pivot_longer_example_payments}
 #| echo: true
@@ -1018,12 +1061,13 @@ This file needs to be rearrange before pivoting longer. Notice that `payment` th
 
 payments <-  read_csv('data/Part_2/14_payments.csv')
 
+
 payments |> 
   pivot_longer(
     cols = contains('date')
   )
 
-#We need meaning names for the new columns
+#We need meaningful names for the new columns
 
 payments |> 
   pivot_longer(
@@ -1038,12 +1082,25 @@ payments |>
 
 ### scores data set example
 
-Regarding the scores data set. The end result of the pivot longer is to have score categories with the label score_cat repeated. This does not make sense afterwards. We could do some cleaning. We can target the score_category column and using regex to remove unwanted strings. The `names_prefix()` can be used to removed the unwanted `score_` at the start of the string.
+Regarding the scores data set. The end result of the pivot longer is to have score categories with the label score_cat repeated. This does not make sense afterwards. We could do some cleaning. We can target the score_category column and using regex to remove unwanted strings. The `names_prefix()` can be used to removed the unwanted label `score_` at the start of the string.
 
 ```{r cleaning_scores_dataset}
 #| echo: true
 #| warning: false
 #| code-fold: true
+
+scores <- read_csv('data/Part_2/13_scores_by_date.csv')
+
+
+#First option
+scores |> 
+  pivot_longer(
+    cols = contains("score"),
+    names_to = "score_type",
+    values_to = "scores"
+  )
+
+#* Second option: removing "score_" prefix
 
 scores |> 
   pivot_longer(cols = -date, 
@@ -1052,14 +1109,13 @@ scores |>
                names_prefix = "score_")
 
 
-
 ```
 
 ### payments example
 
-In the payments example, we have suffixes that need to be removed. Under the name column, the suffix `_payment_date` needs to be removed. This string appears at the end of the column. Unfortunately pivot longer does not have suffix function, however, it has `names_pattern()` function, which works similarly to `str_extract()`. We need to add a group `(\\w*)` of characters preceding the strings to be removed. This group of characters is to be kept.
+In the payments data base, we have suffixes that need to be removed. Under the `name` column, the suffix `_payment_date` needs to be removed. This string appears at the end of the column. Unfortunately pivot longer does not have a suffix function. However, it has the `names_pattern()` function, which works similarly to `str_extract()`. We need to add a group `(\\w*)` of characters preceding the strings to be removed. This group of characters is to be kept.
 
-Another option is to use the regular expression find me anything `(.)`. But one dot stands for only one letter. But adding `+` makes it plural. This means: "of this dot or character, find me as many as you can". Notice the dot signifies to count at the end of the string.
+Another option is to use the regular expression find me anything `(.)`. But one dot stands for only one letter. But adding `+` makes it plural. This means: "of this dot or character, find me as many as you can". Notice the dot signifies to count at the end of the string. Notice the use of parenthesis `(\\w+ )` framing the reg exp signifies to treat the strings as a group.
 
 ```{r cleaing_payments_example}
 #| echo: true
@@ -1075,7 +1131,7 @@ payments |>
     names_pattern = "(\\w+)_payment_date"
   )
 
-#The next option is to list the characters
+#The next option is to list the characters to keep as a group
 
 payments |> 
   pivot_longer(
@@ -1101,7 +1157,7 @@ payments |>
 
 ## Lesson 17: Making long data wide with pivot_wider()
 
-Pivot longer is more frequently used than `pivot-wider()` . However, pivot_wider is extremely useful when creating tables. In pivot wider you need to revert the `names_to` and `values_to`.
+Pivot longer is more frequently used than `pivot_wider()`. However, pivot_wider is extremely useful when creating tables. In pivot wider you need to revert the `names_to` and `values_to`.
 
 ```{r making_long_data_pivot_wider}
 #| echo: true
@@ -1121,11 +1177,11 @@ payments |>
     values_from = 'date'
   )
 
-
-
 ```
 
-Next is a reserve name, this is why the label appears with ticks. We can use the pivot_wider function `names_glue()`. If we want a variable name we use curly brackets `{ }`. And then we write the text we want to add outside the curly brackets. In this case we want to rebuild the original value labels last_payment_date, next_payment_date and final_payment_date. Thus we add the name of the variable containing the labels; namely, payment_date
+### Using names_glue function
+
+Notice that the column labeled `next` appears within ticks. In R the word `next` is a reserve name. We can use the pivot_wider function `names_glue()`. If we want a variable name we use curly brackets `{ }`. And then we write the text we want to add outside the curly brackets. In this case we want to rebuild the original value labels last_payment_date, next_payment_date and final_payment_date. Thus we add the name of the variable containing the labels; namely, payment_date
 
 ```{r removing_reserve_label_pivot_wider}
 #| echo: true
@@ -1145,6 +1201,7 @@ payments |>
     #identify variable within {}, then add legend outside {}
     names_glue = '{payment_date}_payment_date'
   )
+
 
 ```
 
@@ -1172,7 +1229,8 @@ payments |>
     names_glue = '{payment_date}_payment_date'
   )
 
-#Includying payment as an id column
+
+#Includying payment as an id column along with utility
 
 payments |> 
   pivot_longer(
@@ -1195,9 +1253,7 @@ payments |>
 
 Watch [tidyxl](https://nacnudus.github.io/tidyxl/) animation. More information on tidyxl is [here](https://cran.r-project.org/web/packages/tidyxl/vignettes/tidyxl.html).
 
-![](images/original_table.png "Original table"){width="208"}
-
-![](images/coerced_table.png){fig-align="center" width="303"}
+![](images/original_table.png "Original table"){width="280"} ![](images/coerced_table-01.png "Original table"){width="360"}
 
 Using `xlsx_cells()` function from tidyxl package. The tidyxl package is new. The `xlsx_cells()` function imports data from spreadsheets without coercing it into a rectangle. Each cell is represented by a row in a data frame, giving the cell's address, contents, formula, height, width, and keys to look up the cell's formatting in the return value of `xlsx_formats()`.
 
@@ -1208,8 +1264,9 @@ The original file, 17_rand_numbers.xlsx, is a pivot table. Variables are organiz
 #| warning: false
 #| code-fold: true
 
-library(tidyxl)
 library(unpivotr)
+library(tidyxl)
+
 
 rand_numbers_cells <- tidyxl::xlsx_cells(
   'data/Part_2/17_rand_numbers.xlsx')
@@ -1219,39 +1276,54 @@ rand_numbers_cells |>
 
 ```
 
-Once the file is rectified we can strip the labels step by step. We can get rid of the Country A and Country B labels. They are located under the column labeled "3(C)". Then we can get rid of the regions. And so on.
+Once the file is rectified we can strip the labels step by step. The first thing we need to do is to get rid of the labels instead of the values.
 
-We start by stripping the labels step by step. The first is to target Gender, Male, Female and NAs. These descriptors are metadata, not data. To get rid off those entries, we need to eliminate those entries under the character column that have the words, gender and age. We need to filter the cells where we have missing values or things are not gender or age.
+We start by stripping the labels step by step. The first is to target Gender, Male, Female and NAs. These descriptors are not data but metadata if you will. And, to get rid off those descriptors, we need to eliminate those entries under the "character column", in the rad_numbers_cell dataset. We are targeting in the "character" column by removing entries that have the words "Gender" and "Age " or missing. In other words, we need to filter the cells where we have missing values or have the strings Gender or Age: `filter(is.na(character)| !(character %in% c('Gender', 'Age'))`. The end result is a new column, subsequently labeled "country", which has the values of Country A and Country B in it.
 
-Next we can start rectifying it by `behading` it. [`behead()`](http://127.0.0.1:42565/help/library/unpivotr/help/behead) takes one level of headers from a pivot table and makes it part of the data. The main purpose is to eliminate 3(C) column. We want to behave on the left style, because the country labels are at the left of our original pivot table. So we use `left-up`. And then we want to assign the contents into a column we would label `country`.
+Next we can start rectifying it by `behading` it. [`behead()`](http://127.0.0.1:42565/help/library/unpivotr/help/behead) takes one level of headers from a pivot table and makes it part of the data. The main purpose is to eliminate \`3(C)\` column. We want to behave on the left style, because the country labels are at the left of our original pivot table. So we use `left-up`. And then we want to assign the contents into a column we would label `country`.
 
 But, if we look at the cells, we discover where the column country is.
+
+Note that Albert is filtering NAs and the Gender and Age labels in the column labeled `character`. However, filtering NAs serves no purpose.
 
 ```{r cleaning_pivot_part_2}
 #| echo: true
 #| warning: false
 #| code-fold: true
 
-rand_numbers_cells |> 
-  filter(
-    is.na(character) | !(
-      character %in% c('Gender', 'Age')
-      )
-    ) |>
+rand_numbers_cells |>
+#Notice: eliminating missing values and characters that are neither Gen or Age
+  filter(is.na(character) | !(character %in% c('Gender', 'Age'))) |>
   unpivotr::rectify()
-  
-#Now we can start behading this 
-  
-test3 <- rand_numbers_cells |> 
-  filter(is.na(character) | !(character %in% c('Gender', 'Age')
-      )
-    ) |>
-  unpivotr::behead('left-up', name = 'country') |> 
+
+
+#This option also works
+rand_numbers_cells |> 
+#Notice: eliminating missing values and characters that are neither Gen or Age
+  filter(!(character %in% c('Gender', 'Age'))) |>
   unpivotr::rectify()
 
 ```
 
-Next step eliminating the extra country column. And we put the values in a new column label 'region'.
+Next we can use the `behade` function of the unpivotr library to create the new variable `country` containing the values of Country A and Country B. The end result is that column 3(C) is eliminated once its values have been extracted and incorporated into the new column `country`.
+
+```{r cleaning_pivot_part_2_behading}
+#| echo: true
+#| warning: false
+#| code-fold: true
+
+#Now we can start behading this 
+  
+rand_numbers_cells |> 
+  filter(is.na(character) | !(character %in% c('Gender', 'Age')
+      )
+    ) |>
+  unpivotr::behead(direction = 'left-up', name = 'country') |> 
+  unpivotr::rectify()
+
+```
+
+Next step is targeting the region values, which are located in `4(D)`. At this point the character variable column only has region values. We extract the region values and put them a new column labeled 'region'.
 
 ```{r cleaning_pivot_part_3}
 #| echo: true
@@ -1260,17 +1332,10 @@ Next step eliminating the extra country column. And we put the values in a new c
 
 rand_numbers_cells |> 
   filter(
-    is.na(character) | !(
-      character %in% c('Gender', 'Age')
-      )
-    ) |>
-  unpivotr::behead('left-up',name = 'country'
-  ) |> 
-   unpivotr::behead('left',name = 'region'
-  ) |> 
+  is.na(character) | !(character %in% c('Gender', 'Age'))) |>
+  unpivotr::behead(direction = 'left-up',name = 'country') |>
+  unpivotr::behead(direction = 'left',name = 'region') |> 
   unpivotr::rectify()
-
-
 ```
 
 Doing the same for gender.
@@ -1286,18 +1351,18 @@ rand_numbers_cells |>
       character %in% c('Gender', 'Age')
       )
     ) |>
-  unpivotr::behead('left-up',name = 'country'
+  unpivotr::behead(direction = 'left-up',name = 'country'
   ) |>
-   unpivotr::behead('left',name = 'region'
-  ) |>
-  unpivotr::behead('up-left',name = 'gender'
+   unpivotr::behead(direction = 'left',name = 'region'
+  ) |> 
+  unpivotr::behead(direction = 'up-left',name = 'gender'
   ) |>
   unpivotr::rectify()
-  
+
 
 ```
 
-Next we need to do the same for age
+Next we need to do is to get rid of the ages.
 
 ```{r cleaning_pivot_part_5}
 #| echo: true
@@ -1310,17 +1375,16 @@ rand_numbers_cells |>
       character %in% c('Gender', 'Age')
       )
     ) |>
-  unpivotr::behead('left-up',name = 'country'
+  unpivotr::behead(direction = 'left-up',name = 'country'
   ) |>
-   unpivotr::behead('left',name = 'region'
+   unpivotr::behead(direction = 'left',name = 'region'
   ) |>
-  unpivotr::behead('up-left',name = 'gender'
+  unpivotr::behead(direction = 'up-left',name = 'gender'
   ) |>
-  unpivotr::behead('up',name = 'age'
+  unpivotr::behead(direction = 'up',name = 'age'
   ) |>
   unpivotr::rectify()
   
-
 ```
 
 ### Final data creation
@@ -1332,22 +1396,6 @@ We no longer need to rectify. All what we need is to select the new columns. Tho
 #| warning: false
 #| code-fold: true
 
-
-rand_numbers_cells |> 
-  filter(
-    is.na(character) | !(
-      character %in% c('Gender', 'Age')
-      )
-    ) |>
-  unpivotr::behead('left-up',name = 'country'
-  ) |>
-   unpivotr::behead('left',name = 'region'
-  ) |>
-  unpivotr::behead('up-left',name = 'gender'
-  ) |>
-  unpivotr::behead('up',name = 'age'
-  ) |>
-  unpivotr::rectify()
 
 #Selecting country, region, age, gender, numeric columns
 
@@ -1369,13 +1417,32 @@ rand_numbers_cells |>
   #unpivotr::rectify() |>
   select(country:age,numeric)
 
+#Alternative filtering option
+
+rand_numbers_cells |> 
+  filter(!(character %in% c('Gender', 'Age')
+      )
+    ) |>
+  unpivotr::behead('left-up',name = 'country'
+  ) |>
+   unpivotr::behead('left',name = 'region'
+  ) |>
+  unpivotr::behead('up-left',name = 'gender'
+  ) |>
+  unpivotr::behead('up',name = 'age'
+  ) |>
+  #Excludying rectity
+  #unpivotr::rectify() |>
+  select(country:age,numeric)
+
+
 ```
 
 ## Lesson 19 Beheading with multiple data formats
 
 ### Locating unwanted labels
 
-Dealing with a complex and unbalanced spreadsheet with several pivot tables. Under the column `1(A)` we have a couple of labels, City, Department, that are not part of the data, but they describe the data
+Dealing with a complex and unbalanced spreadsheet with several pivot tables. `16_faker_sales_modified.xlsx`, under the column `1(A),` we have a couple of labels, City, Department, that are not part of the data, but they describe the data
 
 ```{r beheading_multiple_formats_1}
 #| echo: true
@@ -1386,18 +1453,15 @@ library(tidyxl)
 
 sales_cells <- tidyxl::xlsx_cells('data/Part_2/16_faker_sales_modified.xlsx')
 
-test <- sales_cells |> 
-  unpivotr::rectify()
-
+#Looking at the date after rectifying it
 sales_cells |> 
   unpivotr::rectify()
-
 
 ```
 
 ### Eliminating unwanted labels
 
-We first want to focus our attention to the second column and on only. The first column refers to the excel spreadsheet (sheet 1)
+We want to eliminate information in the first column dealing with City and Department. To do so we use the filter command `filter(col > 1)` eliminates `1(A)` column displaying the labels City and Department and then a bunch of NAs
 
 ```{r beheading_multiple_formats_2}
 #| echo: true
@@ -1405,16 +1469,22 @@ We first want to focus our attention to the second column and on only. The first
 #| code-fold: true
 
 sales_cells |> 
-  filter(col > 1) |> 
+#Selecting after column number 2
+  #filter(col > 1) |> 
   unpivotr::rectify()
 
-
+sales_cells |> 
+#Eliminating `1(A) column`
+  filter(col > 1) |> 
+  unpivotr::rectify()
 
 ```
 
 ### Cleaning city rows
 
 Using up-left again mode. The next row under 2(B) displays the sales department, groceries. We are left with the data observations displaying customer number, name, gender, etc.
+
+Using `filter(col > 1)` we make certain that the rectified file
 
 ```{r beheading_multiple_formats_3}
 #| echo: true
@@ -1434,34 +1504,78 @@ sales_cells |>
      name = 'variable') |>
     unpivotr::rectify()
 
-
-
-
 ```
 
-### Displaying variables created
+### Beheading variables created
 
-The variables created are city, department and variable.
+The variables created are city, department store and variable.
 
-```{r displaying_variables_created}
+#### Beheading city
+
+After rectifying the data, we see that Chicago is only at the left most corner of the data. Notice that left to Chicago there are many columns with NAs. After them, the next city appears since the cells were merged across cities.
+
+```{r behading_city_variable}
 #| echo: true
 #| warning: false
 #| code-fold: true
 
-test <- sales_cells |> 
+#Notice that Chicago located at the left most corner of the data
+sales_cells |> 
+  filter(col > 1) |> 
+  # unpivotr::behead(direction = 'up-left', name = 'city') |> 
+  unpivotr::rectify()
+
+```
+
+Beheading Chicago as the `up_left` corner of the dataset
+
+```{r behading_city_variable_direction_up_left_corner}
+#| echo: true
+#| warning: false
+#| code-fold: true
+
+sales_cells |> 
+  filter(col > 1) |> 
+  unpivotr::behead(direction = 'up-left', name = 'city') |> 
+  unpivotr::rectify()
+
+#* Notice department variable is now at the up top left of the
+#* rectified file
+
+```
+
+Notice that after beheading Chicago, the value Grocery of the department variable, appears at the up left position of the data set. Departments are organized by Groceries, Outdors, etc.
+
+#### Beheading department
+
+Next step is to behead department
+
+```{r beheading_department}
+#| echo: true
+#| warning: false
+#| code-fold: true
+
+sales_cells |> 
   filter(col > 1) |> 
    unpivotr::behead(
      'up-left',
      name = 'city') |>
   unpivotr::behead(
      'up-left',
-     name = 'department') |>
-  unpivotr::behead(
-     'up',
-     name = 'variable')
+     name = 'department') |> 
+  unpivotr::rectify()
 
+#Notice that after beheading department
+```
 
-behaded_sales_cells <- sales_cells |> 
+And finally we can use all the names appearing in the first row, namely, productID, price,..sex, ..jobtitle, price,..., and collapse them into something we call variable.
+
+```{r beheading_miscellaneous_into_variable}
+#| echo: true
+#| warning: false
+#| code-fold: true
+
+sales_cells |> 
   filter(col > 1) |> 
    unpivotr::behead(
      'up-left',
@@ -1472,31 +1586,61 @@ behaded_sales_cells <- sales_cells |>
   unpivotr::behead(
      'up',
      name = 'variable') |> 
-  select(city:variable, character,numeric,row)
+  unpivotr::rectify()
+
+```
+
+#### Beheaded sales cells dataset
+
+Creating the new file whereby we select the variables we created; namely, city, department and variable. However, we need to add other variables that were present in the original database. They were coded as characters. Those are the values originally listed under productID, price, full name, sex, job title. Most of them are characters while the values under price are numeric. The row label would also help us to identify things, so we could include it in the variable selection.
+
+```{r beheaded_sales_cells_df}
+#| echo: true
+#| warning: false
+#| code-fold: true
+
+beheaded_sales_cells <- sales_cells |> 
+  filter(col > 1) |> 
+   unpivotr::behead(
+     'up-left',
+     name = 'city') |>
+  unpivotr::behead(
+     'up-left',
+     name = 'department') |>
+  unpivotr::behead(
+     'up',
+     name = 'variable') |> 
+ # unpivotr::rectify()
+  select(city:variable, character, numeric, row)
+
 ```
 
 ### Further cleaning the file
 
-We want to have the character and numeric columns in one single column using the function `coalesce()`. Given a set of vectors, `coalesce()` finds the first non-missing value at each position. It's inspired by the SQL `COALESCE` function which does the same thing for SQL `NULL`s. We need to temporarily convert the numeric variable as character otherwise coalesce won't work.
+We want to have the character and numeric columns in one single column using the function `coalesce()`. Given a set of vectors, `coalesce()` finds the first non-missing value at each position. It's inspired by the SQL `COALESCE` function which does the same thing for SQL `NULL`s. **Note:** We need to *temporarily convert* the *numeric variable* *as* *character* otherwise coalesce won't work. Below, it shows we get an error message by not properly handing the variable numeric
+
+`beheaded_sales_cells |>  mutate( using coalesce cell_values = coalesce(character,numeric))`
+
+"Error in `mutate()`: ℹ In argument: `cell_values = coalesce(character, numeric)`. Caused by error in `coalesce()`: ! Can't combine `..1` <character> and `..2` <double>. Run `rlang::last_trace()` to see where the error occurred."
 
 After the merging or coalescing of character and numeric columns into cell values, we won't need the two columns.
+
+Notice that coalesce merges the columns `character` with the column `numeric`. The end result is the variable or column `cell_values`, with a mixture of characters and numbers from the two variables `numeric` and `character`. Notice that while coalescing the two columns using mutate, we declare the variable numeric as a character (`as.character(numeric))`.
 
 ```{r cleaning_the_file_behaded}
 #| echo: true
 #| warning: false
 #| code-fold: true
 
-behaded_sales_cells |> 
+beheaded_sales_cells |> 
   mutate(
+    #Notice we are merging chacter and numeric columns using coalesce
     cell_values = coalesce(character, as.character(numeric))
   ) |> 
   select(-c(character,numeric))
-
-
-
 ```
 
-### Wider transforming
+#### Wider transforming
 
 Now we can transform the database into a wider format. Take the names of the column `variable` and the values from the `cell_values` column. The rest of the variables, `city` and `department`, would serve as unique identifier.
 
@@ -1505,8 +1649,7 @@ Now we can transform the database into a wider format. Take the names of the col
 #| warning: false
 #| code-fold: true
 
-
-behaded_sales_cells |> 
+beheaded_sales_cells |> 
   mutate(
     cell_values = coalesce(character, as.character(numeric))
   ) |> 
@@ -1519,7 +1662,6 @@ behaded_sales_cells |>
   select(-row) |> 
   #Recoding price as numeric
   mutate(price = parse_number(price))
-
 
 
 ```
@@ -1720,7 +1862,7 @@ rand_cells |>
 
 ## Lesson 21 Putting it together
 
-Albert put together three dataset to clean. The first two files are excel files. The third file is an csv file. The first two data sets describe the location of the warehouse, the product and the supplier id. The third data set provides information about the supplier itself (id, name, contact person, email, contract dates, and supplier rating. All three data sets are interconnected.
+Albert put together three data sets to clean. The first two files are excel. The third file is an csv file. The first two data sets describe the location of the warehouse, the product and the supplier id. The third data set provides information about the supplier itself (id, name, contact person, email, contract dates, and supplier rating. All three data sets are interconnected.
 
 First step is to clean the each of the three data sets. Then, we would conduct some data analysis.
 
@@ -1743,7 +1885,7 @@ openxlsx::read.xlsx(
 
 #### Eliminating unwanted header
 
-The headers added by tibble are not needed. We can use the r`ead.xlsx` function `startRow` = 2. Next we can use janitor to clean names. We can also use skimr library `skim()` function to request summary statistics.
+The headers added by tibble are not needed. We can use the r`ead.xlsx` function `startRow` = 2. It has the same effect as the csv function skip = 2. Next we can use janitor to clean names. We can also use skimr library `skim()` function to request summary statistics.
 
 ```{r removing_first_header}
 #| echo: true
@@ -1754,18 +1896,21 @@ openxlsx::read.xlsx(
   'data/Part_2/19a_Shipments_Details_mod.xlsx',
   startRow = 2) |> 
   as_tibble() |> 
-  janitor::clean_names() |> 
+  janitor::clean_names() |>
   skimr::skim()
 
 ```
 
-skim reveals that inside the numeric part we have all of the dates (e.g., shipment, expected delivery, actual delivery and weight). However, all dates were transformed into numbers. They need to be recoded as dates.
+skim reveals that inside the numeric part we have all of the dates (e.g., shipment, expected delivery, actual delivery and weight). However, all dates were transformed into numbers. They need to be re-coded as dates.
+
+We can the across function to recode them as dates using the lubridate function as_date. We could also use janitor's function excel_numeric_to_date().
 
 ```{r recoding_numbers_as_dates}
 #| echo: true
 #| warning: false
 #| code-fold: true
 
+# Using lubridate::as_date() function
 openxlsx::read.xlsx(
   'data/Part_2/19a_Shipments_Details_mod.xlsx',
   startRow = 2) |> 
@@ -1773,7 +1918,7 @@ openxlsx::read.xlsx(
   janitor::clean_names() |> 
   mutate(
     across(.cols = contains('date'),
-           function(x) as_date(x))
+           function(x) lubridate::as_date(x))
   )
 
 #* Another option to transform numeric into date is using 
@@ -1787,7 +1932,8 @@ openxlsx::read.xlsx(
   mutate(
     across(.cols = contains('date'),
            function(x) janitor::excel_numeric_to_date(x))
-  )
+  ) |> 
+  skimr::skim()
 
 #* Option followed by Albert Rapp
 
@@ -1800,7 +1946,6 @@ openxlsx::read.xlsx(
     across(contains('date'),
            janitor::excel_numeric_to_date))
 
-    
 
 ```
 
@@ -1808,7 +1953,7 @@ openxlsx::read.xlsx(
 
 Next we create a new column labeled day_shipped_to_delivered, which is going to be an interval. For this we use `lubridate` . Once we have an interval, we can divide it by an interval of length 1, or one day. We rely on the `days()` function `/days(1)`.
 
-Using `skim()` reveals that the mean of days_shipped_to_delivered is 19.5 days, ranging from 5 to 35 days.
+Using `skim()` reveals that the mean of days_shipped_to_delivered is 19.5 days, ranging from 5 to 36 days.
 
 ```{r interval_dates_to_delivered}
 #| echo: true
@@ -1830,14 +1975,14 @@ openxlsx::read.xlsx(
       end =  actual_delivery_date) / days(x = 1)
   ) |> 
   skimr::skim()
-  
+
 ```
 
 #### Using expected delivery date
 
 We can estimate the difference between expected delivery date and the actual one.
 
-The average days expected to actual delivery is 1.41, and the minimum is to expect the package to be delivered 3 days before. The highest delay is 7 days.
+The average days expected to actual delivery is 1.41, and the minimum is to expect the package to be delivered 3 days before the promised delivery date. The highest delay is 7 days.
 
 ```{r days_expectedt_to_actual}
 #| echo: true
@@ -1961,7 +2106,7 @@ openxlsx::read.xlsx(
       prefix <-  case_when(
         nmbr <= 2 ~ 'warehouse_',
         nmbr < 7 ~ 'product_',
-        TRUE ~ ""
+        TRUE ~ "" #Assign no prefix. Keep variable name as is
       )
       #Putting prefix and variable together
       paste0(prefix,x)
@@ -1982,7 +2127,7 @@ Using `tidyxl` library with the `xlsx_cells()` function instead of openxlsx libr
 
 1.  Get rid of the first row that only has Warehouse and Product
 
-2.  We behead the first raw and end up with a column labeled `variable_type` after eliminating the label Warehouse. Using unpivotr reveals that the content of `variable_type` is the label `Warehouse`.
+2.  We behead the first row and end up with a column labeled `variable_type` after eliminating the label Warehouse. Using unpivotr reveals that the content of `variable_type` is the label `Warehouse`.
 
 3.  Using beheading using up moves ID and Location labels under the label variable. Last column
 
@@ -2058,7 +2203,8 @@ warehouse_cells |>
     date,
     row
   ) |> 
-#* We need to coalesce or stich things together the columms
+#* We need to coalesce or stich things together the columms. In this case
+#* we are coalescing 3 variables or columns: 1)character, 2)numeric, 3)date
 #* or variables character and date
 #* Notice we are declaring date as numeric
   mutate(
