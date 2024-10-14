@@ -212,7 +212,7 @@ large_quantity <-  function(x) {
   }
 }
 
-test <- penguins_wo_NAs |>
+penguins_wo_NAs |>
   mutate(
     large_bill_length = map(
       bill_length_mm,
@@ -220,7 +220,7 @@ test <- penguins_wo_NAs |>
       large_quantity) ) |> 
   select(bill_length_mm,large_bill_length)
 
-test
+
 ```
 
 Still another variation of the `map()` function is the `map_dbl()`. It reports numbers instead of logical statements. Notice, we list first the column to be modified followed by the function (`large_quantity`).
@@ -236,14 +236,13 @@ large_quantity <-  function(x) {
   }
 }
 
-test <- penguins_wo_NAs |>
+penguins_wo_NAs |>
   mutate(
     large_bill_length = map_dbl(
       bill_length_mm,
       large_quantity) ) |> 
   select(bill_length_mm,large_bill_length)
 
-test
 
 ```
 
@@ -266,13 +265,12 @@ You can also save the lengths into one single list using the `list()` function. 
 ```{r listing_summary_results}
 #| echo: true
 
-test <- penguins_wo_NAs |> 
+penguins_wo_NAs |> 
   summarise(
     mean_flipper_length = mean(flipper_length_mm, na.rm = TRUE),
     sd_flipper_length = sd(flipper_length_mm, na.rm = TRUE),
     flipper_lengths = list(flipper_length_mm))
 
-test
 
 ```
 
@@ -294,9 +292,24 @@ palmerpenguins::penguins |>
 
 ## Lesson 5
 
-Repeated calculations for subsets of data. Two options to automate repeated calculations. `for()` loop. Another is to rely on loop calculations. An example is to rely on the data without missing values.
+Repeated calculations for subsets of data. Two options to automate repeated calculations. `for()` loop. However this approach is messy and tedious.
 
-One option is to rely on the option .by = () to specify subgroups. Be careful about omitting the "." It would produce an output but would miss summarizing results by species.
+```{r for_loop_repetead}
+#| echo: true
+
+for (selected_species in unique(penguins_wo_NAs$species)) {
+  penguins_wo_NAs |> 
+    filter(species == selected_species) |> 
+    summarise(
+      mean_flipper_length = mean(flipper_length_mm, na.rm = TRUE),
+      sd_flipper_lenth = sd(flipper_length_mm, na.rm = TRUE)) |> 
+    print()
+}
+```
+
+Another is to rely on loop calculations. The best alternative is to rely on the group approach.
+
+An example is to rely on the data without missing values. One option is to rely on the option .by = () to specify subgroups. Be careful about omitting the "." It would produce an output but would miss summarizing results by species.
 
 ```{r repeated_calc}
 #| echo: true
@@ -308,14 +321,13 @@ penguins_wo_NAs |>
     flipper_lengths = list(flipper_length_mm),
     .by = species)
 
-
 ```
 
-Warning regarding grouping in a series of concatenated computations as show below. group_by() affects the original structure of the data by the first variable in listed in the `group_by()` function.
+Warning regarding grouping in a series of concatenated computations as show below. group_by() affects the original structure of the data by the first variable listed in the `group_by()` function.
 
-Notice the output indicates `#Groups : species[3]` Or 3 species by 5 islands. Adding another `summarise()` function generates a problem. Suppose we want to estimate the mean of the mean_flipper_length estimated in the previous run as well as the sd of the sd_flipper_lenght variable previously created. The end result is an sd_flipper_length with two NAs.
+Notice the output indicates `#Groups : species[3]` Or 3 species by 5 islands. Adding another separate `summarise()` function generates a problem. Suppose we want to estimate the mean of the mean_flipper_length estimated in the previous run as well as the sd of the sd_flipper_lenght variable previously created. The end result is an sd_flipper_length with two NAs.
 
-During the first calculation, `group_by()` strips the last group alluded in the function. In other words, the variable or column island is eliminated. The end result is a 5 X 5 tibble table organized by three groups corresponding to the 3 species. This is an opportunity to mistakes if one ignores the structure imposed on the data by group_by() function. Grouped calculations behave differently.
+During the first calculation, `group_by()` strips the last group alluded in the function; namely `island` variable. In other words, the variable or column island is eliminated. The end result is a 5 X 5 tibble table organized by three groups corresponding to the 3 species. This is an opportunity to mistakes if one ignores the structure imposed on the data by group_by() function. Grouped calculations behave differently.
 
 ```{r grouping_danger}
 #| echo: true
@@ -325,7 +337,8 @@ penguins_wo_NAs |>
   summarise(
     mean_flipper_length = mean(flipper_length_mm),
     sd_flipper_length = sd(flipper_length_mm),
-    flipper_lengths = list(flipper_length_mm)) |> 
+    flipper_lengths = list(flipper_length_mm))  |> 
+  #The next second summarise creates a problem
   summarise(
     mean_flipper_length = mean(mean_flipper_length),
     sd_flipper_length = sd(sd_flipper_length)
@@ -373,13 +386,11 @@ Using grouping `.by =`function with mutate can produce a long list of means. In 
 ```{r group_calculations}
 #| echo: true
 
-test <- palmerpenguins::penguins |> 
+palmerpenguins::penguins |> 
   mutate(
     mean_column = mean(bill_length_mm, na.rm = TRUE),
     .by = species) |> 
   select(bill_length_mm, flipper_length_mm, mean_column)
-
-test
 
 ```
 
@@ -529,6 +540,8 @@ penguins_wo_NAs |>
 
 #### Using 'across()\` function. Several variations.
 
+across() function facilitates eliminating repetition.
+
 Also using glue() to affix a name to the corresponding output. This is done via the functions `.names = 'mean_{.col}'`. This glue function affix the legend `mean_` to all the columns/variables referenced in the `.cols = c(` function.
 
 Notice the output does not display the prefix `mean_`. If you want it you need the option `.names` , which is a glue specification.
@@ -546,14 +559,16 @@ penguins_wo_NAs |>
               "flipper_length_mm",
               "body_mass_g"),
     .fns = mean,
-    .names = 'mean_{.col}'
+    .names = 'mean_{.col}' #Glueing 
   ))
+
 
 #Columns option
 penguins_wo_NAs |> 
   summarise(across(.cols = 3:6, 
                    function(x) mean(x, na.rm = TRUE),
                    .names = 'mean_{.col}'))
+
 
 #where(is.numeric)
 penguins_wo_NAs |> 
@@ -594,6 +609,7 @@ penguins_wo_NAs |>
     str_remove("_g")}'
   ))
 
+
 ```
 
 Another option is to include the .fn in the names function. But unfortunately it did not do the trick because the prefix mean was removed. Instead a prexif `1_` was added .
@@ -613,7 +629,7 @@ penguins_wo_NAs |>
 
 ```
 
-To make it work correctly, we need to use `.fns = list(mean = mean)`. This is the best option to display the names of the summary statistics called for.
+To make it work correctly, we need to use `.fns = list(mean = mean)`. This is the best option to display the names of the summary statistics called for. The `list()` gives a name to the function.
 
 ```{r adding_fn_list_names_function}
 #| echo: true
@@ -624,7 +640,7 @@ penguins_wo_NAs |>
               "bill_depth_mm",
               "flipper_length_mm",
               "body_mass_g"),
-    .fns = list(avg = mean),
+    .fns = list(avg = mean), #list gives a name to the function 
     .names = '{.fn}_{.col |> str_remove("_mm") |> str_remove("_g")}'
   ))
 
@@ -731,6 +747,7 @@ Adding more operations to summarise(). Say you want to add a standard deviation,
 ```{r adding_more_calc_summarise}
 #| echo: true
 
+
 penguins_wo_NAs |> 
   summarise(across(
     .cols = c("bill_length_mm",
@@ -743,19 +760,6 @@ penguins_wo_NAs |>
   sd_bill_length = sd(bill_length_mm)
   )
 
-added_column <- penguins_wo_NAs |> 
-  summarise(across(
-    .cols = c("bill_length_mm",
-              "bill_depth_mm",
-              "flipper_length_mm",
-              "body_mass_g"),
-    .fns = mean,
-    .names = 'mean_{.col |> str_remove("_mm")}'
-  ),
-  sd_bill_length = sd(bill_length_mm)
-  )
-
-added_column
 
 
 ```
@@ -764,9 +768,9 @@ added_column
 
 ### Grouped calculations with across()
 
-In the last lesson we learned that not only we can use across() for multiple computations, but also we can combine it with other analyses. This means we could do across calculations on a group basis as well. In short, we can perform powerful estimations in a concise manner.
+In the last lesson we learned that not only can we use across() for multiple computations, but also we can combine it with other analyses. This means we could do across calculations on a group basis as well. In short, we can perform powerful estimations in a concise manner.
 
-In the example below, we can add the estimation of means and standard deviations by species and island.
+In the example below, we can add the estimation of means and standard deviations by species.
 
 ```{r grouped_calculations_across}
 #| echo: true
@@ -780,11 +784,17 @@ penguins_wo_NAs |>
     .fns = mean,
     .names = 'mean_{.col |> str_remove("_mm")}'
   ),
-  sd_bill_length = sd(bill_length_mm),
-  .by = c(species,island)
+  .by = species
   )
 
-added_sd <- penguins_wo_NAs |> 
+```
+
+We can extend the grouping to species by islands
+
+```{r adding_by_for_groups}
+#| echo: true
+
+penguins_wo_NAs |> 
   summarise(across(
     .cols = c("bill_length_mm",
               "bill_depth_mm",
@@ -793,15 +803,12 @@ added_sd <- penguins_wo_NAs |>
     .fns = mean,
     .names = 'mean_{.col |> str_remove("_mm")}'
   ),
-  sd_bill_length = sd(bill_length_mm),
   .by = c(species,island)
   )
 
-added_sd
-
 ```
 
-An extension of this idea also apply to names =. See below
+An extension of this idea is to add another variable outside the function, in this case estimating the standard deviation of bill_lenght_mm.
 
 ```{r extension_idea_str_remove}
 #| echo: true
@@ -812,12 +819,12 @@ penguins_wo_NAs |>
               "bill_depth_mm",
               "flipper_length_mm",
               "body_mass_g"),
-    .fns = list(avg = mean, standard_deviation = sd),
+    .fns = list(Average = mean),
     .names = '{.fn}_{.col |> str_remove("_mm") |> str_remove("_g")}'
   ),
-  sd_bill_lenght = sd(bill_length_mm),
-  .by = c(species,island))
-
+  .by = c(species,island),
+  std_bill_length = sd(bill_length_mm)
+  )
 
 ```
 
@@ -858,8 +865,7 @@ penguins_wo_NAs |>
   reframe(
     type = c("min", "max"),
     range_bill_lenght_mm = range(bill_length_mm),
-    .by = c(species,island))
-
+    .by = c(species) )
 
 ```
 
@@ -935,21 +941,24 @@ penguins_wo_NAs |>
 
 ## Lesson 13
 
-Motivation for tidyselect helpers. They are powerful techniques. Allows one to select the correct columns or variables. For instance, the `.fns =` allows one to label the variables. Then those labels are collected via the `.names =` function (see below):
+### Motivation for using tidyselect helpers
+
+They are powerful techniques. Allows one to select the correct columns or variables. For instance, the `.fns =` allows one to label the variables. Then those labels are collected via the `.names =` function (see below):
 
 ```{r motivation_tidyselect}
 #| echo: true
 
 penguins_wo_NAs |> 
-  summarise(across(
+  summarise(
+    across(
     .cols = c("bill_length_mm",
               "bill_depth_mm",
               "flipper_length_mm",
               "body_mass_g"),
-    #Adding new labels
-    .fns = list(avg = mean, standard_deviation = sd),
-    .names = '{.fn}_{.col |> str_remove("_mm")}'
-  ),
+    #Adding labels to the summary statistics
+    .fns = list(avg = mean),
+    #Glueing summary stat labels & column names 
+    .names = '{.fn}_{.col |> str_remove("_mm")}'),
   .by = c(species,island))
 
 ```
@@ -970,7 +979,7 @@ penguins_wo_NAs |>
 
 ```
 
-Notice this omnibus statement includes the column year, which is categorical. In other to exclude this kind of variable from the omnibus statement we can add the `-`(minus) to exclude the categorical variable. Notice we need to encircle it within the concatenate function c( ) . The script `c(where(is.numeric), -year)` concatenates the tidy helper while excluding the column year.
+Notice this omnibus statement includes the column year, which is categorical. In other to exclude this kind of variable from the omnibus statement we can add the `-`(minus) to exclude the factor variable `year`. Notice we need to encircle it within the concatenate function c( ) . The script `c(where(is.numeric), -year)` concatenates the tidy helper while excluding the column year.
 
 ```{r where_is_numeric_but_no_categorical}
 #| echo: true
@@ -981,17 +990,22 @@ penguins_wo_NAs |>
     .fns = list(avg = mean),
     .names = '{.fn}_{.col |> str_remove("_mm")}'
   ),
-  .by = c(species,island))
+  .by = c(species)
+  )
+
+
 
 ```
 
 ## Lesson 14
 
+### Using anonymous function
+
 Another custom function for `across()` function. Using the original penguins dataset. Performing the function, you will get missing data.
 
 How to avoid these situations of ending up with `NA`s. We can use the mean function with `na.rm` option. The way to do so is to specify a new function that also specifies `na.rm = TRUE`. We can do so via an anonymous `function(x)`
 
-Two options:
+Three options to use anonymous functions:
 
 ```{r across_other_function}
 #| echo: true
@@ -1012,7 +1026,9 @@ palmerpenguins::penguins |>
     .fns = \(x) mean(x, na.rm = TRUE),
     .names = 'mean_{.col |> str_remove("_mm")}'
   ),
-  .by = c(species,island))
+  .by = c(species) )
+
+
 
 
 #Option 3 creating a prefix for the new variables
@@ -1030,7 +1046,7 @@ palmerpenguins::penguins |>
 
 ## Lesson 15
 
-This lesson shows the most important `tidy` select helpers.
+This lesson shows the most important `tidy` select helpers; namely, `is.numeric`, `is.factor`, `is.character`.
 
 Selecting the right data by column/variable types. Using select along with `where(is.numeric)` screens the database in search of variables that are numeric. We can eliminate non numeric variables as well. In the example below, we exclude the column year.
 
@@ -1046,7 +1062,7 @@ In this example we only want to include numeric variables. We are excluding year
 #Scenario 1: selecting numeric variables while excludying count variable
 
 penguins_wo_NAs |> 
-  select(where(is.numeric), -year)
+  select(where(is.numeric), -year) 
 
 #Scenario 2: selecting variables that are factors
 
@@ -1096,7 +1112,7 @@ penguins_wo_NAs |>
 
 Another handy option is to get columns where specific percentage of values are missing. In this case asking for variables with more than 1% of missing cases.
 
-It usually practical to name this function for future use.
+It is usually practical to name this function for future use.
 
 ```{r anonymous_functions_for_per_na}
 #| echo: true
@@ -1203,6 +1219,7 @@ Using regular expressions to extend the scope of the search for variables. For i
 penguins_wo_NAs |> 
   select(matches("^[fb].*(_mm)$"))
 
+
 ```
 
 Two more ways to select columns/variables based on a vector that contains the names. You can use a vector to select the columns or variables of interest. Two optional functions `any_of()` or `all_of()` functions to select the components of the vector.
@@ -1288,6 +1305,7 @@ library(modeldata)
 library(janitor)
 library(skimr)
 library(modeldata)
+library(tidyverse)
 
 
 ames |> 
@@ -1368,7 +1386,7 @@ ames |>
   skim(sale_price)
 
 #* Checking sale price distribution as well. Notice median < mean 
-#* suggesting the distribution is posotively skewed.
+#* suggesting the distribution is positively skewed.
 
 ames |> 
   select(sale_price) |> 
@@ -1377,7 +1395,7 @@ ames |>
 
 #### Calculating average prices
 
-Notice, Albert introduces the function to request skewness. Skewness belongs to the e1071 library. And to have it displayed in a nice format, we could pivot_longer.
+Notice, Albert introduces the function to request skewness. Skewness belongs to the `e1071` library. And to have it displayed in a nice format, we could pivot_longer.
 
 Using across to estimate min, max, average, median, sd, and skeweness.
 
@@ -1396,6 +1414,7 @@ library(gt)
 #Calculating averages using across
 
 ames |> 
+  na.omit() |> 
   summarise(
     across(
       .cols = sale_price,
@@ -1445,6 +1464,7 @@ ames_top_five <-  ames |>
     neighborhood,
     n = 5)
     ) 
+
 ames_top_five |> 
   select(neighborhood) |> 
   count(neighborhood) |> 
@@ -1510,7 +1530,7 @@ ames_top_five |>
   geom_density(fill = 'grey80') +
   geom_text(data = ranges, 
             aes(y = -1, label = sale_price)) +
-  facet_wrap(~ neighborhood, nrow = 6) +
+  facet_wrap(vars(neighborhood), nrow = 6) +
   scale_x_log10(labels = scales::label_dollar()) +
   theme_minimal(
     base_family = 'Source Sans Pro',
@@ -1538,6 +1558,7 @@ ames_top_five |>
     base_family = 'Source Sans Pro',
     base_size = 16
   )
+
 
 ```
 

@@ -1,0 +1,217 @@
+---
+title: "Part 3"
+author: "Albert Rapp"
+date: October 10, 2024
+format:
+  html:
+    code-link: true
+    code-fold: true
+    code-summary: "Show the code"
+    self-contained: true
+    embed-resources: true
+    toc: true
+    theme: Zephyr
+    number-sections: false
+execute: 
+  warning: false
+  message: false
+  echo: false
+editor_options: 
+  chunk_output_type: console
+---
+
+## Part III
+
+## Lesson 1
+
+This lesson addresses basic string functions, which start with `str_to_`. Those are: `str_to_lower()`, `str_to_upper()`, `str_to_title()`, `str_to_sentence()`.
+
+### Strings for upper or lower capital
+
+```{r loading_libraries}
+library(tidyverse)
+library(gt)
+library(gtExtras)
+```
+
+Notice that `str_to_title()` changes the whole string to capital letters. `str_to_title()`capitalizes all the words in the sentence. `str_to_sentence` changes only the first word in the sentence to upper letters. The rest are in lower letters.
+
+```{r basic strings}
+#| echo: TRUE
+
+str_to_lower("Berlin")
+str_to_lower("This is a sentence")
+str_to_upper("This is a sentence")
+str_to_title("This is a sentence")
+str_to_sentence('Did you know that Berlin is a German city')
+
+# These functions also work with vectors
+str_to_lower(c("Berlin", "Madrid", "London", "New York"))
+```
+
+#### Practical applications
+
+##### Merging data sets
+
+In this example we are using str_to functions to merge two data sets, whose keys appear either in capital or lower letters.
+
+```{r new_examples_str_to_}
+#| echo: true
+
+tib_a <- tibble(
+  city = c('Berlin', 'New York', 'Vienna'),
+  value = c(452, 242, 2342)
+)
+
+tib_b <- tibble(
+  city = c('berlin', 'new york', 'vienna'),
+  new_value = c(123, 2341,25234)
+)
+
+#*  Trying to join them would fail to bring the values of the
+#*  new_value variable in tib_b because of the keys
+
+tib_a |> 
+  left_join(tib_b)
+
+
+```
+
+Using `str_to_` to make compatible the two data sets. Notice the use of `mutate`.
+
+```{r joining_after_str_to}
+#|echo: true
+
+tib_a |> 
+  left_join(
+    tib_b |> 
+      mutate(city = str_to_title(city)),
+    by = join_by(city == city))
+
+# Another option is to change tib_b before doing the merger
+
+# tib_b <- tib_b |> 
+#   mutate(city = str_to_title(city))
+# 
+# tib_a |> 
+#   left_join(
+#     tib_b, by = join_by(city == city)
+#   )
+
+```
+
+##### Tables
+
+Another useful application is when creating tables. Say you want to capitalize the names of the variable, in this case city. Instead of manually change the titles in the gt() table you can include str_to_title() within gt()
+
+```{r creating_tables_str_to}
+#|echo: TRUE
+
+library(gt)
+
+tib_a |> 
+  gt() |> 
+  cols_label_with(fn = str_to_title)
+
+```
+
+## Lesson 2
+
+### `str_detect()`
+
+Finding things related to specific texts.
+
+```{r finding_characters}
+#|echo: TRUE
+
+cities <-  c('Berlin', 'New York', 'Vienna')
+
+#Identifying cities with the letter B
+
+str_detect(cities, 'B')
+
+#Identifying cities with the letter e
+
+str_detect(cities, 'e')
+
+
+
+```
+
+#### Using str_detect() along with filter() function
+
+Watch up that `str_detect()` is case sensitive.
+
+```{r str_detect_filter}
+#| echo: true
+
+#Filtering cities with the letters "Ber"
+
+tib_a |> 
+  filter(str_detect(city, 'Ber'))
+
+tib_a |> 
+  filter(str_detect(city, 'nn'))
+
+
+```
+
+Using `str_subset()` instead of `str_detect()` if interested in pulling the set of values
+
+```{r str_subset}
+#| echo: true
+
+str_subset(cities, 'Ber')
+
+```
+
+Using the `str_which()` function, which provides an index of the elements that match the string.
+
+```{r str_which}
+#| echo: true
+
+str_which(cities, 'Yo')
+
+```
+
+## Lesson 3
+
+Functions that look at the start or end of a string: `str_starts() str_ends()`.
+
+```{r openning_ending_stings}
+#| echo: true
+
+cities <-  c('Berlin', 'New York', 'Vienna')
+
+str_starts(cities,'Ber')
+
+str_ends(cities, 'rk')
+
+```
+
+Function that detects characters `str_detect()`
+
+```{r detective_function}
+#| echo: true
+
+cities <-  c('Berlin', 'New York', 'Vienna')
+
+str_detect(cities, 'n')
+
+```
+
+Using a similar approach to subsets via \[\] brackets. It lists the name of the value meeting the condition.
+
+```{r detect_subset}
+#| echo: true
+
+
+cities <-  c('Berlin', 'New York', 'Vienna')
+
+cities[str_starts(cities,'n')]
+
+cities[str_ends(cities,'n')]
+
+which(str_ends(cities,'n'))
+
+```

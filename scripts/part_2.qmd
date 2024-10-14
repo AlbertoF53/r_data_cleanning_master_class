@@ -2019,7 +2019,7 @@ Calculating mean delivery days and expected days to delivered by country of orig
 #| warning: false
 #| code-fold: true
 
-shipments <- openxlsx::read.xlsx(
+shipment_test <- shipments <- openxlsx::read.xlsx(
   'data/Part_2/19a_Shipments_Details_mod.xlsx',
   startRow = 2) |> 
   as_tibble() |> 
