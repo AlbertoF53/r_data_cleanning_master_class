@@ -60,7 +60,7 @@ palmerpenguins::penguins |>
 
 ```
 
-An alternative to skimr for descriptive statistics is `gt_plt_summary()` function of the gtExtras package. For it to work, you need to select the variables in advance. Note:
+An alternative to skimr for descriptive statistics is `gt_plt_summary()` function of the gtExtras package. For it to work, you need to select the variables in advance.
 
 ```{r an_alternative_gt}
 #| echo: true
@@ -85,7 +85,7 @@ modeldata::ames |>
 
 ```
 
-Notice the ames data has not nice variable names. Good idea to use janitor::clean_names to convert capital letters into lower letters.
+Notice the ames data has not nice variable names in that they are capitalized. Good idea to use janitor::clean_names to convert capital letters into lower letters.
 
 ```{r janitoring_ames}
 #| echo: true
@@ -98,11 +98,13 @@ modeldata::ames |>
 
 ## Lesson 2
 
-The focus is the `mutate()` function. It also deals with vectorized vs iterative calculations with mutate. It introduces the `map()` function. This function aligns a function to a vector, compelling the estimating of one-by-one instead of vector mashing. The variations of map() discussed include the `map_lgl()` (map logical) and the `map_dbl()` (map numeric). The first one produces a logical vector. The second produces numeric values of 1 (True) and 0 (False).
+The focus of this lesson is the `mutate()` function. It also deals with vectorized vs iterative calculations associated with with the `mutate()` function.
+
+It also introduces the `map()` function. This function aligns a function to a vector, compelling the estimating of one-by-one instead of vector mashing. The variations of map() discussed include the `map_lgl()` (map logical) and the `map_dbl()` (map numeric or double). The first one produces a logical vector. The second produces numeric values of 1 (True) and 0 (False).
 
 ### Handling missing cases
 
-It is important to handle missing values before doing mutate(). We can verify missing cases were removed using skimr.
+It is important to handle missing values before doing mutate(). We can verify missing cases were removed using skimr. Remember that the skim function revealed that sex had 11 missing cases, or the completion ratio was 97%.
 
 ```{r missing_values_penguins}
 #| echo: true
@@ -111,6 +113,8 @@ library(palmerpenguins)
 library(tidyverse)
 library(modeldata)
 library(janitor)
+
+#Removing missing cases using !is.na(sex)
 
 penguins_wo_NAs <-  palmerpenguins::penguins |> 
   filter(!is.na(sex))
@@ -122,7 +126,7 @@ skimr::skim(penguins_wo_NAs)
 
 ### Handling vectors
 
-**Mutate** *is a* *vectorised function*. This means that it takes the two vectors listed in the mutate function as a whole. In other words the values of each column are not taken one-by-one. The values are handled as a vector, and then they are operated via a vectorized division (/).
+**Mutate** *is a* *vectorised function*. This means that it takes the two vectors listed in the mutate function as a whole. In other words, the values of each column are not taken one-by-one. The values are handled as a vector, and then they are operated via a vectorized division (/).
 
 Imagine these two vectors are "smashed together" and the result is divided.
 
@@ -131,13 +135,13 @@ Imagine these two vectors are "smashed together" and the result is divided.
 
 penguins_wo_NAs |> 
   mutate(
-    bill_flipper_ratio = bill_length_mm / bill_depth_mm, na.rm = TRUE
+    bill_flipper_ratio = bill_length_mm / flipper_length_mm, na.rm = TRUE
   ) |> 
   select(bill_length_mm, bill_depth_mm, bill_flipper_ratio)
 
 ```
 
-Example where the vectorized condition may not be met. Using a custom function to illustrate this problem. Next let's apply the function to one of the vectors used in estimating bill_flipper_ratio. In this case, bill_length_mm.
+Example where the vectorized condition may not be met. Using a custom function to illustrate this problem. Next let's apply the function to one of the vectors used in estimating bill_flipper_ratio. In this case, bill_length_mm. Our hope is that we would get a vector of TRUE and FALSE.
 
 Notice that the application of the function prompted an error message. It was traced back to the `if (x > 39) ...:` The result shows the condition has `length > 1`.
 
@@ -159,9 +163,8 @@ large_quantity <-  function(x) {
 #   select(bill_length_mm,large_bill_length)
 
 
- #Reconstructing the essence of the function
-# # c(34, 234) > 39
-
+#Reconstructing the essence of the function as a vector
+c(34, 234) > 39
 
 ```
 
@@ -192,6 +195,7 @@ penguins_wo_NAs |>
   mutate(
     large_bill_length = map_lgl(
       bill_length_mm,
+    #Applying large_quantity function to vector bill_lenght_mm
       large_quantity) ) |> 
   select(bill_length_mm,large_bill_length)
 
@@ -223,7 +227,7 @@ penguins_wo_NAs |>
 
 ```
 
-Still another variation of the `map()` function is the `map_dbl()`. It reports numbers instead of logical statements. Notice, we list first the column to be modified followed by the function (`large_quantity`).
+Still another variation of the `map()` function is the `map_dbl()`. It reports numbers (1 = TRUE, 0 = FALSE) instead of logical statements. Notice, we list first the column to be modified followed by the function (`large_quantity`).
 
 ```{r map_numbers}
 #| echo: true
@@ -292,7 +296,7 @@ palmerpenguins::penguins |>
 
 ## Lesson 5
 
-Repeated calculations for subsets of data. Two options to automate repeated calculations. `for()` loop. However this approach is messy and tedious.
+Repeated calculations for subsets of data. Two options to automate repeated calculations: `for()` loop. However this approach is messy and tedious.
 
 ```{r for_loop_repetead}
 #| echo: true
@@ -417,9 +421,8 @@ The `.by = species` forces that the calculations take place separately by the co
 palmerpenguins::penguins |> 
   mutate(
     mean_column = mean(bill_length_mm, na.rm = TRUE),
-    .by = species
-  ) |>
-  select(species,mean_column) |>
+    .by = species) |>
+  select(species,mean_column)|>
   unique()
 
 ```
