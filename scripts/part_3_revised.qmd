@@ -1,0 +1,1216 @@
+---
+title: "Part 3"
+author: "Albert Rapp"
+date: October 10, 2024
+format:
+  html:
+    code-link: true
+    code-fold: true
+    code-summary: "Show the code"
+    self-contained: true
+    embed-resources: true
+    toc: true
+    theme: Zephyr
+    number-sections: false
+execute: 
+  warning: false
+  message: false
+  echo: false
+editor_options: 
+  chunk_output_type: console
+---
+
+# Part III
+
+## Lesson 1
+
+This lesson addresses basic string functions, which start with `str_to_`. Those are: `str_to_lower()`, `str_to_upper()`, `str_to_title()`, `str_to_sentence()`.
+
+### Strings for upper or lower capital
+
+```{r loading_libraries}
+library(tidyverse)
+library(gt)
+library(gtExtras)
+```
+
+Notice that `str_to_title()` changes the whole string to capital letters. `str_to_title()`capitalizes all the words in the sentence. `str_to_sentence` changes only the first word in the sentence to upper letters. The rest are in lower letters.
+
+```{r basic strings}
+#| echo: TRUE
+
+str_to_lower("Berlin")
+str_to_lower("This is a sentence")
+str_to_upper("This is a sentence")
+str_to_title("this is a sentence")
+str_to_sentence('Did you know that Berlin is a German city')
+
+# These functions also work with vectors
+str_to_lower(c("Berlin", "Madrid", "London", "New York"))
+```
+
+#### Practical applications
+
+##### Merging data sets
+
+In this example we are using str_to functions to merge two data sets, whose keys appear either in capital or lower letters.
+
+```{r new_examples_str_to_}
+#| echo: true
+
+tib_a <- tibble(
+  city = c('Berlin', 'New York', 'Vienna'),
+  value = c(452, 242, 2342)
+)
+
+tib_b <- tibble(
+  city = c('berlin', 'new york', 'vienna'),
+  new_value = c(123, 2341,25234)
+)
+
+#*  Trying to join them would fail to bring the values of the
+#*  new_value variable in tib_b because of the keys
+
+tib_a |> 
+  left_join(tib_b)
+
+
+```
+
+Using `str_to_` to make compatible the two data sets. Notice the use of `mutate`.
+
+```{r joining_after_str_to}
+#|echo: true
+
+tib_a |> 
+  left_join(
+    tib_b |> 
+      mutate(city = str_to_title(city)),
+    by = join_by(city == city))
+
+# Another option is to change tib_b before doing the merger
+
+# tib_b <- tib_b |> 
+#   mutate(city = str_to_title(city))
+# 
+# tib_a |> 
+#   left_join(
+#     tib_b, by = join_by(city == city)
+#   )
+
+```
+
+##### Tables
+
+Another useful application is when creating tables. Say you want to capitalize the names of the variable, in this case city. Instead of manually change the titles in the gt() table you can include str_to_title() within gt()
+
+```{r creating_tables_str_to}
+#|echo: TRUE
+
+library(gt)
+
+tib_a |> 
+  gt() |> 
+  cols_label_with(fn = str_to_title)
+
+```
+
+## Lesson 2
+
+### `str_detect()`
+
+Finding things related to specific texts.
+
+```{r finding_characters}
+#|echo: TRUE
+
+cities <-  c('Berlin', 'New York', 'Vienna')
+
+#Identifying cities with the letter B
+
+str_detect(cities, 'B')
+
+#Identifying cities with the letter e
+
+str_detect(cities, 'e')
+
+
+
+```
+
+#### Using str_detect() along with filter() function
+
+Watch up that `str_detect()` is case sensitive.
+
+```{r str_detect_filter}
+#| echo: true
+
+#Filtering cities with the letters "Ber"
+
+tib_a |> 
+  filter(str_detect(city, 'Ber'))
+
+tib_a |> 
+  filter(str_detect(city, 'nn'))
+
+
+```
+
+Using `str_subset()` instead of `str_detect()` if interested in pulling the set of values
+
+```{r str_subset}
+#| echo: true
+
+str_subset(cities, 'Ber')
+
+```
+
+Using the `str_which()` function, which provides an index of the elements that match the string.
+
+```{r str_which}
+#| echo: true
+
+str_which(cities, 'Yo')
+
+```
+
+## Lesson 3
+
+Functions that look at the start or end of a string: `str_starts() str_ends()`.
+
+```{r openning_ending_stings}
+#| echo: true
+
+cities <-  c('Berlin', 'New York', 'Vienna')
+
+str_starts(cities,'Ber')
+
+str_ends(cities, 'rk')
+
+```
+
+Function that detects characters `str_detect()`
+
+```{r detective_function}
+#| echo: true
+
+cities <-  c('Berlin', 'New York', 'Vienna')
+
+str_detect(cities, 'n')
+
+```
+
+Using a similar approach to subsets via \[\] brackets. It lists the name of the value meeting the condition.
+
+```{r detect_subset}
+#| echo: true
+
+cities <-  c('Berlin', 'New York', 'Vienna')
+
+cities[str_starts(cities,'n')]
+
+cities[str_ends(cities,'n')]
+
+which(str_ends(cities,'n'))
+
+```
+
+## Lesson 4
+
+Using the negative argument.
+
+-   The negate argument nullifies what is indicated in the `str_starts()` function. The full function is str_starts(string, pattern, negate = FALSE).
+
+```{r negating_arg}
+#| echo: true
+#| message: false
+
+library(tidyverse)
+
+cities <-  c('Berlin', 'New York', 'Vienna')
+
+#Here we see all three arguments are false
+
+str_starts(cities, 'ber')
+
+#Watch what happens when we add the negate argument within the str_
+
+str_starts(cities, 'ber', negate = TRUE)
+
+
+```
+
+Another example of the use of negate.
+
+Using the first option `str_detect()`reports that New York does not meet the condition of having an n.
+
+-   Watch what happens, when we add the negate argument. In this case New York meets the condition of having an `n`.
+
+-   Another option is to use the negate expression `!`at the beginning of the string. This option means: "Find all those cities that do not have a capital N." In this case, New York does not have a capital 'N' letter, but a lower capital "n" instead, making the logical condition`TRUE`.
+
+```{r negate_v2}
+#| echo: true
+#| message: true
+
+cities <-  c('Berlin', 'New York', 'Vienna')
+
+str_detect(cities, 'n')
+
+#Adding negate
+
+str_detect(cities, 'n', negate = TRUE)
+
+#Adding negate expression at the beginning
+
+!str_detect(cities, 'n')
+
+
+```
+
+A situation where the `negate = TRUE` is useful is in those condition where one does not want to return TRUE or FALSE .
+
+-   The first str_subset identifies Berlin and Vienna has having lower capital "n"s.
+
+-   In the second case, we can use to identify the names of cities not containing lower case 'n's.
+
+```{r negate_v3}
+#| echo: true
+#| warning: true
+
+#First option
+str_subset(cities, 'n')
+
+#Second option
+str_subset(cities, 'n', negate = TRUE)
+
+```
+
+## Lesson 5
+
+Removing unwanted text, or changing the text. The main focus is the `str_remove( )`. This function works by removing a string and replacing it by another.
+
+There are two options: `str_remove( )` and `str_remove_all( )`.
+
+In this example we focus on the string 'Alabama', where we want to remove the letter `a`.
+
+-   str_remove('Alabama', "a") only removes the first "a"
+
+-   str_remove_all('Alabama','a') removes all as
+
+```{r rem_unwanted}
+#| echo: true
+
+str_remove('Alabama', 'a')
+
+#Removing all "a"s
+
+str_remove_all('Alabama', 'a')
+
+#Removing lower & capital a's
+
+str_remove_all('Alabama', 'a|A')
+
+
+```
+
+A nice application showing case the power of str_remove() function
+
+-   In this case we want to remove unnecessary labels associated with the name of companies
+
+```{r rem_unwanted_v2}
+#| echo: true
+
+library(readr)
+big_tech_companies <- read_csv("data/Part_2/big_tech_companies.csv")
+
+```
+
+Cleaning the data using mutate function along with `str_remove()` function
+
+-   Removing Inc. by a space
+
+-   Removing commas followed by a white space
+
+-   Removing ".com"
+
+-   Removing "Corporation"
+
+-   Removing "Systems"
+
+-   Removing Platforms
+
+```{r removing_labels}
+#| echo: true
+
+big_tech_companies |> 
+  mutate(
+    company = company |> 
+      str_remove("Inc.") |> 
+      str_remove(", ") |> 
+      str_remove(".com") |> 
+      str_remove(' Corporation')
+  )
+
+```
+
+Important note. In regular expression language some symbols have special meaning. For example, in the string `Inc.` the period means "any character".
+
+## Lesson 6
+
+Trim and pad your strings.
+
+As you noticed, there are some unwanted spaces at the end of the names of the companies. We can eliminate those unwanted spaces using the `str_trim()` function, which removes whitespaces.
+
+On the other hand, `str_squish()` removes whitespace at the start and end, and replaces all internal whitespace with a single space. Notice that the " " disappears once you trim the string.
+
+```{r trim_pad}
+#| echo: true
+
+big_tech_companies |> 
+  mutate(
+    company = company |> 
+      str_remove("Inc.") |> 
+      str_remove(", ") |> 
+      str_remove(".com") |> 
+      str_remove(" Corporation") |> 
+      str_trim(side = c('both'))
+  )
+
+```
+
+The str_padd() does opposite of str_trim(). It adds spaces.
+
+Consider the example of making certain that a string of numbers have the same length. And we want to add a `0` to the left of the character instead of whitespace. In this example, we are adding to zeros to the left of the digit.
+
+```{r str_pad}
+#|echo: TRUE
+
+1:15
+
+str_pad(
+  1:15,
+  width = 4,
+  side = c('left'),
+  pad = '0'
+)
+
+```
+
+## Lesson 7
+
+### Concatenate strings
+
+#### paste0( ) function
+
+Using the padded numbers to create file names. We can create a new file labelled `file_names`. And then use the `paste0` function and then add the string `_file.txt`. paste() function is similar to paste0 except it leaves a space between the two string being attached.
+
+```{r concatenate_string}
+#| echo: true
+#| message: false
+
+padded_mmbrs <-  str_pad(
+   1:15,
+  width = 4,
+  side = c('left'),
+  pad = '0'
+)
+
+#Pasting the extention _file.txt with space using paste()
+file_names <- paste(
+  padded_mmbrs,
+  "_file.txt"
+)
+
+#Pasting the extention _file.txt without space using paste0()
+file_names <- paste0(
+  padded_mmbrs,
+  "_file.txt"
+)
+
+```
+
+#### `str_c` concatenate function
+
+Similar to paste0(), but `str_c` has a couple of safety features that makes it nicer to work with.
+
+```{r str_concatenate}
+#| echo: true
+
+str_c(
+  padded_mmbrs,
+  '_file.txt'
+)
+
+
+```
+
+#### Collapsing vectors of text
+
+For example using the file_names vector via paste0(file_names) nothing happens
+
+```{r collapsing_vectors_txt}
+#| echo: true
+
+paste0(file_names)
+
+
+```
+
+An alternative using paste0() to collapse all the strings within into a single string, here using collapse to add a comma and a white space `paste0(file_names, collapse = ', ').`
+
+```{r collapsing_vectors_txt_v2}
+#|echo: TRUE
+
+#Adding a comma and space when collapsing string
+paste0(file_names, collapse = ', ')
+
+#Same thing happens using str_c()
+
+str_c(file_names, collapse = ', ' )
+
+```
+
+The str_c function is a preferred option to paste0() in several cases. One of them when combining strings with missing values.
+
+```{r collapse_missing}
+#|echo: TRUE
+
+#Using paste0() to collapse NA
+paste0(c(file_names,NA), collapse = ', ')
+
+#Using str_c() to collapse NAs is preferred
+str_c(c(file_names, NA), collapse = ', ')
+
+
+```
+
+##### str_flatten
+
+`str_flatten( )` reduces a character vector into a single string. It is a summary function in that regardless of the length of the input x, it returns a single string.
+
+-   str_flatten(string, collapse = , )
+
+The str_flatten function has another advantage next to paste0() and str_c(). It allows you to modify the last entry in the string to include a symbol marking using the argument last = " and ". Because this option is so common, there is even an Oxford version of the str_flatten function: str_flatten_comma().
+
+```         
+str_flatten_comma(string, last = NULL, na.rm = FALSE)
+```
+
+```{r str_flatten}
+#| echo: true
+
+#This option produces same results as paste0() and str_c()
+str_flatten(file_names, collapse = ', ')
+
+#However str_flatten() has another option allowing to add a string
+str_flatten(file_names, collapse = ', ', last = ' and ')
+
+#Demonstrating the same using the first 3 names
+str_flatten(file_names[1:3], collapse = ', ', last = ', and ')
+
+#Oxford version
+str_flatten_comma(file_names[1:3],last = ', and ')
+
+```
+
+## Lesson 8
+
+### glue & epoxy
+
+#### glue package
+
+In the real world you want to preface a collapse vector with a short explanation of what it stands for. glue() and epoxy() functions add explanations to collapsed strings. To add variables within the glue function use `{ }`. **Be careful** about using [single quotation]{.underline} mark when inserting the column or variable. *Use double quotation mark " "instead*.
+
+```{r glue_epoxy}
+#| echo: true
+
+library(glue)
+library(epoxy)
+
+glue::glue(
+  "The relevant files are: 
+  {str_flatten_comma(file_names[1:3],last = ', and ') }"
+  )
+
+# Adding more text at the end of glue
+
+file_location <- 'somewhere'
+
+
+glue::glue(
+  "The relevant files are: 
+  {str_flatten_comma(file_names[1:3],last = ', and ') } and they are located {file_location}." 
+  )
+
+```
+
+#### epoxy package
+
+epoxy is like glue package but with steroids.
+
+It works like glue(). It produces the same output
+
+```{r epoxy_pck}
+#| echo: true
+
+library(epoxy)
+
+file_location <- 'somewhere'
+
+
+epoxy::epoxy(
+  "The relevant files are: 
+  {str_flatten_comma(file_names[1:3],last = ', and ') } and they are located {file_location}." 
+  )
+
+```
+
+Additional epoxy features. Notice we don't need to flatten the string as we did with glue()
+
+```{r addition_epoxy_feat}
+#| echo: true
+
+file_location <- 'somewhere'
+
+#Notice this option lists each file 
+epoxy::epoxy(
+  "The relevant files are: {file_names[1:3]} and they are located {file_location}." 
+  )
+
+#To produce a single string, whereby the comma is specified in advance.
+epoxy::epoxy(
+  "The relevant files are: {.comma file_names[1:3]} and they are located {file_location}." 
+  )
+
+#* The same works with other special arguments like adding 'and'
+epoxy::epoxy(
+  "The relevant files are: {.and file_names[1:3]} and they are located {file_location}." 
+  )
+
+#* Using or instead of and
+epoxy::epoxy(
+  "The relevant files are: {.or file_names[1:3]} and they are located {file_location}." 
+  )
+
+```
+
+## Lesson 9
+
+### Replace texts with str_replace( )
+
+In the example, the goal is to modify the original sentence using the `str_replace( )`function. There are several options of str_replace:
+
+-   str_replace( )
+
+-   str_replace_all( )
+
+-   str_replace_na( )
+
+```{r replace_txt}
+#| echo: true
+
+
+sentence <-  'Peter is a nice guy and Tom is a mean guy while Maria is NA'
+
+#Replacing nice by another word, or empty space
+str_replace(sentence,'nice','')
+
+str_replace(sentence,'guy','dude')
+
+#Using the str_replace_all function
+
+str_replace_all(sentence,'guy','dude')
+
+# Replacing a string with an NA
+
+str_replace_na(sentence, replacement = "NA")
+
+
+```
+
+This function can be a life savvier when joining data sets. Notice that in the second dataset Washington DC is not spelled the same way as in the first dataset, producing an NA when merging the data
+
+```{r replace_join_role}
+#| echo: true
+
+population <- tibble(
+  city = c("New York", "Washington D.C."),
+  inhabitants = runif(2, max = 10^7) |> 
+    round()
+)
+
+area <-  tibble(
+  city = c("New York", "Washington DC."),
+  area_m2 = runif(2, max = 10^7) |> 
+    round()
+)
+
+#* One approach is to replace "Washington DC." by "Washington D.C." in
+#* the are df before merging the two datasets
+
+area |> 
+  mutate(
+    city = city |> 
+      str_replace("Washington DC.", "Washington D.C."))
+
+#Or
+
+area <- area |> 
+  mutate(
+    city = str_replace(city, "Washington DC.", "Washington D.C." ) )
+
+
+population |>
+  left_join(area, 
+            by = 'city')
+
+
+```
+
+Second approach to replace the incorrect spelling of DC. Notice that `str_replacement_all( )` has a hidden feature. It can be used to perform multiple replacements using regexp.
+
+```{r 2nd_approach_join}
+#| echo: true
+
+population <- tibble(
+  city = c("New York", "Washington D.C."),
+  inhabitants = runif(2, max = 10^7) |> 
+    round()
+)
+
+area <-  tibble(
+  city = c("New York", "Washington DC."),
+  area_m2 = runif(2, max = 10^7) |> 
+    round()
+)
+
+population |>
+  mutate(
+    city = str_replace_all(city,"D.C.", "DC." )
+  ) |> 
+  left_join(area, 
+            by = 'city')
+
+
+```
+
+### Replacement dictionary
+
+In this example we have two cities that need replacing 'D.C.' by 'DC.' and New York by New York City. We can do so by creating a dictionary of the replacements to be made before joining the two databases.
+
+Notice that the area is being modified by a mutate command within the left_join function prior to using the key merging variable; in this case, city.
+
+```{r hidden_feature}
+#| echo: true
+
+population <- tibble(
+  city = c("New York", "Washington D.C."),
+  inhabitants = runif(2, max = 10^7) |> 
+    round()
+)
+
+area <-  tibble(
+  city = c("New York City", "Washington DC."),
+  area_m2 = runif(2, max = 10^7) |> 
+    round()
+)
+
+#* Creating a replacement dictionary
+#* 
+
+replace_dict <- c("New York City" = "New York",
+                  "Washington DC." = "Washington D.C.")
+
+#* Notice that the area df is being modified by the mutate function before
+#* matching with whe key, city. 
+
+population |> 
+  left_join(area |> 
+            mutate(
+              city = str_replace_all(city, replace_dict )
+            ),
+            by = 'city')
+
+
+```
+
+## Lesson 10
+
+This lesson examines how to split strings.
+
+### Splitting sentence with spaces
+
+```{r splitting_strings}
+#| echo: true
+#| warning: false
+
+sentences <- c(
+  "Petter is a nice guy and Tommy is a mean guy",
+  "Lisa is a nice lady and Jenny is a mean lady"
+)
+
+str_split(sentences, " " )
+
+#This function can also be used to split a word
+
+str_split('Flapjack', '' )
+
+
+```
+
+### str_split_1() function
+
+It can be used to get the results as a vector. `str_split_1()` takes a single string and splits it into pieces. It returns a character
+
+```{r str_split_1()}
+#| echo: true
+#| message: false
+
+str_split_1('Flapjack', '')
+
+
+```
+
+### str_split_i() function
+
+Splits each string into a character vector into pieces and extracts the ith value, returning a vector. This function is ideal if we want to single out an attribute or string located in a particular position in the vector
+
+Suppose we want to single out the 5th word or letter in a string. In this case, 'guy', and "lady".
+
+```{r str_split_i() }
+#| echo: true
+#| message: false
+
+str_split_i(sentences, ' ', i = 5)
+
+```
+
+#### Applications
+
+This function could help to identify important elements in a vector. For example ingredients in a recipe. In this case single out the second element.
+
+```{r str_split_ingredients}
+#| echo: true
+#| message: false
+
+recipe <- c("5 beer",
+  "6 onions",
+  "7 cucumbers")
+
+ 
+str_split_i(recipe,' ', i = 2)
+
+
+
+```
+
+#### Creating data sets
+
+This could be useful in a tibble data set, which identifies the ingredients as a second column. If we want to have a column with the quantity using the parse_number() from the `readr`package
+
+```{r tibble_str_split}
+#| echo: true
+#| message: false
+
+tibble(
+  input = c("5 beer",
+  "6 onions",
+  "7 cucumbers")) |> 
+  mutate(
+    quantity = parse_number(input),
+    unit =   str_split_i(input,' ', i = 2)
+  )
+
+```
+
+### str_split_fixed
+
+`str_split_fixed()` can be used to break down a string into 3 splits.
+
+```{r str_split_}
+#| echo: true
+#| message: false
+
+str_split_fixed(sentences,' ', n = 3)
+
+
+```
+
+## Lesson 11
+
+### separate_wider\_ function
+
+Split columns with `separate_wider_delim()`. It is part of the tidyr package. It allows us to separate string by a delimiter. We need to indicate the column to be split, in this case; content. Basically, it breaks a long string into columns. It has many options.
+
+```{r spliting_columns}
+#| echo: true
+#| message: false
+
+mixed_col <- tibble(
+  content = c("5 beer",
+  "6 onions",
+  "7 cucumbers"))
+
+#Two options
+
+separate_wider_delim(
+  data = mixed_col,
+  cols = 'content',
+  delim = ' ',
+  names = c('quantity','unit')
+)
+
+
+#Pipe option |>
+
+mixed_col |> 
+  separate_wider_delim(
+  cols = 'content',
+  delim = ' ',
+  names = c('quantity','unit')
+)
+
+
+```
+
+#### debug option
+
+A more complicated example. Notice the last entry has more than two pieces of data, which prompts an error. We need to use he option `too-many` argument. If unsure what to do, you could use the 'debug' option. This option shows what is wrong.
+
+```{r split_col_comp }
+#| echo: true
+#| message: false
+
+mixed_col <- tibble(
+  content = c("5 beer",
+  "6 onions",
+  "7 cucumbers",
+  "8 pieces of bread"))
+
+#too_many = debug
+
+
+mixed_col |> 
+  separate_wider_delim(
+  cols = 'content',
+  delim = ' ',
+  names = c('quantity','unit'),
+  too_many = "debug"
+)
+
+
+```
+
+#### merge
+
+One way to correct the problem is to merge "pieces of bread".
+
+```{r split_col_comp_merge }
+#| echo: true
+#| message: false
+
+mixed_col |> 
+  separate_wider_delim(
+  cols = 'content',
+  delim = ' ',
+  names = c('quantity','unit'),
+  too_many = "merge"
+)
+
+```
+
+#### drop
+
+```{r split_col_comp_drop }
+#| echo: true
+#| message: false
+
+mixed_col |> 
+  separate_wider_delim(
+  cols = 'content',
+  delim = ' ',
+  names = c('quantity','unit'),
+  too_many = "drop"
+)
+
+```
+
+#### An example of too few
+
+The last row, Houston, does not indicate the state of the city. The debug option reveals that the last row, Houston, is FALSE in that it is too short. It lacks the state.
+
+```{r split_col_comp_too_few}
+#| echo: true
+#| message: false
+
+tibble(
+  city = c(
+    "New York, NY",
+    "San Diego, CA",
+    "Houston"
+  )
+) |> 
+  separate_wider_delim(
+  cols = 'city',
+  delim = ',  ',
+  names = c('city','state')
+)
+
+#Using the `too_few` argument with the debug optin
+
+tibble(
+  city = c(
+    "New York, NY",
+    "San Diego, CA",
+    "Houston"
+  )
+) |> 
+  separate_wider_delim(
+  cols = 'city',
+  delim = ', ',
+  names = c('city', 'state'),
+  too_few = 'debug'
+)
+
+
+
+```
+
+#### too_few = 'align_start'
+
+We have two option to correct the problem: align_start or align_end. Opting for \`too_few = align_start'. The align_start option creates two columns. In the case of Houston, it reports the state as NA.
+
+```{r split_col_comp_aling_start}
+#| echo: true
+#| message: false
+
+tibble(
+  city = c(
+    "New York, NY",
+    "San Diego, CA",
+    "Houston"
+  )
+) |> 
+  separate_wider_delim(
+  cols = 'city',
+  delim = ', ',
+  names = c('city', 'state'),
+  too_few = 'align_start'
+)
+
+
+
+```
+
+#### too_few = 'align_end'
+
+Using the align_end to correct the problem is missing state for Houston. In this case, the last entry reports city as NA and state = Houston.
+
+```{r split_col_comp_aling_end}
+#| echo: true
+#| message: false
+
+tibble(
+  city = c(
+    "New York, NY",
+    "San Diego, CA",
+    "Houston"
+  )
+) |> 
+  separate_wider_delim(
+  cols = 'city',
+  delim = ', ',
+  names = c('city', 'state'),
+  too_few = 'align_end'
+)
+
+
+```
+
+### separate_longer
+
+It operates as `separate_wider` but in the opposite direction. It does not give you many columns but instead rows.
+
+## Lesson 12
+
+Regular expressions.
+
+```{r reg_exp_intro}
+#| echo: true
+#| message: false
+
+#Removing lower as
+
+str_remove_all('Alabama', 'a')
+
+#Removing captial As
+
+str_remove_all('Alabama', 'A')
+
+
+```
+
+### str_remove() and regex
+
+Removing both capital and lower a's using regular expressions. We can remove capital or lower a's using or `|` operator. Recall that the second argument in the `str_remove()` deals with the `pattern` we are looking for.
+
+```{r str_remove_regex}
+#| echo: true
+#| warning: false
+
+str_remove_all('Alabama', 'a|A')
+
+
+```
+
+### str_subset() and regex
+
+In this example, we want to subset the string by singling out cities with either capital B or lower cap b. Another example
+
+```{r str_subset_regex}
+#| echo: true
+#| warning: false
+
+str_subset(
+  c('Berlin', 'New York', 'Vienna'),
+  'B|b'
+  
+)
+
+```
+
+### str_detect and regex
+
+This function returns TRUE or FALSE for those cities meeting the regex condition or pattern.
+
+```{r str_detect_regex}
+#| echo: true
+#| warning: false
+
+str_detect(
+  c('Berlin', 'New York', 'Vienna'),
+  'B|b'
+)
+
+
+```
+
+### Expanding on `or` `|` operator
+
+In this example we want to subset Berlin, but without caring if it spelled with a capital or lower B.
+
+Notice we also pulled out Brussels although it was not our intention. Using `string_view` reveals the reason Brussels was included. view is used to print the underlying representation of a string and to see how a `pattern` matches.
+
+In this case the `|` operator searches that patterns that match to the right or left of it.
+
+```{r expanding_|_or}
+#| echo: true
+#| warning: false
+
+str_subset(
+  c('Berlin', 'Brussels', 'New York', 'Vienna'),
+  'B|berlin'
+)
+
+#*To figure it out using str_view, which prints the underlying
+#*represention of a string and how a pattern matches
+
+str_view(
+  c('Berlin', 'Brussels', 'New York', 'Vienna'),
+  'B|berlin'
+)
+
+```
+
+Instead of using `|`, `or`, we want to instruct the string_subset to select cities that start with capital B or lower b and are followed by the string `erlin`. In this case only one entry satisfies this condition: `<Berlin>`.
+
+In regex, parenthesis `( )` are regular expressions to group things together.
+
+```{r restricting_or_via_parenthesis}
+#| echo: true
+#| warning: false
+
+str_view(
+  c('Berlin', 'Brussels', 'New York', 'Vienna'),
+  '(B|b)erlin'
+)
+
+str_subset(
+  c('Berlin', 'Brussels', 'New York', 'Vienna'),
+  '(B|b)erlin'
+)
+
+str_detect(
+  c('Berlin', 'Brussels', 'New York', 'Vienna'),
+  '(B|b)erlin'
+)
+
+
+```
+
+## Lesson 13
+
+RegEx. The `.` operator and how to escape it.
+
+In this new data set there are four rows. Each with a name and her corresponding email.
+
+```{r escaping_period_operator}
+#| echo: true
+#| warning: false
+
+contact_info <- tibble(
+  name = c(
+    "Otto Bauer", "Lisa Hundsgemein",
+    "Leah LastName", 'Nora Whats-Her-Name'),
+  mail = str_to_lower(name) |> 
+    str_replace_all(' ', '.') |> 
+    paste0(
+      c("@communicators.de",
+        "@communicators.de",
+        "@microsoft.com",
+        "@apple.com")
+    ) )
+
+contact_info
+
+```
+
+The exercise is to filter out the emails that end with `.com` .
+
+The first option is to use `str_detect` with searching for `.com`. However, this option does not single out the cases with .com . To see what is going on, we can ask for the `str_view()`
+
+The string view reveals the error.: Caused by error: ! `..1` must be a logical vector, not a <stringr_view> object.
+
+```{r filtering_emails_str_detect}
+#| echo: true
+#| warning: false
+
+contact_info |> 
+  filter(str_detect(mail,".com"))
+
+str_view(contact_info$mail, '.com')
+
+```
+
+The `str_view` reveals that dot and dot.com `.` and `.com` matches two separate things. In one cases it matches to the `@` and in and in another case it matches to `.com`. This is why you get all rows returned.
+
+There are two ways to fix this problem:
+
+Using the fixed option
+
+In this case, we indicate the pattern we are searching for after fixed.
+
+```{r fixed_solution}
+#| echo: true
+#| warning: false
+
+
+str_view(contact_info$mail, fixed('.com'))
+
+
+```
+
+```{r}
+contact_info |> 
+  filter(str_detect(mail, '\\.com'))
+```
