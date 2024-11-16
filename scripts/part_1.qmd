@@ -488,6 +488,8 @@ penguins |>
 
 Notice not all combinations between species and islands are displayed. For instance Chinstrap -Biscoe, Chinstrap - Torgesen, Gentoo - Dream, and Gentoo-Torgeson combinations are not displayed.
 
+To be reviewed later on - Last review November 15, 2024
+
 ```{r missing_data_grp_calc}
 #| echo: true
 
