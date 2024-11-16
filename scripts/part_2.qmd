@@ -50,12 +50,10 @@ Loading csv files. It is recommended that you Rstudio project sets up to relativ
 #| warning: false
 #| code-fold: true
 
-library(tidyverse)
+read_csv('/Users/albertocabrera/Documents/GitHub/r_data_cleanning_master_class/data/Part_2/02_exibble.csv')
 
 
-read_csv('data/Part_2/02_exibble.csv')
-
-getwd()
+# getwd()
 
 ```
 
@@ -72,8 +70,11 @@ By default, csv will assign generic column names.
 #| warning: false
 #| code-fold: true
 
-read_csv('data/Part_2/01_exibble_no_headers.csv', 
-         col_names = FALSE)
+read_csv('/Users/albertocabrera/Documents/GitHub/r_data_cleanning_master_class/data/Part_2/01_exibble_no_headers.csv')
+
+
+# read_csv('data/Part_2/01_exibble_no_headers.csv', 
+#          col_names = FALSE)
 
 
 ```
@@ -94,8 +95,13 @@ desired_colnames <-  c("fuit",
                        "missing_NULL",
                        "missing_dates")
 
-read_csv('data/Part_2/01_exibble_no_headers.csv', 
-         col_names = desired_colnames)
+X02_exibble <- read_csv('/Users/albertocabrera/Documents/GitHub/r_data_cleanning_master_class/data/Part_2/02_exibble.csv',
+                        col_names = desired_colnames)
+
+
+# X02_exibble <- read_csv("data/Part_2/02_exibble.csv",
+#                         col_names = desired_colnames)
+
 
 ```
 
@@ -108,7 +114,11 @@ It displays a message with illegible data. Notice that the first two columns con
 #| warning: false
 #| code-fold: true
 
-read_csv("data/Part_2/05_exibble_with_metadata.csv")
+
+read_csv('/Users/albertocabrera/Documents/GitHub/r_data_cleanning_master_class/data/Part_2/05_exibble_with_metadata.csv')
+
+
+# read_csv("data/Part_2/05_exibble_with_metadata.csv")
 
 ```
 
@@ -119,7 +129,7 @@ We need to skip the first two rows using `skip =2`, which are not relevant. Afte
 #| warning: false
 #| code-fold: true
 
-read_csv("data/Part_2/05_exibble_with_metadata.csv",
+read_csv("/Users/albertocabrera/Documents/GitHub/r_data_cleanning_master_class/data/Part_2/05_exibble_with_metadata.csv",
          skip = 2)
 ```
 
@@ -132,7 +142,7 @@ Problem the first row has the name of the variables, but they are not recognized
 #| warning: false
 #| code-fold: true
 
-read_csv2("data/Part_2/03_exibble_european.csv")
+read_csv2("/Users/albertocabrera/Documents/GitHub/r_data_cleanning_master_class/data/Part_2/03_exibble_european.csv")
 
 ```
 
@@ -145,7 +155,7 @@ RStudio reads this file as having two columns. Reading the quote file that appea
 #| warning: false
 #| code-fold: true
 
-read_csv("data/Part_2/09_line_break.csv")
+read_csv("/Users/albertocabrera/Documents/GitHub/r_data_cleanning_master_class/data/Part_2/09_line_break.csv")
 
 
 ```
@@ -159,7 +169,7 @@ Instead, we need to use the `read_delim()` function. And we need to specify we w
 
 #Another option
 
-read_delim("data/Part_2/11_quote_doubled.csv",
+read_delim("/Users/albertocabrera/Documents/GitHub/r_data_cleanning_master_class/data/Part_2/11_quote_doubled.csv",
            delim = ',',
            escape_double = TRUE)
 
@@ -176,7 +186,7 @@ The file is separated by spaces
 #| warning: false
 #| code-fold: true
 
-read_tsv('data/Part_2/04_exibble.tsv')
+read_tsv('/Users/albertocabrera/Documents/GitHub/r_data_cleanning_master_class/data/Part_2/04_exibble.tsv')
 
 ```
 
@@ -189,7 +199,7 @@ The columns are separated with `|`
 #| warning: false
 #| code-fold: true
 
-read_delim('data/Part_2/12_weird_delimiter.txt',
+read_delim('/Users/albertocabrera/Documents/GitHub/r_data_cleanning_master_class/data/Part_2/12_weird_delimiter.txt',
            delim = '|')
 
 
@@ -206,7 +216,7 @@ One package useful for reading excel files is `oepnxls`. However, the data frame
 
 library(openxlsx)
 
-openxlsx::read.xlsx('data/Part_2/06_exibble.xlsx') |> 
+openxlsx::read.xlsx('/Users/albertocabrera/Documents/GitHub/r_data_cleanning_master_class/data/Part_2/06_exibble.xlsx') |> 
   as_tibble()
 
 ```
@@ -221,7 +231,7 @@ Notice the column `dates` not treated as a date but with a weird number. Consequ
 
 library(lubridate)
 
-openxlsx::read.xlsx('data/Part_2/06_exibble.xlsx') |> 
+openxlsx::read.xlsx('/Users/albertocabrera/Documents/GitHub/r_data_cleanning_master_class/data/Part_2/06_exibble.xlsx') |> 
   as_tibble() |> 
   mutate(dates = lubridate::as_date(dates))
 
@@ -235,7 +245,7 @@ We could also use the `janitor` package to transfer dates into a date format
 #| warning: false
 #| code-fold: true
 
-openxlsx::read.xlsx('data/Part_2/06_exibble.xlsx') |> 
+openxlsx::read.xlsx('/Users/albertocabrera/Documents/GitHub/r_data_cleanning_master_class/data/Part_2/06_exibble.xlsx') |> 
   as_tibble() |> 
   mutate(dates = janitor::excel_numeric_to_date(dates))
 
@@ -258,7 +268,7 @@ You can also use the `glimpse` function.
 
 library(jsonlite)
 
-jsonlite::read_json('data/Part_2/07_exibble.json') |>
+jsonlite::read_json('/Users/albertocabrera/Documents/GitHub/r_data_cleanning_master_class/data/Part_2/07_exibble.json') |>
   str()
 
 
@@ -273,7 +283,7 @@ Using glimpse function to describe the organization of the json files
 
 library(jsonlite)
 
-jsonlite::read_json('data/Part_2/07_exibble.json') |>
+jsonlite::read_json('/Users/albertocabrera/Documents/GitHub/r_data_cleanning_master_class/data/Part_2/07_exibble.json') |>
   glimpse()
 
 
@@ -291,7 +301,7 @@ Use bind rows function to find together the different rows that make up the json
 
 library(jsonlite)
 
-jsonlite::read_json('data/Part_2/07_exibble.json') |>
+jsonlite::read_json('/Users/albertocabrera/Documents/GitHub/r_data_cleanning_master_class/data/Part_2/07_exibble.json') |>
   bind_rows()
 
 
@@ -310,13 +320,13 @@ You can use both of them to describe the components of the file. And, then creat
 
 library(jsonlite)
 
-jsonlite::read_json('data/Part_2/07_exibble.json') |>
+jsonlite::read_json('/Users/albertocabrera/Documents/GitHub/r_data_cleanning_master_class/data/Part_2/07_exibble.json') |>
   glimpse() |> 
   bind_rows()
 
 #OR we can request glimpse after binding the rows
 
-jsonlite::read_json('data/Part_2/07_exibble.json') |>
+jsonlite::read_json('/Users/albertocabrera/Documents/GitHub/r_data_cleanning_master_class/data/Part_2/07_exibble.json') |>
   bind_rows() |> 
   glimpse()
 
@@ -332,7 +342,7 @@ This file is a special case. It has three columns. You cannot use `bind_rows()` 
 #| code-fold: true
 
 library(jsonlite)
-jsonlite::read_json('data/Part_2/08_nested_example.json') |> 
+jsonlite::read_json('/Users/albertocabrera/Documents/GitHub/r_data_cleanning_master_class/data/Part_2/08_nested_example.json') |> 
   glimpse()
 
 ```
@@ -347,7 +357,7 @@ Extracting information from `08_nested_example/json` using the `pluck()` functio
 
 library(jsonlite)
 
-jsonlite::read_json('data/Part_2/08_nested_example.json') |> 
+jsonlite::read_json('/Users/albertocabrera/Documents/GitHub/r_data_cleanning_master_class/data/Part_2/08_nested_example.json') |> 
   pluck('information','origin') |> 
   glimpse()
 
@@ -363,14 +373,14 @@ We need to unnest them, though.
 #| warning: false
 #| code-fold: true
 
-jsonlite::read_json('data/Part_2/08_nested_example.json') |> 
+jsonlite::read_json('/Users/albertocabrera/Documents/GitHub/r_data_cleanning_master_class/data/Part_2/08_nested_example.json') |> 
   pluck('information','origin') |> 
   as_tibble() |> 
   unnest(cols = c(country,season))
 
 #Or
 
-jsonlite::read_json('data/Part_2/08_nested_example.json') |> 
+jsonlite::read_json('/Users/albertocabrera/Documents/GitHub/r_data_cleanning_master_class/data/Part_2/08_nested_example.json') |> 
   pluck('information','origin') |> 
   as_tibble() |> 
   unnest(cols = everything())
@@ -388,7 +398,7 @@ A simple procedure to recode several values as missing using CSV files
 #| warning: false
 #| code-fold: true
 
-read_csv("data/Part_2/02_exibble.csv") |> 
+read_csv("/Users/albertocabrera/Documents/GitHub/r_data_cleanning_master_class/data/Part_2/02_exibble.csv") |> 
   select(1:6)
 
 
@@ -403,7 +413,7 @@ Notice that these two columns have values that need to be re-coded as missing.
 #| warning: false
 #| code-fold: true
 
-read_csv("data/Part_2/02_exibble.csv") |> 
+read_csv("/Users/albertocabrera/Documents/GitHub/r_data_cleanning_master_class/data/Part_2/02_exibble.csv") |> 
   select(-(1:6))
 
 ```
@@ -415,7 +425,7 @@ This means that while the numbers look like they could do what numbers do, they 
 #| warning: false
 #| code-fold: true
 
-# read_csv("data/Part_2/02_exibble.csv") |> 
+# read_csv("/Users/albertocabrera/Documents/GitHub/r_data_cleanning_master_class/data/Part_2/02_exibble.csv") |> 
 #   select(-(1:6)) |> 
 #   mutate(number = missing_NULL + 2)
 
@@ -430,7 +440,7 @@ One can actually tell `read_csv()` what constitutes a missing value. With the `n
 #| warning: false
 #| code-fold: true
 
-read_csv("data/Part_2/02_exibble.csv",
+read_csv("/Users/albertocabrera/Documents/GitHub/r_data_cleanning_master_class/data/Part_2/02_exibble.csv",
          na = c("", "(null)", "Unknown")) |>
   select(-(1:6)) |> 
   glimpse()
@@ -446,7 +456,7 @@ Notice variables missing_Null and missing_dates are incorrectly identified as ch
 #| warning: false
 #| code-fold: true
 
-openxlsx::read.xlsx("data/Part_2/06_exibble.xlsx") |> 
+openxlsx::read.xlsx("/Users/albertocabrera/Documents/GitHub/r_data_cleanning_master_class/data/Part_2/06_exibble.xlsx") |> 
   as_tibble() |> 
   select(7:8) |> 
   glimpse()
@@ -462,7 +472,7 @@ You can actually tell `read_xlsx()` what constitutes a missing value. With the `
 #| warning: false
 #| code-fold: true
 
-openxlsx::read.xlsx("data/Part_2/06_exibble.xlsx",
+openxlsx::read.xlsx("/Users/albertocabrera/Documents/GitHub/r_data_cleanning_master_class/data/Part_2/06_exibble.xlsx",
                     na.strings = c("", "(null)", "Unknown")) |> 
   as_tibble() |> 
   select(-c(1:6))
@@ -484,7 +494,7 @@ Correcting or parsing numbers in an excel file. Notice that this option codes mi
 #* Notice this option codes missing values for one missing_NULL only
 
 openxlsx::read.xlsx(
-  "data/Part_2/06_exibble.xlsx") |> 
+  "/Users/albertocabrera/Documents/GitHub/r_data_cleanning_master_class/data/Part_2/06_exibble.xlsx") |> 
   as_tibble() |> 
   select(-c(1:6)) |> 
   mutate(missing_NULL = parse_number(
@@ -504,7 +514,7 @@ The alternative script below re-codes the missing values for both missing_NULL a
 library(lubridate)
 
 openxlsx::read.xlsx(
-  "data/Part_2/06_exibble.xlsx",
+  "/Users/albertocabrera/Documents/GitHub/r_data_cleanning_master_class/data/Part_2/06_exibble.xlsx",
   na.strings = c("", '(null)', "Unknown")) |> 
   as_tibble() |> 
   select(-c(1:6)) |> 
@@ -527,7 +537,7 @@ Notice that the readr's `parse_number()` function allows one to specify missing 
 #| code-fold: true
 
 openxlsx::read.xlsx(
-  "data/Part_2/06_exibble.xlsx"
+  "/Users/albertocabrera/Documents/GitHub/r_data_cleanning_master_class/data/Part_2/06_exibble.xlsx"
   ) |> 
   as_tibble() |> 
   select(-c(1:6)) |> 
@@ -551,7 +561,7 @@ For extracting dates and times using the readr function parse_datetime. Notice t
 #| code-fold: true
 
 openxlsx::read.xlsx(
-  "data/Part_2/06_exibble.xlsx"
+  "/Users/albertocabrera/Documents/GitHub/r_data_cleanning_master_class/data/Part_2/06_exibble.xlsx"
   ) |> 
   as_tibble() |> 
   select(-c(1:6)) |> 
@@ -577,7 +587,7 @@ For extracting just dates, use the readr function `parse_date()` as shown below.
 #| code-fold: true
 
 openxlsx::read.xlsx(
-  "data/Part_2/06_exibble.xlsx"
+  "/Users/albertocabrera/Documents/GitHub/r_data_cleanning_master_class/data/Part_2/06_exibble.xlsx"
   ) |> 
   as_tibble() |> 
   select(-c(1:6)) |> 
@@ -1030,8 +1040,7 @@ Let's illustrate the utility of pivot_longer by summarizing
 #| warning: false
 #| code-fold: true
 
-scores <- read_csv('data/Part_2/13_scores_by_date.csv')
-
+scores <- read_csv('/Users/albertocabrera/Documents/GitHub/r_data_cleanning_master_class/data/Part_2/13_scores_by_date.csv')
 
 scores |> 
   #Other options for cols: cols = 2:5 cols = contains('score')
@@ -1059,7 +1068,7 @@ This file needs to be rearranged before pivoting longer. Notice that `payment` t
 #| warning: false
 #| code-fold: true
 
-payments <-  read_csv('data/Part_2/14_payments.csv')
+payments <-  read_csv('/Users/albertocabrera/Documents/GitHub/r_data_cleanning_master_class/data/Part_2/14_payments.csv')
 
 
 payments |> 
@@ -1089,7 +1098,7 @@ Regarding the scores data set. The end result of the pivot longer is to have sco
 #| warning: false
 #| code-fold: true
 
-scores <- read_csv('data/Part_2/13_scores_by_date.csv')
+scores <- read_csv('/Users/albertocabrera/Documents/GitHub/r_data_cleanning_master_class/data/Part_2/13_scores_by_date.csv')
 
 
 #First option
@@ -1269,7 +1278,7 @@ library(tidyxl)
 
 
 rand_numbers_cells <- tidyxl::xlsx_cells(
-  'data/Part_2/17_rand_numbers.xlsx')
+  '/Users/albertocabrera/Documents/GitHub/r_data_cleanning_master_class/data/Part_2/17_rand_numbers.xlsx')
 
 rand_numbers_cells |> 
   unpivotr::rectify()
@@ -1451,7 +1460,7 @@ Dealing with a complex and unbalanced spreadsheet with several pivot tables. `16
 
 library(tidyxl)
 
-sales_cells <- tidyxl::xlsx_cells('data/Part_2/16_faker_sales_modified.xlsx')
+sales_cells <- tidyxl::xlsx_cells('/Users/albertocabrera/Documents/GitHub/r_data_cleanning_master_class/data/Part_2/16_faker_sales_modified.xlsx')
 
 #Looking at the date after rectifying it
 sales_cells |> 
@@ -1675,7 +1684,7 @@ In the previous example the data were well organized. Country and Region had the
 #| warning: false
 #| code-fold: true
 
-rand_cells <- tidyxl::xlsx_cells('data/Part_2/18_rand_numbers_harder.xlsx')
+rand_cells <- tidyxl::xlsx_cells('/Users/albertocabrera/Documents/GitHub/r_data_cleanning_master_class/data/Part_2/18_rand_numbers_harder.xlsx')
 
 #Passing rand_cells to unpivotr & rectify it
 
@@ -1777,7 +1786,7 @@ Notice glimpse reveals there is an entry `$fill` which can tell us the color. We
 #| code-fold: true
 
 tidyxl::xlsx_formats(
-  'data/Part_2/18_rand_numbers_harder.xlsx') |> 
+  '/Users/albertocabrera/Documents/GitHub/r_data_cleanning_master_class/data/Part_2/18_rand_numbers_harder.xlsx') |> 
   pluck('local','fill') |> 
   glimpse()
 
@@ -1795,7 +1804,7 @@ The pluck function along glimpse reveals that the fill has four colors: "FFDEE7E
 #Creating a vector of background colors
 
 bg_colors <- tidyxl::xlsx_formats(
-  'data/Part_2/18_rand_numbers_harder.xlsx') |> 
+  '/Users/albertocabrera/Documents/GitHub/r_data_cleanning_master_class/data/Part_2/18_rand_numbers_harder.xlsx') |> 
   pluck('local','fill','patternFill','fgColor', 'rgb') |> 
   glimpse()
 
@@ -1878,7 +1887,7 @@ Loading the data set, and transform it as tibble. Doing so it duplicates the var
 #| code-fold: true
 
 openxlsx::read.xlsx(
-  'data/Part_2/19a_Shipments_Details_mod.xlsx') |> 
+  '/Users/albertocabrera/Documents/GitHub/r_data_cleanning_master_class/data/Part_2/19a_Shipments_Details_mod.xlsx') |> 
   as_tibble()
 
 ```
@@ -1893,7 +1902,7 @@ The headers added by tibble are not needed. We can use the r`ead.xlsx` function 
 #| code-fold: true
 
 openxlsx::read.xlsx(
-  'data/Part_2/19a_Shipments_Details_mod.xlsx',
+  '/Users/albertocabrera/Documents/GitHub/r_data_cleanning_master_class/data/Part_2/19a_Shipments_Details_mod.xlsx',
   startRow = 2) |> 
   as_tibble() |> 
   janitor::clean_names() |>
@@ -1912,7 +1921,7 @@ We can the across function to recode them as dates using the lubridate function 
 
 # Using lubridate::as_date() function
 openxlsx::read.xlsx(
-  'data/Part_2/19a_Shipments_Details_mod.xlsx',
+  '/Users/albertocabrera/Documents/GitHub/r_data_cleanning_master_class/data/Part_2/19a_Shipments_Details_mod.xlsx',
   startRow = 2) |> 
   as_tibble() |> 
   janitor::clean_names() |> 
@@ -1925,7 +1934,7 @@ openxlsx::read.xlsx(
 #* janitor::excel_numeric_to_date()
 
 openxlsx::read.xlsx(
-  'data/Part_2/19a_Shipments_Details_mod.xlsx',
+  '/Users/albertocabrera/Documents/GitHub/r_data_cleanning_master_class/data/Part_2/19a_Shipments_Details_mod.xlsx',
   startRow = 2) |> 
   as_tibble() |> 
   janitor::clean_names() |> 
@@ -1938,7 +1947,7 @@ openxlsx::read.xlsx(
 #* Option followed by Albert Rapp
 
 openxlsx::read.xlsx(
-  'data/Part_2/19a_Shipments_Details_mod.xlsx',
+  '/Users/albertocabrera/Documents/GitHub/r_data_cleanning_master_class/data/Part_2/19a_Shipments_Details_mod.xlsx',
   startRow = 2) |> 
   as_tibble() |> 
   janitor::clean_names() |> 
@@ -1963,7 +1972,7 @@ Using `skim()` reveals that the mean of days_shipped_to_delivered is 19.5 days, 
 library(lubridate)
 
 openxlsx::read.xlsx(
-  'data/Part_2/19a_Shipments_Details_mod.xlsx',
+  '/Users/albertocabrera/Documents/GitHub/r_data_cleanning_master_class/data/Part_2/19a_Shipments_Details_mod.xlsx',
   startRow = 2) |> 
   as_tibble() |> 
   janitor::clean_names() |> 
@@ -1992,7 +2001,7 @@ The average days expected to actual delivery is 1.41, and the minimum is to expe
 library(lubridate)
 
 openxlsx::read.xlsx(
-  'data/Part_2/19a_Shipments_Details_mod.xlsx',
+  '/Users/albertocabrera/Documents/GitHub/r_data_cleanning_master_class/data/Part_2/19a_Shipments_Details_mod.xlsx',
   startRow = 2) |> 
   as_tibble() |> 
   janitor::clean_names() |> 
@@ -2020,7 +2029,7 @@ Calculating mean delivery days and expected days to delivered by country of orig
 #| code-fold: true
 
 shipment_test <- shipments <- openxlsx::read.xlsx(
-  'data/Part_2/19a_Shipments_Details_mod.xlsx',
+  '/Users/albertocabrera/Documents/GitHub/r_data_cleanning_master_class/data/Part_2/19a_Shipments_Details_mod.xlsx',
   startRow = 2) |> 
   as_tibble() |> 
   janitor::clean_names() |> 
@@ -2096,7 +2105,7 @@ We can create a custom function to repair the names of the variables `name_repai
 
 #* Using .name_repair()
 openxlsx::read.xlsx(
-  'data/Part_2/19b_Warehouse_Inventory_mod.xlsx',
+  '/Users/albertocabrera/Documents/GitHub/r_data_cleanning_master_class/data/Part_2/19b_Warehouse_Inventory_mod.xlsx',
   startRow = 2) |>
   as_tibble(
     #Creating a function within .name_repair
@@ -2137,7 +2146,7 @@ Using `tidyxl` library with the `xlsx_cells()` function instead of openxlsx libr
 #| code-fold: true
 
 warehouse_cells <- tidyxl::xlsx_cells(
-  'data/Part_2/19b_Warehouse_Inventory_mod.xlsx')
+  '/Users/albertocabrera/Documents/GitHub/r_data_cleanning_master_class/data/Part_2/19b_Warehouse_Inventory_mod.xlsx')
 
 warehouse_cells |> 
   unpivotr::rectify()
@@ -2301,7 +2310,7 @@ Moving to the supplier information dataset. While the dataset was loaded without
 #| code-fold: true
 
 suppliers <- read_csv(
-  'data/Part_2/19c_Suppliers_Info.csv') |> 
+  '/Users/albertocabrera/Documents/GitHub/r_data_cleanning_master_class/data/Part_2/19c_Suppliers_Info.csv') |> 
   janitor::clean_names()
 
 #* Subsetting suppliers dataset to include supplier id
