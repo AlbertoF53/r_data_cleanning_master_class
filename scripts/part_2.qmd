@@ -39,7 +39,7 @@ library(tidyxl)
 
 ## Lesson 1
 
-Overview of different formats for the same database. Those are **csv**, **csv** **with header**, **csv semicolon separator**, **tsv space separator**, **csv metadata,** **excel files,** **json files**, which are annoying looking
+Overview of different formats for the same database. Those are **csv**, **csv** **with header**, **csv semicolon separator**, **tsv space separator**, **csv metadata,** **excel files,** **json files**, which are annoying looking - To be reviewed later on.
 
 ## Lesson 2: Same data in in different formats
 
