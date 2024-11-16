@@ -320,8 +320,14 @@ A nice application showing case the power of str_remove() function
 ```{r rem_unwanted_v2}
 #| echo: true
 
-library(readr)
-big_tech_companies <- read_csv("data/Part_2/big_tech_companies.csv")
+# library(readr)
+# big_tech_companies <- read_csv("data/Part_2/big_tech_companies.csv")
+# 
+# saveRDS(big_tech_companies, 
+#         file = 'data/Part_2/new_big_tech.rds')
+#   
+big_tech_companies <- readRDS("~/Documents/GitHub/r_data_cleanning_master_class/data/Part_2/new_big_tech.rds")
+
 
 ```
 
@@ -943,34 +949,34 @@ The last row, Houston, does not indicate the state of the city. The debug option
 #| echo: true
 #| message: false
 
-tibble(
-  city = c(
-    "New York, NY",
-    "San Diego, CA",
-    "Houston"
-  )
-) |> 
-  separate_wider_delim(
-  cols = 'city',
-  delim = ',  ',
-  names = c('city','state')
-)
+# tibble(
+#   city = c(
+#     "New York, NY",
+#     "San Diego, CA",
+#     "Houston"
+#   )
+# ) |> 
+#   separate_wider_delim(
+#   cols = 'city',
+#   delim = ',  ',
+#   names = c('city','state')
+# )
 
 #Using the `too_few` argument with the debug optin
 
-tibble(
-  city = c(
-    "New York, NY",
-    "San Diego, CA",
-    "Houston"
-  )
-) |> 
-  separate_wider_delim(
-  cols = 'city',
-  delim = ', ',
-  names = c('city', 'state'),
-  too_few = 'debug'
-)
+# tibble(
+#   city = c(
+#     "New York, NY",
+#     "San Diego, CA",
+#     "Houston"
+#   )
+# ) |> 
+#   separate_wider_delim(
+#   cols = 'city',
+#   delim = ', ',
+#   names = c('city', 'state'),
+#   too_few = 'debug'
+# )
 
 
 
@@ -1194,9 +1200,9 @@ str_view(contact_info$mail, '.com')
 
 The `str_view` reveals that dot and dot.com `.` and `.com` matches two separate things. In one cases it matches to the `@` and in and in another case it matches to `.com`. This is why you get all rows returned.
 
-There are two ways to fix this problem:
+There are two ways to fix this problem, One is using the fixed option in str_view(), and the second option is escaping the special characters.
 
-Using the fixed option
+#### Using the fixed option
 
 In this case, we indicate the pattern we are searching for after fixed.
 
@@ -1204,13 +1210,44 @@ In this case, we indicate the pattern we are searching for after fixed.
 #| echo: true
 #| warning: false
 
-
 str_view(contact_info$mail, fixed('.com'))
 
 
 ```
 
-```{r}
-contact_info |> 
-  filter(str_detect(mail, '\\.com'))
+#### Escaping especial characters
+
+We modify the special characters so that the regular expression behind understands not using the `.` as a special character but as a point. We do so using double backslash `\\`. If you use a single backslash you will get the following error:
+
+"Error: '.' is an unrecognized escape in character string (<input>:1:31)"
+
+The reason being R also has especial characters. For example `\n` is recognized by R as to signify a break line. For example `cat(A\nB)` means to separate A and B in different lines.
+
+```{r special_characters_r}
+#| echo: true
+#| warning: false
+
+cat('A\nB')
+
+#Scapping the meaning of breaking a line
+
+cat('\\.com')
+
+```
+
+Because of the this reasons we need to use double backslash. In other words, you need to tell R not to use `\` as a special indicator for breaking a line. In other to do so, we need a double `\\`.
+
+`cat('\\.com')`
+
+R interprets the first `\` as meaning a literal backslash while the second backslash signifies treating the dot `.` as a regular thing and not an special operator.
+
+```{r escaping_regex_double}
+#| echo: true
+#| warning: false
+
+#Using `\` to escape the special function associated with dot.
+
+str_view(contact_info$mail, '\\.com')
+
+
 ```
