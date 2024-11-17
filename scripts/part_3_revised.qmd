@@ -1405,3 +1405,47 @@ contact_info |>
 ```
 
 ### Split text column with separate_wider_regex()
+
+This option has a better workflow next to str_match. In contrast to str_match, instead of using the group pattern as is, you have to specify a vector that splits the pattern. Everything that is named inside the vector would become a column.
+
+Notice that we not longer need the grouping `()`, since the grouping already takes place when specifying the patterns.
+
+```{r separate_wider_regex_option_v1}
+#| echo: true
+#| warning: false
+
+contact_info |> 
+  separate_wider_regex(
+    cols = mail,
+    patterns = c(
+      first_name = '.+',
+      '\\.',
+      last_name = '.+',
+      '@'
+    )
+  )
+
+```
+
+However, this would prompt an error message
+
+**Error in `separate_wider_regex()`: ! Expected each value of `mail` to match the pattern, the whole pattern, and nothing but the pattern.**
+
+In order to correct the problem, we need to instruct R that after the add symbol `@` one or more characters can be encountered. This means adding the following regex `@.+`
+
+```{r separate_wider_regex_option_v2}
+#| echo: true
+#| warning: false
+
+contact_info |> 
+  separate_wider_regex(
+    cols = mail,
+    patterns = c(
+      first_name = '.+',
+      '\\.',
+      last_name = '.+',
+      '@.+'
+    )
+  )
+
+```
