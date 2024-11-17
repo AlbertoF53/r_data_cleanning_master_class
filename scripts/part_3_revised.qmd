@@ -1191,10 +1191,13 @@ The string view reveals the error.: Caused by error: ! `..1` must be a logical v
 #| echo: true
 #| warning: false
 
+library(tidyverse)
+
 contact_info |> 
   filter(str_detect(mail,".com"))
 
 str_view(contact_info$mail, '.com')
+
 
 ```
 
@@ -1217,7 +1220,7 @@ str_view(contact_info$mail, fixed('.com'))
 
 #### Escaping especial characters
 
-We modify the special characters so that the regular expression behind understands not using the `.` as a special character but as a point. We do so using double backslash `\\`. If you use a single backslash you will get the following error:
+We modify the special characters so that the regular expression. R automatically regards perido `.` as a control character. We need to teach R to understand not using the `.` as a special character but as a point. We do so using double backslash `\\`. If you use a single backslash you will get the following error:
 
 "Error: '.' is an unrecognized escape in character string (<input>:1:31)"
 
@@ -1251,3 +1254,154 @@ str_view(contact_info$mail, '\\.com')
 
 
 ```
+
+## Lesson 14
+
+Using the last data set. In this exercise we want to extract data from the mail column. For instance, we may want to extract characters before the `@` symbol and string after the `@` symbol. For instance, we may want to extract people who use the apple email domain.
+
+Using `str_match()` to extract strings from a vector.
+
+Notice the dot operator `.` can be used to identify strings. To identify more symbols before or after the dot operator, we can use the `+` operator.
+
+```{r str_match_dot}
+#| echo: true
+#| warning: false
+
+library(tidyverse)
+
+contact_info <- tibble(
+  name = c(
+    "Otto Bauer", "Lisa Hundsgemein",
+    "Leah LastName", 'Nora Whats-Her-Name'),
+  mail = str_to_lower(name) |> 
+    str_replace_all(' ', '.') |> 
+    paste0(
+      c("@communicators.de",
+        "@communicators.de",
+        "@microsoft.com",
+        "@apple.com")
+    ) )
+
+#Finding things that match the @ symbol
+
+str_match(contact_info$mail, '@')
+
+#Using the dot operator in front and back
+
+str_match(contact_info$mail, '.@.')
+
+#If we want all the characters after the @ symbol
+
+str_match(contact_info$mail, '.@.+')
+
+#Examples of intermediate steps using `+` and `.`
+
+str_match(contact_info$mail, '.@.')
+
+str_match(contact_info$mail, '@.+')
+
+str_match(contact_info$mail, '.@.+')
+
+str_match(contact_info$mail, '.+@.+')
+
+
+
+```
+
+### Searching for specific groups
+
+str_match can be used to look for specific groups. The key for making groups is to use the special characters `( )` for grouping things together in front and back. This expression breaks the sentences into three groups.
+
+```{r str_match_groups}
+#| echo: true
+#| warning: false
+
+str_match(contact_info$mail, '(.+)@(.+)')
+
+
+```
+
+If we want to extract the first and last name. Notice that a dot separates the first name from the last name.
+
+The str_match below produces 3 groups, but not the output we wanted. Our grouping uses the wrong dot `.`.
+
+```{r extract_last_first_name_first}
+#| echo: true
+#| warning: false
+
+str_match(contact_info$mail, ('(.+)\\.(.+)'))
+
+```
+
+We can instruct our regular expression to stop at the add sign `@`. This regular expression produces three columns. The first one we don't want. The last two contain the first and last name we want to keep.
+
+```{r extract_names_only}
+#| echo: true
+#| warning: false
+
+str_match(contact_info$mail, ('(.+)\\.(.+)@'))
+
+```
+
+Finally, once cool thing we could do is to take this part and remove everything at the first column. We can do so using brackets `[, -1 ]` indicating we want to keep all rows while removing the first column. Recall, this bracket was produced by *str_match(contact_info\$mail, ('(.+)\\.(.+)\@'))* indicating the column with the unwanted string.
+
+```{r extract_names_remove_everthing}
+#| echo: true
+#| warning: false
+
+str_match(contact_info$mail, ('(.+)\\.(.+)@'))[, -1] |> 
+  as_tibble()
+
+```
+
+However, we get a warning message:
+
+Warning message: The `x` argument of `as_tibble.matrix()` must have unique column names if `.name_repair` is omitted as of tibble 2.0.0. Using compatibility `.name_repair`.
+
+Thus we can add a `name_repair` which contains a function that throws the first and last name.
+
+```{r extract_nmes_name_repair}
+#| echo: true
+#| warning: false
+
+str_match(contact_info$mail, ('(.+)\\.(.+)@'))[, -1] |> 
+  as_tibble(.name_repair = function(x) c('first', 'last') )
+
+
+```
+
+## Lesson 15
+
+### Creating columns using mutate() and string_match
+
+This option produces the same results as str_match, but while creating columns. We need to include a mutate, while using the same match function as before.
+
+```{r separate_wider}
+#| echo: true
+#| warning: false
+
+contact_info <- tibble(
+  name = c(
+    "Otto Bauer", "Lisa Hundsgemein",
+    "Leah LastName", 'Nora Whats-Her-Name'),
+  mail = str_to_lower(name) |> 
+    str_replace_all(' ', '.') |> 
+    paste0(
+      c("@communicators.de",
+        "@communicators.de",
+        "@microsoft.com",
+        "@apple.com")
+    ) )
+
+contact_info |> 
+  mutate(
+    matches = str_match(mail,'(.+)\\.(.+)@'),
+    first = matches[,2],
+    last = matches[,3]
+  ) |> 
+  select(c('first', 'last'))
+
+
+```
+
+### Split text column with separate_wider_regex()
