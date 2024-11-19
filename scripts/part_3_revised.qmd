@@ -1538,6 +1538,8 @@ contact_info2 |>
 
 Let's split emails as we did before using str_match( mail, '(.+)\\\\.(.+)\@'). However,this option produces a rather messy output. In two cases, it did not split into first and last name.
 
+We would also learn about a special operator for optional things `?:`.
+
 ```{r look_op_texts}
 #| echo: true
 #| warning: false
@@ -1638,6 +1640,7 @@ Adding the optional symbol `?` alerts R to distinguish those cases where numbers
 #| echo: true
 #| warning: false
 
+#Adding the optional presence of numbers in the email address
 str_match(contact_info2$mail, '([a-z]+)\\.([a-z-]+)(\\.[0-9]+)?')
 
 ```
@@ -1648,19 +1651,31 @@ Notice this str_match produced 4 columns. Column \[,4\] captures the two email c
 
 What is we just want the numbers without the dot.
 
-```{r just_numbers_mom}
+##### The first option is to include the third group reporting that the numbers in the name are optional
+
+```{r last_numbers_optional}
+#| echo: true
+#| warning: false
+
+str_match(contact_info2$mail, '([a-z]+)\\.([a-z-]+)\\.([0-9]+)?')
+
+
+```
+
+The problem is traced to the fact the regular expression treats the period `.` as if it were present for all the names. However, this condition is present in only two names `otto.bauder2` and `otto.bauder.21`. But for the reminder 4 names there is no point preceding the `@` sign. This is why, we need to include the `.` as a part of the optional group. So we are making the dot `.` along with the numbers optional with `?`.
+
+```{r group_optional_2}
 #| echo: true
 #| warning: false
 
 str_match(contact_info2$mail, '([a-z]+)\\.([a-z-]+)(\\.([0-9]+))?')
-
 ```
 
-The end result is 5 columns. Column \[,4\] we don't need because it includes the dot along the numbers from the email.
+The end result is 5 columns. Column \[,5\] we don't need because it repeats column \[,4\].
 
 #### Just keeping the numbers column.
 
-One way is to manipulate the parenthesis to group things together without including other characters. We can do so by including the question mark at the beginning of the group, followed by the column operator. `?:`
+One way is to manipulate the parenthesis to group things together without including other characters. "Tell the parenthesis it should group things together, but should not count it as a group parenthesis". We can do so by including the question mark at the beginning of the group, followed by the column operator. `?:`
 
 ```{r just_numbers_column_no_dot}
 #| echo: true
@@ -1668,15 +1683,25 @@ One way is to manipulate the parenthesis to group things together without includ
 
 str_match(contact_info2$mail, '([a-z]+)\\.([a-z-]+)(?:\\.([0-9]+))?')
 
+#Another option yielding the same result
+
+str_match(contact_info2$mail, '([a-z]+)\\.([a-z-]+)(\\.[0-9]+)?')
+
 ```
 
 ## Lesson 18
 
 ### Extracting first and last name
 
+#### Using `str_match()`
+
 Working with the name column. Extracting the first and last name.
 
-Basically we have two groups of string separated by a white space. Or `([a-z]+  ([a-z]+ )`. This option wont work since regex are case sensitive.
+Basically we have two groups of string separated by a white space. Or `([a-z]+  ([a-z]+ )`. This option won't work since regexp is case sensitive. Moreover, Nora's last name is separated by `-` that need to be included in the regexp.
+
+This regular expression tells str_match to use column name as the target. Next use two groups of strings. The first string group consists of several letters `([a-z]+)`. Then a space separates the second group of strings. The second group of string also includes several letters and include `-` `([a-z-]+)`.
+
+Problem is that letters include both lower and capital letters the regexp needs to include.
 
 ```{r match_groups_case_sensite}
 #| echo: true
@@ -1696,12 +1721,13 @@ contact_info2 <- tibble(
         "@apple.com")
     ) )
 
+
 str_match(contact_info2$name, '([a-z]+) ([a-z-]+)')
 
 
 ```
 
-We need to alert R that names involve a collection of upper and lower letters
+We need to alert R that names involve a collection of upper and lower letters omitted in the two groups of strings.
 
 ```{r upper_lower_letters}
 #| echo: true
@@ -1711,6 +1737,8 @@ str_match(contact_info2$name, '([A-Za-z]+) ([A-Za-z-]+)')
 
 ```
 
+#### Using str_replace()
+
 We could have accomplished the same outcome using str_split. However, we want the regular expression to use str_replace. The sequence is:
 
 1.  Identify target column or variable
@@ -1719,7 +1747,7 @@ We could have accomplished the same outcome using str_split. However, we want th
 
 3.  Replacement. Identify the group for the regular expression. In this case the first name is contained in \[,2\] and the last name in \[,3\], which can be identified by \\2 and \\3
 
-However, we don't get the result we want
+However, we don't get the result we want.
 
 ```{r str_replace_group}
 #| echo: true
@@ -1730,10 +1758,9 @@ str_replace(
   '([A-Za-z]+) ([A-Za-z-]+)',
   '\2, \1' )
 
-
 ```
 
-Correcting replacement. Remember that `\` is a reserved character in R. We could escape it using double `\\`
+Correcting replacement. Remember that `\` is a reserved character in R. We could escape it using double `\\`. The order of listing the groups is signified by the number. \\\\2 stands for the second group which is the family name. \\\\1 stands for the first group which is the name.
 
 ```{r correct_replacement_str_replace}
 #| echo: true
@@ -1746,26 +1773,27 @@ str_replace(contact_info2$name,
 
 ```
 
-Notice the numbers are left as they are in the names. If we want to exclude those numbers we could expand the regular expression to capture the numbers associated to Otto Bauder 2 and Otto Bauder 21.
+#### Optional `?` symbol
 
-Remember that the regular expression creates three columns. The third column includes the number perse. By referring to columns 1 and 2, we only include first and last numbers.
+Notice the numbers in the names are included. If we want to exclude those numbers we could expand the regular expression to capture the numbers associated to Otto Bauder 2 and Otto Bauder 21.
+
+Remember that the regular expression creates three columns. The third column includes the number itself. By referring to columns 1 and 2, we only include first and last numbers. We also make the third group optional using `?` outside the group.
 
 ```{r exclude_numbers_str_replace}
 #| echo: true
 #| warning: false
 
 str_replace(contact_info2$name,
-  '([A-Za-z]+) ([A-Za-z-]+)( [0-9]+?)',
+  '([A-Za-z]+) ([A-Za-z-]+)( [0-9]+)?',
   '\\2, \\1' )
-
 
 ```
 
 ## Lesson 19
 
-### Match and exact number
+### How to match an exact number
 
-While the `+` operator matches many things, sometimes you want an operator that matches an exact number of things. Such operator is particular useful when splitting data that has for example city abbreviations. For example matching a collection of exactly two.
+While the `+` operator matches many things, sometimes you want an operator that matches an exact number of things. Such operator is particular useful when splitting data that has for example city abbreviations. For example matching a collection of exactly two. This operator is `{ }`
 
 Trying to extract the city from the database. We could first rely on `str_view` to have a feeling of the way the strings are organized.
 
@@ -1778,6 +1806,8 @@ Looking for a pattern composed of capital letters.
 3.  Step 3: Search for exact matches using `{}` . Using `{}` produces cities as well as the first two letters of USA.
 
 4.  Step 4: Alternatively, specifying ranges of matches we want to find. For instance, finding two or three matches `{2,3}`
+
+#### Using str_view() to visualize the groups of strings
 
 ```{r match_exact_number}
 #| echo: true
@@ -1797,17 +1827,27 @@ str_view(city_tib$city, "([A-Z])")
 #Step 2 All sets of capital letters
 str_view(city_tib$city, "([A-Z]+)")
 
-#Step 3 Looking for exact matches
+#Step 3 Looking for exact matches for two upper letters
 str_view(city_tib$city, "([A-Z]{2})")
 
-#Step 4 Specifying range of matches
+#Step 4 Specifying range of matches for up to three letters
 str_view(city_tib$city, "([A-Z]{2,3})")
 
 ```
 
-### Using regexp to split the column inside the data set
+### Using regexp `str_match` to split the column
 
-We want to split the city vector using `str_match`. Notice that the vector starts with city names, with a combination of capital and lower letters
+We want to split the city vector using `str_match`. Notice that the vector starts with city names, with a combination of capital and lower letters.
+
+-   To single out the first column, we need to specify the regexp associated to the first group which includes the name of the State; namely (`[A-Za-z ]+)` .
+
+-   The second group constitutes the abbreviation of the city, which is composed by two capital letters; namely, (`, [A-Z]{2})` preceded by a comma and a space.
+
+-   Adding a `?` makes the second group, city, optional (`, [A-Z]{2})?`
+
+-   Including country requires a third group, preceded by a comma and a space, which can also be optional `(, [A-Za-z]+)?`.
+
+-   We can exclude the comma associated with the first group (country) by using `:?` as follows `(?: ,)?.`
 
 ```{r split_column_inside}
 #| echo: true
@@ -1827,7 +1867,9 @@ city_tib$city |>
 city_tib$city |> 
   str_match('([A-Za-z ]+)(, [A-Z]{2})')
 
-#Using optional includes Berlin listing the state as NA
+#*Using optional includes Berlin listing the state as NA. 
+#*Add an optional ? since the city may appear or not
+
 city_tib$city |> 
   str_match('([A-Za-z ]+)(, [A-Z]{2})?')
 
@@ -1835,20 +1877,38 @@ city_tib$city |>
 city_tib$city |> 
   str_match('([A-Za-z ]+)(, [A-Z]{2})?, ([A-Za-z]+)?')
 
-#* Eliminating comma followed by space in the third column by taking
-#* away the comma in the second group by using the question mark
-#* followed by :
+```
+
+#### Checking errors in regular expressions str_match()
+
+Notice this string includes commas in the state abbreviations column `[, 3]`.
+
+```{r check_error_regexp_str_match}
+#| echo: true
+#| message: false
+
+#Including country by adding another group
+city_tib$city |> 
+  str_match('([A-Za-z ]+)(, [A-Z]{2})?, ([A-Za-z]+)?')
+
+```
+
+Let's try to get rid of the comma in the second column for the city abbreviation.
+
+Eliminating comma followed by space in the third column by taking away the comma in the second group by using the question mark followed by : or `(?: ,)`. We also need to remind R that this comma may appear or not.
+
+```{r eliminating_comma_city}
+#| echo: true
+#| message: false
 
 city_tib$city |> 
   str_match('([A-Za-z ]+)(?:, )?([A-Z]{2})?, ([A-Za-z]+)?')
 
 ```
 
-Without the optional `?` , eliminates the 4th entry composed of Berlin, with no state. It appears as `NA`. Allowing for `?` optional, Berlin entry is included, with NA for the state.
+### Creating a tibble after splitting out vector
 
-#### Creating a tibble after splitting out vector
-
-And to get nice column names, we can us the .name_repair function
+And to get nice column names, we can use the tibble `.name_repair =` function. It produces nice column names.
 
 ```{r creating_tibble_after_splitting}
 #| echo: true
@@ -1862,12 +1922,11 @@ city_tib$city |>
                                  "state",
                                  "country") )
 
-
 ```
 
-#### Separate wider option regex
+### Separate wider using separate_wider_regex() function
 
-Remember with `separate_wider_regex()` we are already doing the grouping eliminating the need of using parenthesis.
+Remember with `separate_wider_regex()` we are already doing the grouping eliminating the need of using parenthesis. However, this code produces an error: invalid number of groups. It did not like leaving `(?:, )` by itself
 
 ```{r separate_wider_cities}
 #| echo: true
@@ -1880,11 +1939,248 @@ city_tib |>
     cols = city,
     patterns = c(
       city = '[A-Za-z ]+',
-      '(?:, )?',
-      state = "(?:[A-Z]{2})?", #We need to use the parenthesis here
+      '(?:, )',
+      state = '([A-Z]{2}?)', #We need to use the parenthesis here
       ', ',
       country = "[A-Za-z]+" 
     ) )
+
+
+```
+
+#### Detecting errors in the separate_wider_reg() code
+
+But this produces a different error, prompting the use of the debug mode.
+
+```{r detect_error_sep_wider_reg}
+#| echo: true
+#| warning: false
+
+city_tib |> 
+  separate_wider_regex(
+    cols = city,
+    patterns = c(
+      city = '[A-Za-z ]+',
+      '(?:, )',
+      state = '(?:[A-Z]{2}?)', #We need to use the parenthesis here
+      ', ',
+      country = "[A-Za-z]+" 
+    ) )
+
+
+```
+
+##### Requesting the use of the debug mode
+
+```{r debug_reg_exp_mode}
+#| echo: true
+#| warning: false
+
+city_tib |> 
+  separate_wider_regex(
+    cols = city,
+    patterns = c(
+      city = '[A-Za-z ]+',
+      '(?:, )',
+      state = '(?:[A-Z]{2}?)', #We need to use the parenthesis here
+      ', ',
+      country = "[A-Za-z]+" 
+    ),
+    too_few = 'debug')
+
+```
+
+There is always an issue when the state is missing.
+
+The problem can be traced to the omission of the question mark
+
+```{r correct_reg_exp_mode}
+#| echo: true
+#| warning: false
+
+city_tib |> 
+  separate_wider_regex(
+    cols = city,
+    patterns = c(
+      city = '[A-Za-z ]+',
+      '(?:, )?', #Adding ommited question mark at the end
+      state = '(?:[A-Z]{2}?)', #We need to use the parenthesis here
+      ', ',
+      country = "[A-Za-z]+" 
+    ),
+    too_few = 'debug')
+
+
+```
+
+Running the script again without the `debug` option
+
+```{r correct_reg_exp_mode_no_debug}
+#| echo: true
+#| warning: false
+
+city_tib |> 
+  separate_wider_regex(
+    cols = city,
+    patterns = c(
+      city = '[A-Za-z ]+',
+      '(?:, )?',
+      state = '(?:[A-Z]{2})?',
+      ', ',
+      country = '[A-Za-z]+'
+    )
+  )
+
+
+```
+
+## Lesson 20
+
+### RexEx: The \* operator
+
+Trying to write a regular expression that could describe the vector displayed below.
+
+Notice that Hi can be followed by space, but not always. We can describe this situation using the special operator `?` alternative.
+
+```{r the_*_operator}
+#| echo: true
+#| warning: false
+
+str_view(
+  c('Hi!', 'Hi again!', 'Hi  again!'),
+  'Hi( again)?!'
+)
+
+
+```
+
+Notice that this regular expression only catches two sentences. The sentence not captured has two white spaces between `Hi` and `again`. We can add `{ }` to signify the potential number of additional spaces between Hi and again.
+
+```{r catching_spaces}
+#| echo: true
+#| warning: false
+
+str_view(
+  c('Hi!', 'Hi again!', 'Hi  again!'),
+  'Hi( ){0,5}(again)?!'
+)
+
+```
+
+Another option to allow the possibility that white spaces can go from zero to an infinite number.
+
+```{r handling_white_spaces}
+#| echo: true
+#| warning: false
+
+str_view(
+  c('Hi!', 'Hi again!', 'Hi  again!'),
+  'Hi( ){0,}(again)?!'
+)
+
+
+```
+
+Another alternative, we could use the star operator `*`.
+
+```{r alternative_spaces}
+#| echo: true
+#| warning: false
+
+str_view(
+  c('Hi!', 'Hi again!', 'Hi  again!'),
+  'Hi( )*(again)?!'
+)
+
+```
+
+## Lesson 21
+
+### RexEx: Match things at the beginning & end of text
+
+Example of how to search for things and the beginning and end. Extracting words that start with `r`.
+
+### Using str_starts() function
+
+```{r match_beg_end}
+#| echo: true
+#| warning: false
+
+x <- c("regex", "regular", "expression")
+
+#View start with r
+str_starts(x, 'r')
+
+#You could also extract the variables with r
+
+x[str_starts(x, 'r')]
+
+#Extracting strings that start with r and end with x
+
+x[str_starts(x, 'r') & str_ends(x,'x')]
+
+
+```
+
+### String Subset Using `^`  and `$`
+
+An alternative approach to extract strings that start and end with specific characters, using special annotations
+
+```{r alternative_extraction}
+#| echo: true
+#| warning: false
+
+str_subset(x, '^r')
+
+str_subset(x, 'x$')
+
+#Combining all of these expressions
+# Start with an x and end with an x
+
+str_subset(x, '^rx$')
+
+#* Correct approach is to signify a series of characters between 
+#* desired start and end of characters
+
+str_subset(x, '^r.+x$')
+
+
+```
+
+We could use this approach for include some patterns.
+
+```{r search_comb_letters}
+#| echo: true
+#| warning: false
+
+#Searching for regular
+
+str_subset(x, '^regu')
+
+#* It can also be used to search for potential groups of characters
+#* for instance the group `regu` can be there or not
+
+str_subset(x, '^(regu)?')
+
+# Another example: start with an r or an n
+
+x <- c("regex", "regular", "expression", 'night')
+
+str_subset(x, '^(r|n)')
+
+#Suppose we want to catch words that end with an r or  an n
+
+str_subset(x, '(r|n)$')
+
+#Get things that end with r or t
+
+str_subset(x, '(r|t)$')
+
+#* We can also combined groupings: start with either r or n and end
+#* with either n or t
+
+str_subset(x, '^(r|n).+(r|t)$')
+
 
 
 ```
