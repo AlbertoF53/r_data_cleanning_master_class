@@ -2122,7 +2122,7 @@ x[str_starts(x, 'r') & str_ends(x,'x')]
 
 ```
 
-### String Subset Using `^`  and `$`
+### String Subset Using `^` (start) and `$` (end)
 
 An alternative approach to extract strings that start and end with specific characters, using special annotations
 
@@ -2182,5 +2182,87 @@ str_subset(x, '(r|t)$')
 str_subset(x, '^(r|n).+(r|t)$')
 
 
+
+```
+
+## Lesson 22
+
+### RegEx: The `not` operator
+
+The `^` not operator can be used to instruct R to look for all but certain strings.
+
+-   Searching for fruits containing letter r
+
+-   Searching for fruits not containing letter r
+
+-   Searching for fruits with
+
+-   Using str_subset() to get a group of fruits \[\^r\]
+
+```{r not_oper_1}
+#| echo: true
+#| warning: false
+
+
+fruit[1:7]
+
+#Searching for names of fruits containing the letter r
+str_view(fruit[1:7], '[r]')
+
+#Searching for names of fruits not containing the letter r
+str_view(fruit[1:7], '[^r]')
+
+#Searching for names of fruits not containing the letters ar together
+str_view(fruit[1:7], '[^ar]')
+
+#Using str_subset() to identify fruits not starting with r
+str_subset(fruit[1:7], '[^r]')
+
+
+```
+
+Modifying regular expression to identify fruits containing no r at all. We can do so by using the add the asteric operator `*` . This operator means 0, 1 or many.
+
+-   str_subset(fruit\[1:7\], "\[\^r\]\*") but still does not produce what we want
+
+-   str_view reveals that r still is part of the strings being captured
+
+-   combining beginning and end of the string. We start with not r and we we end with not r
+
+    -   We start with `^[^r]` and the end string not r using `*` : `^[^r]*$`
+
+        -   `^[^r]*$`
+
+        -   This option produces the correct three fruits with no r
+
+-   Alternatively we could use a `+` instead of an `^[^r]+$`
+
+```{r not_oper_2}
+#| echo: true
+#| warning: false
+
+#Using astering operator
+str_subset(fruit[1:7], '[^r]*')
+
+#Unsing str_view to check the output
+str_view(fruit[1:7], '[^r]*')
+
+#Using beginning and end of string to eliminate begining and end
+str_view(fruit[1:7], '^[^r]*$')
+
+#Using subset to identify fruits with no r
+str_subset(fruit[1:7], '^[^r]*$')
+
+#Alternatively we could use a `+` instead of an `*`
+str_subset(fruit[1:7], '^[^r]+$')
+
+str_view(fruit[1:7], '^[^r]+$')
+```
+
+## Lesson 23
+
+### RegEx: Special collections
+
+```{r}
 
 ```
