@@ -2294,7 +2294,7 @@ str_view(txt, '[a-z]+')
 
 ```
 
-#### Introducing the  lower and upper special class operators
+#### Introducing the lower and upper special class operators
 
 Notice that the `lower` operator needs to be preceded by `:` followed by `:`. There is also the `upper` class operator
 
@@ -2457,7 +2457,11 @@ str_view(text, '(?<!black )cat')
 
 Notice that it only catches the word cat. It does capture "I saw at.." , and "...a stray".
 
-We can do the same for "stray cat". However, we could extend this option to capture `black` and `stray`. However, we need to form "black" and "stray" to be part of a group using `( )`, and qualifying this group using `?<!`. Or `?<!(stray|black)`
+We can do the same for "stray cat". However, we could extend this option to capture `black` and `stray`. However, we need to form "black" and "stray" to be part of a group using `( )`, and qualifying this group using `?<!`. Or `?<!(stray|black).`
+
+The regexpr `'(?<!(stray|black) )cat'` stands for only look for cats that are neither stray or black. The important thing here is that the operator `?<!(`
+
+that handles the expression is the same. It consists of the question mark `?` that modifies the group. And then there is the "less than sign" `<` signifying that whenever we have a match we want to look behind the match; in this case "black" or "stray". And then we say we don't want `!` those two matches.
 
 ```{r unpreceded_matches_2}
 #| echo: true
@@ -2469,5 +2473,41 @@ str_view(text, '(?<!stray )cat')
 #Exlcudying a varity of cats
 str_view(text, '(?<!(stray|black) )cat')
 
+
+```
+
+##### Practicing these `lookaround` operators
+
+Looking for things that are "not" cheap. We don't want words that the the `not` in them. We also want to get rid of the string "not really" cheap.
+
+The next regexp means exclude not and any other character that range from 0 to 20 characters.
+
+This regular expression `'(?<!not.{0,20} )cheap)'`
+
+```{r exercise}
+#| echo: true
+#| warning: false
+
+
+reviews <- c(
+  "The product is cheap and affordable.",
+  "The material feels cheap.",
+  "It is not cheap, but it is worth the price",
+  "This product is not really cheap, but it is worth the price.",
+  "Very cheap quality for the cost."
+)
+
+#Looking for strings cheap
+str_view(reviews, 'cheap')
+
+#Looking for things that are not cheap
+str_view(reviews, '(?<!not )cheap')
+
+#* Another possibility is to use { } with a number of spaces to 
+#* capture other words interjected with not
+str_view(reviews, '(?<!not.{0,20} )cheap')
+
+#An alternative is 
+str_view(reviews, '(?<!(not|not really) )cheap')
 
 ```
