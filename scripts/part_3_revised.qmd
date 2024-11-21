@@ -22,6 +22,18 @@ editor_options:
 
 # Part III
 
+## Opus
+
+From demystifying regular expressions in R. Regular expressions can be used for:
+
+-   search
+
+-   replace
+
+-   validation
+
+-   extraction
+
 ## Lesson 1
 
 This lesson addresses basic string functions, which start with `str_to_`. Those are: `str_to_lower()`, `str_to_upper()`, `str_to_title()`, `str_to_sentence()`.
@@ -2261,8 +2273,201 @@ str_view(fruit[1:7], '^[^r]+$')
 
 ## Lesson 23
 
-### RegEx: Special collections
+### RegEx: Special collections of characters
 
-```{r}
+Those include:
+
+-   \[:lower:\]; \[:upper:\]; \[:letter:\]: \[:alpha:\]; \[:punct:\]; \[:graph:\]; `\d`;
+
+```{r special_collections_1}
+#| echo: true
+#| warning: false
+
+txt <-  "Hello I'm 10 years old."
+
+#Displaying single lower cap letters
+str_view(txt, '[a-z]')
+
+#Displaying all groups of lower cap letters
+str_view(txt, '[a-z]+')
+
+
+```
+
+#### Introducing the  lower and upper special class operators
+
+Notice that the `lower` operator needs to be preceded by `:` followed by `:`. There is also the `upper` class operator
+
+```{r special_collections_2}
+#| echo: true
+#| warning: false
+
+#Lower class operator
+str_view(txt, '[:lower:]+')
+
+#Upper class operator
+str_view(txt, '[:upper:]+')
+
+```
+
+#### Using alpha and letter
+
+It brings a combination of capital and lower letters. Notice that only numbers are excluded from the search of characters. Both produce the same outcome.
+
+```{r special_collection_alpha}
+#| echo: true
+#| warning: false
+
+#Alpha operator
+str_view(txt, '[:alpha:]+')
+
+#Letter operator
+str_view(txt, '[:letter:]+')
+
+```
+
+#### Using `punct` class
+
+It used to single out or identify punctuation characters such as ", ',
+
+```{r punct_class}
+#| echo: true
+#| warning: false
+
+#Letter operator
+str_view(txt, '[:punct:]+')
+
+```
+
+#### Using `alnum` class
+
+Notice that so far these class operators do not catch numbers. The class `alnum` is applicable. It catches both letters and numbers.
+
+```{r alnum_class}
+#| echo: true
+#| warning: false
+
+#Letter operator
+str_view(txt, '[:alnum:]+')
+
+
+```
+
+#### Using graph class
+
+The graph class combines all prior operators
+
+```{r graph_class}
+#| echo: true
+#| warning: false
+
+#Letter operator
+str_view(txt, '[:graph:]+')
+
+```
+
+#### Using print class
+
+`print` catches white spaces as well. It produces the same results as the `.` and `+` operators. If so, it is better to choose the dot and plus operators.
+
+```{r print_class}
+#| echo: true
+#| warning: false
+
+#Print operator
+str_view(txt, '[:print:]+')
+
+#Dot operator
+str_view(txt, '.+')
+
+```
+
+`\d` for numbers only
+
+```{r searching _numbers_only}
+#| echo: true
+#| warning: false
+
+#Searching for numbers
+str_view(txt, '\\d+')
+
+```
+
+`\\s` for spaces only
+
+```{r searching_white_spaces}
+#| echo: true
+#| warning: false
+
+#Searching for white spaces
+str_view(txt, '\\s+')
+
+```
+
+#### Inverting classes
+
+You can invert the classes just by making the small letter into capital letter. For instance capitalizing `s` and `d`, means searching for anything that is not a number of a space
+
+```{r inverting_characters}
+#| echo: true
+#| warning: false
+
+#Inverting characters
+str_view(txt, '\\D+')
+
+str_view(txt, '\\S+')
+```
+
+Note:
+
+MORE SPECIAL CASES CAN BE FOUND AT:
+
+https://cran.r-projects.org/web/packages/stringr/vignettes/regular-expressions.htlml. Also consult regular expressions [regexp](https://cran.r-project.org/web/packages/stringr/vignettes/regular-expressions.html).
+
+## Lesson 24
+
+### RegEx: Find matches not preceded by something
+
+Starting with this lesson our focus will on `lookarounds`. They are important to look for or to exclude specific things. For example, search for all cats but black.
+
+Remember the `?:` for optional to identify the group that is unnamed. Now, we want to make the group `(black )` forbidden. The way to do it is to add the sign `<` to signify less of it followed by negating it `!`.
+
+```{r unpreceded_matches_1}
+#| echo: true
+#| warning: false
+
+text <- c("I saw a cat, a black cat, and a stray cat.")
+
+#Looking for cat
+str_view(text, 'cat')
+
+#Excludying black cat from the search
+#First attempt group black
+str_view(text, '(black )cat')
+
+#Recall using ?: before the group to signify optional group
+str_view(text, '(?:black )cat')
+
+#* To eliminate the group black use optional, followed by less of it, 
+#* and then the negation of the object or group. ?<!
+
+str_view(text, '(?<!black )cat')
+
+```
+
+Notice that it only catches the word cat. It does capture "I saw at.." , and "...a stray".
+
+We can do the same for "stray cat". However, we could extend this option to capture `black` and `stray`. However, we need to form "black" and "stray" to be part of a group using `( )`, and qualifying this group using `?<!`. Or `?<!(stray|black)`
+
+```{r unpreceded_matches_2}
+#| echo: true
+#| warning: false
+
+#Excludying stray cat
+str_view(text, '(?<!stray )cat')
+
+#Exlcudying a varity of cats
+str_view(text, '(?<!(stray|black) )cat')
+
 
 ```
