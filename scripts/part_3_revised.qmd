@@ -2616,7 +2616,7 @@ logs |>
 
 ## Lesson 26
 
-### RegEx: Possitive Lookarounds
+### RegEx: Positive Lookarounds
 
 This lesson is the analog to the previous ones. In the previous lessons we excluded string that were either preceded or followed by some something. Now we want to include only things that are preceded or followed by something.
 
@@ -2651,5 +2651,96 @@ str_view(text, '[a-z]+\\spie')
 #Fifth option
 str_view(text, '[a-z]+(?= pie)')
 
+
+```
+
+## Lesson 27
+
+### Putting it all together
+
+#### Selecting variables/columns using matches() along regex
+
+A couple of small multiple examples to cover with regex.
+
+The first is an exercise on patients' blood pressure across time.
+
+1.  First eliminating patient_id using matches function. In this case `\\d`. This option also works in `pivot_longer()`
+
+```{r patient_data_ex}
+#| echo: true
+#| warning: false
+
+bio_data <- tibble(
+  patient_id = 1:3,
+  bp_t1 = c(120,230,125),
+  bp_t2 = c(122,135,127),
+  hr_t1 = c(70, 72,69),
+  hr_t2 = c(71, 74, 70)
+)
+
+#Selecting everithing but patient id
+bio_data |> 
+  select(-patient_id) |> 
+  view()
+
+#Another option for selecting cases using matches()
+bio_data |> 
+  select(matches('bp_t|hr_t')) |> 
+  view()
+
+#Using regexp for selecting variable or columns with numbers
+
+bio_data |> 
+  select(matches('\\d')) |> 
+  view()
+
+```
+
+#### Using regexp `\\d` with pivot() longer
+
+In this example we want to to create a longer file whereby and flood testing and timing are separated in two distinct columns across time.
+
+-   Under cols, we use the tidy helper matches along a regular expression to select the columns we want to widen. Notice we are using \\\\d which stands for digits and +. Or select columns containing one or more numbers in the name.
+
+-   Under pattern, we identify the new two columns via regex. The first group starts with the letters bp or hr. The second group is preceded by the \_t and contains one or more numbers.
+
+-   Names to instructs pivot longer about the names of the new two columns: pressure and time.
+
+-   Notice that the columns time is reported as character. We could parse_number is using mutate. Alternatively , we could change it at the moment of doing the pivoting longer with the option names_transform = list(time = as.numeric).
+
+```{r regexp_pivot_longer}
+#| echo: true
+#| message: false
+
+bio_data |> 
+  pivot_longer(
+    cols = matches("\\d+"),
+    names_pattern = '(bp|hr)_t(\\d+)',
+    names_to = c("metric", "time"),
+    values_to = 'val'
+  )
+
+#Parsing time as numeric using mutate
+bio_data |> 
+  pivot_longer(
+    cols = matches("\\d+"),
+    names_pattern = '(bp|hr)_t(\\d+)',
+    names_to = c("metric", "time"),
+    values_to = 'val'
+  ) |> 
+  mutate(
+    time = parse_number(time),
+    metric = as.factor(metric),
+  )
+
+#Changing time as numeric within pivot longer
+bio_data |> 
+  pivot_longer(
+    cols = matches("\\d+"),
+    names_pattern = '(bp|hr)_t(\\d+)',
+    names_to = c("metric", "time"),
+    names_transform = list(time = parse_number),
+    values_to = 'val'
+  ) 
 
 ```
