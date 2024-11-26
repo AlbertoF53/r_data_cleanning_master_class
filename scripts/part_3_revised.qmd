@@ -2382,7 +2382,7 @@ str_view(txt, '.+')
 
 ```
 
-`\d` for numbers only
+`\d` or d stands for numbers only
 
 ```{r searching _numbers_only}
 #| echo: true
@@ -2509,5 +2509,147 @@ str_view(reviews, '(?<!not.{0,20} )cheap')
 
 #An alternative is 
 str_view(reviews, '(?<!(not|not really) )cheap')
+
+```
+
+## Lesson 25
+
+### RegEx: Negative Lookahead
+
+We want to exclude strings that are followed by something.
+
+First search or view Otto Bauer. Next we want to exclude the numbers followed by the name.
+
+```{r negative_lookahead_1}
+#| echo: true
+#| warning: false
+
+names <- c(
+  'Otto Bauer',
+  'Otto Bauer 2',
+  'Otto Bauer 21',
+  'Lisa Hundsgemein',
+  'Leah LastName',
+  'Nora Whats-Her-Name'
+)
+
+#Looking for Otto Bauer
+str_view(names, "Otto Bauer" )
+
+#Trying to exclude the numbers using this regexp won't work
+str_view(names,"Otto Bauer[ \\d]{0}")
+
+#* Wrapping numeric \\d as a new group, and indicating we don't want
+#* it
+str_view(names, 'Otto Bauer(?![ \\d])')
+
+
+```
+
+Another example. We would be looking for the critical error messages. What about getting the errors that are not critical. We could use the `str_view(cols, pattern, match)` to identify strings that do not match the string `error critical`.
+
+```{r negative_lookahead_2}
+#| echo: true
+#| warning: false
+
+logs <- c(
+  '2024-09-01 error critical: database failure',
+  '2024-09-02 error warning: low disk space',
+  '2024-09-03 error critical: server down',
+  '2024-09-03 message info: A new version is available',
+  '2024-09-04 error info: process completed'
+)
+
+#Singling out critical errors
+str_view(logs,'error critical')
+
+#Singling out errors that are not critical
+str_view(logs, 'error critical', match = FALSE)
+
+#* However this option displays the string `critical` as part
+#* of the list.
+
+#* The strategy of negative look aheads can be called upon. So that we
+#* could look for the string `error` and then say don't take those
+#* that are followed by white space and the word critical.
+#* Grouping critical. Let's modify it so that it is a negative look
+#* 
+
+str_view(logs,'error(?! critical)' )
+
+#Another option is to add the symbol for white space
+
+str_view(logs,'error(?!\\scritical)' )
+
+#* If you want to get particular messages, you could use str_match
+#* to get strings not followd by critical but by other characters
+
+str_match(logs, 'error(?! critical).+: .+')
+
+
+#* If we want the error type and the message separately, we could
+#* group these characters. In this case note we are grouping it 
+#* together
+
+str_match(logs, 'error(?! critical)(.+): (.+)')
+
+#* Notice we have a white space in the fifth row " info", which we
+#* don't want. We can include a space either blank or symbol \\s
+
+str_match(logs, 'error(?! critical)\\s(.+): (.+)')
+
+
+```
+
+If you don't like the operators of question mark followed by #\* negation mark `?!` you could use chaining multiple string functions. For instance, you could use str_sub() listing the first string `error`. Next exclude, all the strings labeled `critical`, followed by the `negate = TRUE` option. This would eliminate all sentences or strings with the word `critical` in them.
+
+```{r using_str_sub_chains}
+#| echo: true
+#| warning: false
+
+logs |> 
+  str_subset('error') |>
+  str_subset('critical', negate = TRUE)
+
+
+```
+
+## Lesson 26
+
+### RegEx: Possitive Lookarounds
+
+This lesson is the analog to the previous ones. In the previous lessons we excluded string that were either preceded or followed by some something. Now we want to include only things that are preceded or followed by something.
+
+-   The first option we are looking for strings that follow the word apple
+
+-   Second option is a variation of first option by specifying and then joining two groups of strings
+
+-   Third option consists of two groups of strings. The first string specifies that the word we are looking for should be preceded by the word `apple` followed by a space. This yiels `pie`, `juice`, and `crumble`.
+
+-   Fourth option produces identifies words joined with the word `pie`.
+
+-   Fifth option identifies words that precede the word pie.
+
+```{r possitive_lookaround_1}
+#| echo: true
+#| warning: false
+
+text <- "apple pie, apple juice, apple crumble and plum pie"
+
+#First option
+str_view(text, 'apple\\s[a-z]+')
+
+#Second option
+str_view(text, '(apple\\s)[a-z]+')
+
+#*Third option: include the word preceded by `apple`
+str_view(text, '(?<=apple\\s)[a-z]+')
+
+#Fourth option
+str_view(text, '[a-z]+\\spie')
+
+#Fifth option
+str_view(text, '[a-z]+(?= pie)')
+
 
 ```
