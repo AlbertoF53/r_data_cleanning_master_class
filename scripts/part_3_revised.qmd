@@ -2744,3 +2744,50 @@ bio_data |>
   ) 
 
 ```
+
+Using another example of privot_longer with sales data. The purpose is to transform the database into 5 columns: id, type of transaction, month, year, and volume
+
+```{r sales_data_ex}
+#| echo: true
+#| message: false
+
+sales_data <- tibble::tibble(
+  id = 1:3,
+  sales_jan_2021 = c(100, 150, 120),
+  revenue_jan_2021 = c(1000, 1500, 1200),
+  sales_feb_2021 = c(130, 140, 115),
+  revenue_feb_2021 = c(1300, 1400, 1150),
+  sales_jan_2022 = c(110, 160,125),
+  revenue_jan_2022 = c(1100, 1600, 1250),
+  sales_feb_2022 = c(140, 145, 135),
+  revenue_feb_2022 = c(1400, 1450, 1350)
+)
+
+#Alberto's approach to create a new database
+sales_data |> 
+  pivot_longer(cols = -id,
+               names_pattern = '(\\D+)_(\\D+)_(\\d+)',
+               names_to = c("transaction", "month", "year"),
+               names_transform = list(year = parse_number),
+               values_to = "money")
+
+
+#*Albert Rapp's approach. 
+#*Notice in the names pattern. Albert approach is to use the two
+#*labels sales or revenue using |, next group he uses `[a-z]+`
+#*regex to capture month'. 
+#*The third group is captured by specifying 4 numbers or
+#* (\\d){4}
+
+sales_data |> 
+  pivot_longer(cols = -id,
+               names_pattern = '(sales|revenue)_([a-z]+)_(\\d{4})',
+               names_to = c("metric", "month", "year"),
+               names_transform = list(year = parse_number),
+               values_to = "val")
+
+
+
+
+
+```
