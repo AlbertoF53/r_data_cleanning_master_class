@@ -2696,7 +2696,7 @@ bio_data |>
 
 ```
 
-#### Using regexp `\\d` with pivot() longer
+### Using regexp `\\d` with pivot() longer
 
 In this example we want to to create a longer file whereby and flood testing and timing are separated in two distinct columns across time.
 
@@ -2745,6 +2745,8 @@ bio_data |>
 
 ```
 
+#### pivot_loner with sales data
+
 Using another example of privot_longer with sales data. The purpose is to transform the database into 5 columns: id, type of transaction, month, year, and volume
 
 ```{r sales_data_ex}
@@ -2786,6 +2788,59 @@ sales_data |>
                names_transform = list(year = parse_number),
                values_to = "val")
 
+
+```
+
+#### Selecting all columns related to sales for the year 2022
+
+-   We can use a combination of tidy helpers sucha as contains('sales') as well as ends_with('2022'). However this combination yields all columns that have the word `sales` or the year `2022`.
+
+-   The short path would involve using match() along the regexp sales followed by something then underscore 2022. Or 'sales\_.+\_2022'
+
+```{r pivot_longer_2022}
+#| echo: true
+#| warning: false
+
+#The first approach does not produce the desired solution
+sales_data |> 
+  select(contains("sales"), ends_with('2022'))
+
+#Selecting sales that only took place in 2022
+sales_data |> 
+  select(contains("sales") & ends_with('2022'))
+
+#Another short path
+sales_data |> 
+  select(matches('sales_.+_2022'))
+
+```
+
+Reduced searches using regexp and `matches()` function
+
+Selecting all columns that start with an f or a b and end in mm
+
+Another option using regexp: At the start \^ we want to have either f or b, followed by anything .+ and at the end `$` we want \_mm
+
+```{r matches_penguin}
+#| echo: true
+#| message: false
+
+
+#Or the long approach by combining several tidy functions
+
+palmerpenguins::penguins |> 
+  select(
+    (starts_with('f') | starts_with('b')) & ends_with('_mm')  )
+
+#Short solution with regexp
+palmerpenguins::penguins |> 
+  filter(!is.na(sex)) |> 
+  select(matches('(f|b).+_mm'))
+
+#Another regexp solution
+palmerpenguins::penguins |> 
+  #We want to start the string and then we want to have the
+  select(matches('^(b|f).+_mm$'))
 
 
 
