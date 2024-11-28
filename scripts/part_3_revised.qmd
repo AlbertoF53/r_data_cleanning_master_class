@@ -381,9 +381,12 @@ As you noticed, there are some unwanted spaces at the end of the names of the co
 
 On the other hand, `str_squish()` removes whitespace at the start and end, and replaces all internal whitespace with a single space. Notice that the " " disappears once you trim the string.
 
+There are two options for this transformation. Using the shortcut option in which there is only one reference to the column or variable to be changed. And the long version of several mutates for the same variable.
+
 ```{r trim_pad}
 #| echo: true
 
+#Shortcut
 big_tech_companies |> 
   mutate(
     company = company |> 
@@ -393,6 +396,18 @@ big_tech_companies |>
       str_remove(" Corporation") |> 
       str_trim(side = c('both'))
   )
+
+#Longversion
+
+# big_tech_companies |> 
+#   mutate(
+#     company = str_remove(company, "Inc."),
+#     company = str_remove(company, ", "),
+#     company = str_remove(company, ".com"),
+#     company = str_remove(company, " Corporation"),
+#     company = str_trim(company, side = c('both'))
+#   )
+
 
 ```
 
@@ -2815,11 +2830,13 @@ sales_data |>
 
 ```
 
-Reduced searches using regexp and `matches()` function
+#### Selecting columns penguins data
 
-Selecting all columns that start with an f or a b and end in mm
+Selecting all columns that start with an `f` or a `b` and end with an `mm.`
 
-Another option using regexp: At the start \^ we want to have either f or b, followed by anything .+ and at the end `$` we want \_mm
+Another option using regexp: At the start, `^` we want to have either f or b, followed by anything `.+` and at the end `$` we want \_mm.
+
+regex along with tidy verse functions and helpers is a powerful combination.
 
 ```{r matches_penguin}
 #| echo: true
@@ -2837,12 +2854,91 @@ palmerpenguins::penguins |>
   filter(!is.na(sex)) |> 
   select(matches('(f|b).+_mm'))
 
-#Another regexp solution
+#Another regexp solution that brings a concise result
 palmerpenguins::penguins |> 
   #We want to start the string and then we want to have the
   select(matches('^(b|f).+_mm$'))
 
 
+```
+
+### Big companies example
+
+In this example, an illustration as to how to consolidate 6 changes done by str_remove() by one single regex.
+
+Targeting company column, and using `str_remove_all( )` function. Once the characters have been removed, we can use str_trim() to remove unwanted spaces.
+
+We can also replace International Business Machines by IBM
+
+Next we can load the gt() package
+
+```{r single_regex_for_six_changes}
+
+big_tech_companies <- 
+  readr::read_csv('https://raw.githubusercontent.com/rfordatascience/tidytuesday/master/data/2023/2023-02-07/big_tech_companies.csv')
+
+# Consolidating these 6 str_remove into a few regex
+# big_tech_companies |> 
+#   mutate(
+#     company = company |> 
+#       str_remove("Inc.") |> 
+#       str_remove(", ") |> 
+#       str_remove(".com") |> 
+#       str_remove(" Corporation") |> 
+#       str_trim(side = c('both'))
+#   )
+
+#Another option
+# big_tech_companies |> 
+#   mutate(
+#     company = str_remove_all(
+#       company, 
+#       "Inc\\.|,|Corporation|\\.com|Systems|Platforms"),
+#     company = str_replace(company,
+#                           "International Business Machines",
+#                           "IBM") |> 
+#     str_trim())
+
+
+clean_labels <- big_tech_companies |> 
+  mutate(
+    company = str_remove_all(
+      company, 
+      "Inc\\.|,|Corporation|\\.com|Systems|Platforms") |> 
+      str_trim(),
+      company = str_replace(company,
+                  "International Business Machines",
+                "IBM"))
+
+
 
 
 ```
+
+#### Creating a gt table of the cleaned data set
+
+We can add a function in the gt() procedure. The anonymous function goes as follows, whenever x gets an `_` it would be replaced it by a space. Next we use str_to_title() to create upper letters.
+
+```{r gt_clean_dataset}
+#| echo: true
+#| warning: false
+
+#Creating a gt table
+
+library(gt)
+
+clean_labels |> 
+  gt() |>
+  cols_label_with(
+    #Anonymous function whatever gets a _ replace it with space
+    fn = function(x) x |> 
+      str_replace_all('_', " ") |> 
+      str_to_title()
+  )
+
+
+```
+
+#### What follows is a an example of automate
+
+Based on a chain letter.
