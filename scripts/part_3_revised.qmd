@@ -2939,6 +2939,65 @@ clean_labels |>
 
 ```
 
-#### What follows is a an example of automate
+### Automate Example
 
-Based on a chain letter.
+#### Reading and glueing a text
+
+An example as to how to use regex along with tidy helpers to automate letters.
+
+```{r letter_txt_glue}
+#| echo: true
+#| warning: false
+
+library(glue)
+
+template <- read_file('data/Part_3/letter_template.txt') |> 
+  glue::glue()
+
+
+```
+
+#### Creating dictionary
+
+Our first task is creating a dictionary for replacement. Passing the object template to extract the names using str_match_all() looking for things that are in brackets. However, we know that \[ \] are R special characters used for collections so that we need to escape them.
+
+And in between these brackets, we can add many things such as `.+` , which allows us to collect letters. To get nicer results we need to add `unlist()` function.
+
+```{r creating_dictionary}
+#| echo: true
+#| warning: false
+
+template |> 
+  str_match_all('\\[.+\\]') |>
+  unlist()
+  
+```
+
+However this overall `.+` approach is too lenient. It produces duplicates and unwanted texts. So instead of `.+`, we need to be more specific with our regular expressions. The regular expression allows to catch what we are looking for
+
+`[\\[[A-Za-z _]+\]`
+
+```{r creating_dictionary_2}
+#| echo: true
+#| warning: false
+
+template |> 
+  str_match_all('\\[[A-Za-z _]+\\]') |>
+  unlist()
+  
+
+```
+
+Next we can use the unique function to avoid duplicates, which yields 11 unique fields.
+
+```{r creating_dictionary_unique}
+#| echo: true
+#| warning: false
+
+template |> 
+  str_match_all('\\[[A-Za-z _]+\\]') |>
+  unlist() |> 
+  unique()
+  
+
+```
