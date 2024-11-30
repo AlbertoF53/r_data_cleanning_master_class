@@ -2910,9 +2910,6 @@ clean_labels <- big_tech_companies |>
                   "International Business Machines",
                 "IBM"))
 
-
-
-
 ```
 
 #### Creating a gt table of the cleaned data set
@@ -2959,9 +2956,9 @@ template <- read_file('data/Part_3/letter_template.txt') |>
 
 #### Creating dictionary
 
-Our first task is creating a dictionary for replacement. Passing the object template to extract the names using str_match_all() looking for things that are in brackets. However, we know that \[ \] are R special characters used for collections so that we need to escape them.
+Our first task is creating a dictionary for replacement. Passing the object template to extract the names using str_match_all() looking for al things that are in brackets using the genexp `.+`. However, we know that \[ \] are R special characters used for collections so that we need to escape them.
 
-And in between these brackets, we can add many things such as `.+` , which allows us to collect letters. To get nicer results we need to add `unlist()` function.
+And in between these brackets, we can add many things such as `.+` , which allows us to collect letters. To get nicer results we need to the add `unlist()` function.
 
 ```{r creating_dictionary}
 #| echo: true
@@ -2973,7 +2970,7 @@ template |>
   
 ```
 
-However this overall `.+` approach is too lenient. It produces duplicates and unwanted texts. So instead of `.+`, we need to be more specific with our regular expressions. The regular expression allows to catch what we are looking for
+However this overall `.+` approach is too lenient. It produces duplicates and unwanted texts. So instead of `.+`, we need to be more specific with our regular expressions. The regular expression belo allows to catch what we are looking for. Notice we adding the `+` to signify there are many capital and lower letters followed by space and a single underscore.
 
 `[\\[[A-Za-z _]+\]`
 
@@ -2988,7 +2985,7 @@ template |>
 
 ```
 
-Next we can use the unique function to avoid duplicates, which yields 11 unique fields.
+However, this regular expression reports 19 fields, with several duplciates. Next we can use the unique function to avoid duplicates, which yields 11 unique fields. Having created a template, allows us to avoid typing the place holders one by one, which is a rather tedious task, prone to errors.
 
 ```{r creating_dictionary_unique}
 #| echo: true
@@ -2998,6 +2995,245 @@ template |>
   str_match_all('\\[[A-Za-z _]+\\]') |>
   unlist() |> 
   unique()
-  
+
+```
+
+The next step is to identify all 11 fields to be replaced.
+
+##### Capturing content of fields
+
+However, it would be too tedious to type the content of the 11 fields that need to be replaced by their corresponding regex. Using `str_escape()` allows us to identify the strings inside the brackets.
+
+```{r capturing_content_str_escape}
+#| echo: true
+#| warning: false
+
+template |> 
+  str_match_all('\\[[A-Za-z _]+\\]') |>
+  unlist() |> 
+  unique() |> 
+  str_escape()
+
+
+```
+
+Next, we can stick this patterns into a regular expression allowing to replace the text withihn the brackets for us.
+
+##### Creating placeholder
+
+Creating a placeholder
+
+```{r creating_place_holder}
+#| echo: true
+#| warning: false
+
+placeholder <- template |> 
+  str_match_all('\\[[A-Za-z _]+\\]') |>
+  unlist() |> 
+  unique() |> 
+  str_escape()
+
+
+```
+
+Creating data for place holder
+
+It is an example of just one row of data across several columns. Using `slide()` can describe the contents of a row, and then `unlist()` to print the content of the case selected. Notice the data are organized by columns or variables.
+
+##### Calling first case or row replacement dict.
+
+```{r data_dictionary}
+#| echo: true
+#| warning: false
+
+replacement_dict <- tibble(
+  company_name = "Fake Comp",
+  company_address = '4234 Wall Street',
+  city_state_zip = 'New York City, NY, 11111',
+  sender_phone_number = '111-111-1111',
+  sender_email = 'anna@fake-comp.com',
+  letter_date = 'Oct 01, 2024',
+  first_and_last_name = 'John Customer',
+  address = "San Diego, CA 22222",
+  case_id = 'aa-bsa-25235234',
+  contact_reason = 'a change of address',
+  contact_date = 'Sep 12, 2024',
+  sender_full_name = 'Anna Businessperson',
+  sender_position = 'Customer Service Expert'
+) |> 
+  slice(1) |> 
+  unlist()
+
+ 
+```
+
+##### Aligning replacement dict with placeholder 
+
+Using the `names()` function of the replacement dictionary to capture the names or content of the first row. Recall the vector replacement dictionary has the regex associated to each field in the letter associated with the information to be filled in the corresponding field.
+
+We modify the replacement_dict vector with the regex contained in the placeholder vector. In this way the regex of each field is aligned with the data. In other words, the replacement dict has now the regex of the field associated with the data entry in the letter. Notice the NA associated with a a couple of fields or names. This means our regular expression did not capture all the elements of the letter.
+
+```{r aligning_replacement_dict_placeholder}
+#| echo: true
+#| warning: false
+
+names(replacement_dict) <- placeholder
+
+
+
+
+```
+
+Looking at the letter template, we discover that a place holder can also include commas `,`, which our regular expression failed to capture for example \[City, State ZIP Code\]. So adding comma to regex `('\[[A-Za-z _,]+\]')`.
+
+```{r revising_regex}
+#| echo: true
+#| warning: false
+
+#Capturing missing commmas
+placeholder <- template |> 
+  str_match_all('\\[[A-Za-z _,]+\\]') |>
+  unlist() |> 
+  unique() |> 
+  str_escape()
+
+#Changing replacement dictionary with revised placeholder
+names(replacement_dict) <- placeholder 
+
+replacement_dict
+
+```
+
+Notice the revised place holder took care of the missing comma, bringing back the missing field \[City, State, ZIP Code\]; however, it missed one field or stakeholder since there is an NA.
+
+The problem can be traced back to Case ID field \[ID1\], which includes digits or numbers along letters.
+
+```{r correcting_reason_contact}
+#| echo: true
+#| warning: false
+
+#* Capturing missing CASE ID [ID1] field to include numbers
+
+placeholder <- template |> 
+  str_match_all('\\[[A-Za-z _,\\d]+\\]') |>
+  unlist() |> 
+  unique() |> 
+  str_escape()
+
+#Changing replacement dictionary with revised placeholder
+names(replacement_dict) <- placeholder 
+
+replacement_dict
+
+
+
+```
+
+Another thing that is wrong is the field \[Today's Date\], since the regular expression misses the possessive symbol '.
+
+```{r adding_missing_possesive_date}
+#| echo: true
+#| warning: false
+
+#* Capturing missing apostrophe in [Today's Date] field
+
+placeholder <- template |> 
+  str_match_all('\\[[A-Za-z _,\\d’]+\\]') |>
+  unlist() |> 
+  unique() |> 
+  str_escape()
+
+#Changing replacement dictionary with revised placeholder
+names(replacement_dict) <- placeholder 
+
+replacement_dict
+
+```
+
+Adding the ' to capture the field \[Today's Date\] produces an error message.
+
+"Error in names (replacement_dict) \<- placeholder:
+
+'names`attribute [14] most be the same length as the vector [13]`
+
+Basically this mean that we have two fields with the Name in it: "\\\[First Name\\\]" and "\\\[Last Name\\\]". The problem can be traced back to the original replacement_dict tibble data were first and last names are combined as follows \`first_and_last_name =
+
+##### Overriding placing holders
+
+We can combine the two fields by overriding the placeholder vector, using the original place holder by skipping 1 thru 6 entry, and using the paste function to combine the 7th and 8th entry, corresponding to first and last name. Next we skip the first to the 8th place holder eliminating the 14th entry.
+
+```{r combining_names_overriding}
+#| echo: true
+#| warning: false
+
+placeholder <- c(
+  placeholder[1:6],
+  paste(placeholder[7],placeholder[8]),
+  placeholder[-(1:8)]
+)
+
+#Changing replacement dictionary with revised placeholder
+names(replacement_dict) <- placeholder 
+
+replacement_dict
+
+
+```
+
+#### An alternative solution
+
+However, I was not able to replicate Albert Rapp's solution. Consequently, I focused my attention to correcting the replacement_dict tibble file itself. The purpose was to align the placeholder to the original template of the letter. Accordingly, I replaced the `first_and_last_name = 'John Customer'` in the tibble file by the original `[First Name]  = John` and `[Last Name] = Customer]` as originally envisioned in the template. I avoided the complicated procedure of replacing the placeholder.
+
+##### Aligning tibble to original template of a customer letter
+
+```{r alternative_solution}
+#| echo: true
+#| warning: false
+
+
+replacement_dict <- tibble(
+  company_name = "Fake Comp",
+  company_address = '4234 Wall Street',
+  city_state_zip = 'New York City, NY, 11111',
+  sender_phone_number = '111-111-1111',
+  sender_email = 'anna@fake-comp.com',
+  letter_date = 'Oct 01, 2024',
+  #Adding field for first name
+  first_name = 'John',
+  #Adding field for last name
+  last_name = 'Customer',
+  address = "San Diego, CA 22222",
+  case_id = 'aa-bsa-25235234',
+  contact_reason = 'a change of address',
+  contact_date = 'Sep 12, 2024',
+  sender_full_name = 'Anna Businessperson',
+  sender_position = 'Customer Service Expert'
+) |> 
+  slice(1) |> 
+  unlist()
+
+#Applying template of genex to template of letter generate placeholder
+
+placeholder <- template |> 
+  str_match_all('\\[[A-Za-z _,\\d’]+\\]') |>
+  unlist() |> 
+  unique() |> 
+  str_escape()
+
+#Changing replacement dictionary with revised placeholder
+names(replacement_dict) <- placeholder 
+
+#Displaying new replacement dictionary
+replacement_dict
+
+```
+
+Replacing replacing the template with the replacement dictionary and gluing the sentences together.
+
+```{r alternative_solution_2}
+
+template |> 
+  str_replace_all(replacement_dict) |> 
+  glue()
 
 ```
