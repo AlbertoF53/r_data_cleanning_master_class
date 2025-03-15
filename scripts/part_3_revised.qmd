@@ -3067,7 +3067,7 @@ replacement_dict <- tibble(
  
 ```
 
-##### Aligning replacement dict with placeholder 
+##### Aligning replacement dict with placeholder
 
 Using the `names()` function of the replacement dictionary to capture the names or content of the first row. Recall the vector replacement dictionary has the regex associated to each field in the letter associated with the information to be filled in the corresponding field.
 

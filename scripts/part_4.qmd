@@ -1,0 +1,1913 @@
+---
+title: "Part 4"
+author: "Albert Rapp"
+date: January 20, 2025
+format:
+  html:
+    code-link: true
+    code-fold: true
+    code-summary: "Show the code"
+    self-contained: true
+    embed-resources: true
+    toc: true
+    theme: Zephyr
+    number-sections: false
+execute: 
+  warning: false
+  message: false
+  echo: false
+editor_options: 
+  chunk_output_type: console
+---
+
+## Part IV
+
+This section deals with times and dates. We will rely on the {lubridate} package
+
+## Lesson 1: A first glimpse at times & dates
+
+The R `Sys.time()` tells us about the time. However, it is not appropriately formatted. It is a character vector. You can check its properties by using the `class()` function. The same applies to Sys.date() which produces a character.
+
+```{r lesson_1_opus_libraries}
+#| echo: TRUE
+#| warning: false
+
+
+library(tidyverse)
+library(gt)
+library(gtExtras)
+library(zoo)
+library(here)
+
+
+
+
+Sys.time() |> 
+  class()
+
+Sys.Date() |> 
+  class()
+```
+
+### Lubridate equivalents
+
+The nice thing about these two equivalent time and date formats relies on their flexibility. For instance, the now() function allows one to specify the time zone. Notice, `lubridate::date()` function gives you a short date, no time.
+
+```{r date_time_lubridate}
+#| echo: TRUE
+#| warning: false
+
+lubridate::now() 
+
+lubridate::today() 
+
+```
+
+#### Formatting dates and times
+
+Passing the now() to the format() function. The format function allows us to format for pretty printing. Clicking `POSIXct` tab, reveals is a list of abbreviations such as %a abbreviated weekday, %b abbreviated month day etc.
+
+format('%d') tell us we are on the 26th day of the month. Using %D tells us the complete date.
+
+We can use these abbreviations to format days and time to create time stamps.
+
+To report %B month, %Y year, %D dat as well as time %H:%M:%S
+
+```{r formatting_date_time}
+#| echo: TRUE
+#| warning: false
+
+#To report %B month, %Y year, %D dat as well as time %H:%M:%S
+
+lubridate::now() |> 
+  format('%B')
+
+lubridate::now() |> 
+  format('%d.%m.%Y  %H:%M:%S')
+
+#German time central europe
+lubridate::now(tzone = 'CST') |> 
+  format('%d.%m.%Y  %H:%M:%S')
+ 
+#US eastern standard time
+lubridate::now(tzone = 'EST') |> 
+  format('%D.%M.%Y  %H:%M:%S')
+
+```
+
+#### Another format
+
+**%F** shorthand for date
+
+:   Equivalent to %Y-%m-%d (the ISO 8601 date format). It saves to type %Y-%m-%d
+
+```{r another_format}
+#| echo: TRUE
+#| warning: false
+
+lubridate::now(tzone = 'EST') |> 
+ format('Current timestamp: %F %H:%M:%S')
+
+
+```
+
+## Lesson 2: Create dates & date times
+
+Making dates and times functions
+
+### Making date times
+
+It goes from larger (Year) to smaller (seconds). For instance, 2025, February, second, 1:06 PM, eastern time.
+
+```{r making_dates}
+#| echo: TRUE
+#| warning: false
+
+make_datetime(2025,2,7,13,6,tz = 'EST')
+
+#Checking class 
+make_datetime(2025,2,7,13,6,tz = 'EST') |> 
+  class()
+```
+
+Another option
+
+```{r make_date_function}
+#| echo: TRUE
+#| warning: false
+
+make_date(2023,2,2)
+
+make_date(2023,2,2) |> 
+  class()
+
+```
+
+### Extracting dates from date times
+
+Suppose we have a date as follows: "2025-02-07 13:06:00 EST". We only want to extract the date. All what we need is to pass it to the `date()` function.
+
+```{r extracting_dates}
+#| echo: TRUE
+#| warning: false
+
+make_datetime(2025,2,7,13,6,tz = 'EST') |> 
+  date()
+
+#Checking type
+make_datetime(2025,2,7,13,6,tz = 'EST') |> 
+  date() |>
+  year() |> 
+  class()
+
+
+```
+
+#### Extracting date as a decimal format
+
+You need to use the function `decimal_date()`. The function `date_decimal()` does not work.
+
+```{r extract_date_as_decimal}
+#| echo: TRUE
+#| warning: false
+
+make_datetime(2025,2,7,13,6,tz = 'EST') |> 
+  decimal_date()
+
+
+
+```
+
+### Lesson 3: Extract time components & understand locales
+
+Extracting specific time information from a date object. Say we want to extract **year** information from a date. Use the `lubridate::date()` function. It can also extract multiple years from a vector.
+
+```{r object_date}
+#| echo: TRUE
+#| warning: false
+
+
+base_date <- make_datetime(2025,02,02)
+
+#Extracting year from a date object
+
+year(base_date)
+
+#Extracting dates from a vector of dates
+
+base_date <- make_datetime(2020:2025,09:12,02:59)
+
+year(base_date)
+
+```
+
+### Extracting months, days, hours, and seconds
+
+```{r extracting_months_vector}
+#| echo: TRUE
+#| warning: false
+
+month(base_date)
+
+day(base_date)
+
+hour(base_date)
+
+minute(base_date)
+
+second(base_date)
+
+
+```
+
+### Extracting semester, quarter, and workday
+
+Workday can be a particularly useful function. It is abbreviated as `wday()` function. Using the label argument `label = TRUE` depicts the name of the day. We could use the argument `week_start = 1` to signify Monday as the starting day of the week instead of the default Sunday. We could also re arrange the date
+
+```{r extracting_semesters}
+#| echo: TRUE
+#| warning: false
+
+base_date <- make_date(2020:2024,8:12,30)
+
+semester(base_date)
+
+quarter(base_date)
+
+wday(base_date)
+
+wday(base_date, label = TRUE, abbr = FALSE, week_start = 1)
+
+wday(base_date, week_start = 1)
+
+
+```
+
+## Lesson 4: Introduction to periods
+
+The date function would tell us we have the 30th date in the base_date object. For each component there is the plural form: `days()`. This would prompt the following result: 1\] "19996d 0H 0M 0S". The default requires specifying a number days(x=1). Which gives us 1\] "2d 0H 0M 0S" . The duration of two days, or better understand as period of two days, which is confusing.
+
+Take home point is: functions with **s** (days, months, years) refer to specific "stretch" of time.
+
+days(x = 2) \|\>
+
+```{r using_periods_dates}
+#| echo: TRUE
+#| warning: false
+
+base_date <-  make_date(2024, 9 ,30)
+
+days(x = 2) |> 
+  class()
+
+```
+
+Practical applications in the use of these periods functions (days(), years(), months() ).
+
+### Using periods for calculations
+
+This option allows us to do operations with dates. It makes manipulating dates easier. The same could be done with hours. We could also create a custom period
+
+```{r using_periods_calculations}
+#| echo: TRUE
+#| warning: false
+
+#Adding two days to the date we move from September 30 to October 2
+
+base_date <-  make_datetime(2024, 9 ,30, tz = "EST")
+
+
+base_date + days(x = 2)
+
+#Adding two hours to the date
+
+base_date + hours(x = 2)
+
+#Creating custom period or lapse
+
+custom_period  <- hours(x = 2) + minutes(x = 21) + seconds(x = 6)
+
+#Adding custom period to base_date
+base_date + custom_period
+
+#You could also use multiple dates: Creating two dates
+
+make_datetime(2024,8:9,30, tz = 'EST') + custom_period
+
+#Substracting hours, minutes and seconds
+
+
+make_datetime(2024,8:9,30, tz = 'EST') - custom_period
+
+
+#Increasing hours & doubling the amount
+
+custom_period2  <- hours(x = 16) + minutes(x = 21) + seconds(x = 6)
+
+2 * custom_period2
+
+make_datetime(2024,8:9,30, tz = 'EST') + (2 * custom_period2)
+
+#We ended with two dates ahead of the original date
+
+
+
+```
+
+## Lesson 5: Introduction to durations
+
+Adding 30 days to January 30 , 2024 generate March 3, 2024. Next adding 4 weeks. Adding a month does not work to January since February does not have 30 days
+
+```{r intro_durations}
+#| echo: TRUE
+#| warning: false
+
+jan31 <- make_datetime(2024,1,31)
+
+jan31 + days(30)
+
+jan31 + weeks(x = 4)
+
+#Does not work (NA) since February does not have 30 days
+jan31 + months(1)
+
+
+```
+
+::: callout-caution
+## Durations
+
+Durations are more flexible than periods
+:::
+
+Unlike periods, durations provide more flexibility like overcoming problems with months like February that has less than 30 days.
+
+Duration is more faithful to your plans. All what you need to invoke the function **duration** is to add the extra letter `d` as a prefix. ddays(x=1) would give you "86400s (\~1 days)", dweeks(x = 1) \[1\] "604800s (\~1 weeks)". A dmonths(x=1) yields "2629800s (\~4.35 weeks)", or about 4.35 weeks
+
+Adding a dmonth to the date yields **jan31 + dmonths(x = 1) \[1\] "2024-03-01 10:30:00 UTC"**
+
+```{r duration_instead_of_period}
+#| echo: TRUE
+#| warning: false
+
+
+#Requesting duration of days instead of days
+
+ddays(x = 1)
+
+#Requesting duration of a week
+
+dweeks(x = 1)
+
+#Requesting duration for a month
+
+dmonths(x = 1)
+
+#* "2629800s (~4.35 weeks)"
+#* 
+
+jan31 + dmonths(x = 1)
+
+```
+
+Suppose you are thinking about February 29 of 2023. Also making Feb 29, 2024. Unlike 2023, Feb 29 does exist for 2024 since it was a leap year.
+
+Suppose we subtract one year from Feb 29, 2024 it would generate an `NA` since that does not exist in 2023. 2023 was not a leap year unlike 2024.
+
+However, using duration to subtract one year to 2024 does not produce an `NA`. It works since it deals with seconds.
+
+```{r example_february_29}
+#| echo: TRUE
+#| warning: false
+
+feb29_2023 <- make_datetime(2023,2,29)
+
+feb29 <- make_datetime(2024,2,29)
+
+#Substracting years 
+
+feb29 - years(x = 1)
+
+#Subsracting years as duration works
+
+feb29 - dyears(x = 1)
+
+```
+
+## Lesson 6: Shifting time points by months
+
+A procedure for rolling back dates to the last date of the previous month. Say, we want to roll back the date of April 20, 2024 to January, 1, 2024. We can also roll back with calculated dates. In this case we rolling back from January 1, 2024 to December 20234. `rollback(jan31 - dmonths(1))`
+
+#### Rollback
+
+You can also rollback to the first day of the preceding month by using the argument `roll_to_first = TRUE`.
+
+```{r shifting_time_points_months}
+#| echo: TRUE
+#| warning: false
+
+jan31 <- make_date(2024,1,31)
+
+jan31 + dmonths(1)
+
+rollback(make_date(2024,4,20))
+
+#This calculation rolls back the date to Februart 29
+rollback(jan31 + dmonths(1))
+
+#Rolling back from January 1, 2024 to one month, or November 30 , 2023
+
+rollback(jan31 - dmonths(1)) |> 
+  date()
+
+#Rolling forward from January 1, 2024 to February, 29 2024
+
+rollback(jan31 + dmonths(1)) |> 
+  date()
+
+#An alternative to eliminatge hms without using date
+
+rollback(jan31 + dmonths(1), preserve_hms = FALSE)
+
+#An alternative to rollback to the first day of the month
+
+rollback(jan31 + dmonths(1), preserve_hms = FALSE,
+         roll_to_first = FALSE)
+
+```
+
+#### Adding with rollback
+
+"Adding months frustrates basic arithmetic because consecutive months have different lengths. With other elements, it is helpful for arithmetic to perform automatic roll over. For example, 12:00:00 + 61 seconds becomes 12:01:01. However, people often prefer that this behavior NOT occur with months. For example, we sometimes want January 31 + 1 month = February 28 and not March 3. `%m+%` performs this type of arithmetic. Date `%m+%` months(n) always returns a date in the nth month after Date. If the new date would usually spill over into the n + 1th month, `%m+%` will return the last day of the nth month (`rollback()`). Date `%m-%` months(n) always returns a date in the nth month before Date."
+
+You can use a date and a period of time. This function does not accept duration.
+
+In the example below we add 30 days to January, 1 2024, producing February 2, 2024. A shortcut to this function is `%m+%`. Namely, `jan31 %m+% months(1)`
+
+```{r adding_with_rollback}
+#| echo: TRUE
+#| warning: false
+
+#You can specify a date and a month span time
+
+add_with_rollback(jan31, months(1))
+
+#An alternative function to add 30 days is
+
+jan31 %m+% months(1)
+
+#An alernative function to substract 30 days
+
+jan31 %m-% months(1)
+
+#Other options to eliminate hms
+
+```
+
+## Lesson 7: Time length calculations with durations & periods
+
+This lesson further demonstrates the use of periods and durations. Useful to handle stretches of time in a common metric; for example: how many hours, how many minutes
+
+The example below reports hours and minutes.
+
+A key element here is to understand the role of periods and durations. The example below creates a `period` of two hours and a half. Using the lubridate function minutes() allows us to extract minutes from the period of two hours.
+
+#### Using periods to manipulate periods
+
+One option is to divide the two_plus_half_hour period by `minutes(1)`. It zeroes on the minutes portion; namely, 30. You have to ask yourself: How many periods of specific length can fit into the divider `minutes()`? Recall that two_plus_half_hour vector has two objects : hours and minutes. The divider `minutes()` zeroes on the second period.
+
+```{r manipulating_periods_with_periods}
+#| echo: TRUE
+#| warning: false
+
+library(tidyverse)
+
+two_plus_half_hour <- hours(2) + minutes(30)
+
+#Extracting minutes from period
+
+minute(two_plus_half_hour) # No error but wrong
+
+#Instead using minutes()
+minutes(two_plus_half_hour)
+
+#Another option: how many minutes are there in the vector?
+#Answer 2H = 120 + 30M = 30 = 150
+
+two_plus_half_hour/minutes(1)
+
+#How many quarter hours are there in the vector?
+
+two_plus_half_hour/minutes(15)
+
+#What fraction of one day is this time vector?
+
+two_plus_half_hour/days(1)
+
+```
+
+::: {.callout-caution appearance="simple"}
+You can't mix durations with periods
+:::
+
+#### Using durations to manipulate durations
+
+The last examples illustrate the manipulation of periods with periods. But we could also add durations.
+
+```{r manmipulating_durations_with_durations}
+#| echo: TRUE
+#| warning: false
+
+#How many months are there in one year?
+
+dyears(1)/dmonths(1)
+
+#Duration of one month  and divide it by duration of 1 day
+
+dmonths(1)/ddays(1)
+
+
+```
+
+## Lesson 8: Calculate time between time points
+
+What amount of time is between them? Notice they both refer to the same date and hour, but differ in minutes; 27 to be precise.
+
+Notice that `class()` function reveals that the difference between the two strings is `difftime`. We can make it numeric using as.numeric(). However, it does not produce a result that can be manipulated on a time bases. Better to use the `lubridate::as.period()` function. It reports the difference in minutes and seconds. We could use durations, which transforms minutes and seconds into seconds.
+
+Doing so allows us to transform periods into durations
+
+```{r calc_time_between_points}
+#| echo: TRUE
+#| warning: false
+
+timepoint_a <- make_datetime(2024,9,30,23,2)
+
+timepoint_b <- make_datetime(2024,9,30,23,29)
+
+#Subtracting dates
+
+timepoint_b - timepoint_a
+
+#We can also ask what kind of object this string is all about
+
+class(timepoint_b - timepoint_a)
+
+
+#We can also try to transform the class from "diff
+
+#Works but not nice for later calculations
+as.numeric(timepoint_b - timepoint_a)
+
+#better is to change it to as period of time using lubridate
+
+lubridate::as.period(timepoint_b - timepoint_a)
+
+#Using durations
+
+lubridate::as.duration(timepoint_b - timepoint_a)
+
+#*Transforming periods into duration using division of periods
+#*which gives a result in a numeric class
+
+as.period(timepoint_b - timepoint_a)/hours(1)
+
+#We can do the same with duration: dividing durations over durations
+
+as.duration(timepoint_b - timepoint_a) / dhours(1)
+
+
+```
+
+## Lesson 9: Introducing intervals
+
+### Using the `interval()` function of lubridate
+
+```{r introducing_intervals}
+#| echo: TRUE
+#| warning: false
+
+
+interval(timepoint_a, timepoint_b, tzone = 'EST')
+
+#Checking class
+
+interval(timepoint_a, timepoint_b, tzone = 'EST') |> 
+  class()
+
+
+#Naming interval as vector
+
+interval_ab <- interval(timepoint_a, timepoint_b, tzone = 'EST')
+```
+
+### Manipulating intervals
+
+Diving intervals by days and even durations. Intervals allows one to do multiple things in tandem. But we need to use the shift function.
+
+```{r manipulating_intervals}
+#| echo: TRUE
+#| warning: false
+
+interval_ab/days(1)
+
+interval_ab/ddays(1)
+
+interval_ab/hours(1)
+
+interval_ab/dhours(1)
+
+#Shifting intervals by time periods such as one hour using int_shift()
+
+#Take the interval_ab and shift it by a period of one hour
+
+int_shift(interval_ab, hours(1))
+
+```
+
+## Lesson 10: Using Interval Functions
+
+```{r using_interval_functions}
+#| echo: TRUE
+#| warning: false
+
+
+timepoint_a <- make_datetime(2024,9,30,23,2,31)
+
+timepoint_b <- make_datetime(2024,9,30,23,29)
+
+timepoint_c <- make_datetime(2024,10,31)
+
+timepoints <- c(timepoint_a,timepoint_b,timepoint_c)
+
+interval_ab <- interval(timepoint_a, timepoint_b, tzone = 'EST')
+
+interval_ac <- interval(timepoint_a, timepoint_c, tzone = 'EST')
+
+interval_bc <- interval(timepoint_b, timepoint_c, tzone = 'EST')
+
+
+```
+
+### Exploring what interval functions can do
+
+Easiest functions are int_start() and int_end(). Next is to determine the length of an interval. The int_lenght() reports the interval in seconds.
+
+int_flip() allows you to switch the order of the interval vector.
+
+int_standardize() function makes certain the time lenght is in the correct order
+
+```{r playing_with_int_functions}
+#| echo: TRUE
+#| warning: false
+
+#Identify the starting interval in a time vecto
+int_start(interval_ab)
+
+#Identify the ending interval in a time vector
+int_end(interval_ab)
+
+#Identify the lenght of an interval
+
+int_length(interval_ac)
+
+#Identify the lenght of an interval in minutes
+
+int_length(interval_ac)
+
+#Which is equivalent to
+
+interval_ac/dseconds(x = 1)
+
+#Changing order of the interval
+
+int_flip(interval_ac)
+
+#Combining two interval functions
+
+int_flip(interval_ac) |> 
+  int_length()
+
+int_flip(interval_ac)/dseconds(x=1)
+
+#It makes certain the intervals have the correct order
+int_standardize(int_flip(interval_ac))
+
+#If we don't flip, we get the same results
+
+int_standardize(interval_ac)
+
+#Checking to see if intervals overlap
+
+int_overlaps(interval_ab,interval_bc)
+
+#If we shift the intervals
+
+int_overlaps(interval_ab,int_shift(interval_bc, by = minutes(x=1)))
+
+int_overlaps(interval_ab,interval_bc)
+
+
+```
+
+### Neat interval functions
+
+There are two of them. The int_aligns() check if the start or the end of the interval are the same. The int_diff() which is useful for vector of intervals
+
+```{r neat_interval_functions}
+#| echo: TRUE
+#| warning: false
+
+#int_aligns() checks if the start or end points are the same
+
+int_aligns(interval_ab,interval_bc)
+
+int_aligns(interval_ab,interval_ac)
+
+#int_diff
+
+int_diff(timepoints)
+
+
+
+
+```
+
+### Simulating getting rid of data
+
+Creating a simulated data of seconds of each customer arriving to the store.
+
+```{r getting_rid_of_data}
+#| echo: TRUE
+#| warning: false
+
+set.seed(2524)
+
+interarrivals_secs <- rexp(100,rate = 1/120) |> 
+  round(0) |> 
+  cumsum()
+
+arrival_times <- make_datetime(2024,12,2,9) + 
+  dseconds(c(0,interarrivals_sec))
+
+
+#Assembling a tibble table to store the data
+
+dat_arrivals <- tibble(
+  arrival = arrival_times,
+  customer_count = seq_along(arrival) - 1)
+
+#Estimating minutes between each arrival
+
+int_diff(dat_arrivals$arrival)
+
+
+#* We can save it into a vector called int_arrivals(), and then we
+#* can transform each interval in minutes
+
+int_arrivals <- int_diff(dat_arrivals$arrival)
+
+int_arrivals/dminutes(x = 1)
+
+#* Then we can pose the question: on average what is the time between
+#* customers arriving 
+
+mean(int_arrivals/dminutes(x = 1))
+
+
+```
+
+## Lesson 11: Rounding dates
+
+Introducing a function called low_date, ceiling_date ,or rounding date. All of them do the same thing: rounding dates
+
+```{r rounding_dates_1}
+#| echo: TRUE
+#| warning: false
+
+library(tidyverse)
+
+
+
+base_date <- make_datetime(2024,9,30,16,12,53, tz = "UTC")
+
+#* Rounding date function & then define the unit to which to round for.
+#* In this case rounding to the nearest day
+
+round_date(base_date, unit = 'day' )
+
+#Enforcing the rounding into the future using the ceiling date
+
+ceiling_date(base_date, unit = 'day')
+
+#Floor date does the same
+
+floor_date(base_date, unit = 'day')
+
+#Using all sorts of avearage units such as next week
+
+base_date <- make_datetime(2024,9,30,16,12,53, tz = "UTC")
+
+
+round_date(base_date, unit = 'week' )
+ceiling_date(base_date, unit = 'week')
+floor_date(base_date, unit = 'week')
+
+#* In order to avoid arbitrary setting of time, we could use the
+#* week_start argument. We could use Monday to signify the starting of
+#* the week
+
+round_date(base_date, unit = 'week', week_start = 1)
+ceiling_date(base_date, unit = 'week', week_start = 1)
+floor_date(base_date, unit = 'week', week_start = 1)
+
+#Rounding towards months
+round_date(base_date, unit = 'month')
+ceiling_date(base_date, unit = 'month')
+floor_date(base_date, unit = 'month')
+
+
+```
+
+Examples where rounding dates functions are useful. One application is to find out how many followers we get each week. We can use the floor_date() function to take each date and rounding it towards the beginning of the week, where the week start on Mondays. The end result is a new column reporting the date starting with a Monday when new followers joined. Next, it is easy to create a new column reporting the total number of followers by week start.
+
+Next, we can do a nice visualization
+
+```{r followers_per_week}
+#| echo: TRUE
+#| warning: false
+
+
+dat_followers <- openxlsx::read.xlsx(
+  'data/Part_4/LI_data.xlsx',
+  sheet = 'FOLLOWERS',
+  startRow = 3) |> 
+  as_tibble() |> 
+  janitor::clean_names() |> 
+  mutate(date = mdy(date))
+
+#* Identifying followers per week where the week starts on Monday
+#* We end up with a new column repprting the date of the week on Monday
+
+dat_weekly_followers <- dat_followers |> 
+  mutate(
+    week_start = floor_date(date,
+                            unit = 'week',
+                            week_start = 1)
+  ) |> 
+  summarise(
+    followers = sum(new_followers),
+    .by = week_start
+  )
+
+dat_weekly_followers |> 
+  ggplot(aes(x = week_start, y = followers)) +
+  geom_line(linewidth = 1, col = 'dodgerblue4') +
+  geom_point(size = 4 , col = 'dodgerblue4') +
+  theme_minimal(base_size = 20)
+
+
+```
+
+We can do the same strategy for another periods. Say we want to do it by the start of every month.
+
+```{r followers_another_period}
+#| echo: TRUE
+#| warning: false
+
+dat_monthly_followers <- dat_followers |> 
+  mutate(
+    month_start = floor_date(date,
+                            unit = 'month')
+  ) |> 
+  summarise(
+    followers = sum(new_followers),
+    .by = month_start
+  )
+
+dat_monthly_followers |> 
+  ggplot(aes(x = month_start, y = followers)) +
+  geom_line(linewidth = 1, col = 'dodgerblue4') +
+  geom_point(size = 4 , col = 'dodgerblue4') +
+  theme_minimal(base_size = 20)
+
+
+```
+
+## Lesson 12: Filter time columns
+
+We are interested in examining the peak of followers in the time period between April and July 2024; namely April 29. Let's drill down the area between April and May.
+
+Taking the data, and passing it to the filter function. We single out week_start column and use the special operator `%within%` to which if our week start is within a specific interval: April 2024 all the way to end of June 2024. Note `%within%` along with `interval()` functions can help us identify periods or ranges of values or times.
+
+Next we can add the ggplot code. This generates a chart that drills down into the numbers we are looking for.
+
+```{r filter_time_columns}
+#| echo: TRUE
+#| warning: false
+
+dat_weekly_followers |>
+  filter( week_start %within% interval(
+    make_date(2024, 4), 
+    make_date(2024, 6, 30))) |> 
+  ggplot(aes(x = week_start, y = followers)) +
+  geom_line(linewidth = 1, col = 'dodgerblue4') +
+  geom_point(size = 4 , col = 'dodgerblue4') +
+  theme_minimal(base_size = 20)
+
+```
+
+However, we still don't have the exact date where the maximum number of followers take place. We don't need any time related function to do so. We could use the `slice_max()` function. The result is April 29 with 379 followers. Next, we could pull out the date and save in a vector.
+
+Next, we can create an interval that ranges from the vector we created: **dat_week_followers**. Put we are going to add a padding of two days prior to the date where the highest number peaked. It creates then an interval.
+
+```{r singling_out_date_followers}
+#| echo: TRUE
+#| warning: false
+
+dat_peak_followers <- dat_weekly_followers |> 
+  slice_max(order_by = followers) |> 
+  pull(week_start)
+
+#Adding more padding to the interval peak
+
+interval_peak <-  interval(
+  start = dat_peak_followers - ddays(x = 2),
+  end = dat_peak_followers
+  )
+
+
+```
+
+Bringing the dataset and selecting a new datasheet. It contains two columns with Post.URL, which is a pain in the neck. As shown when transforming the data as tibble, the columns, we get the message: **Column names `Post.URL` and `Post.publish.date` must not be duplicated.** The column names need to be repaired.
+
+We can do so using the tibble's argument `.name_repair = 'unique`\`. Then we need to rename the columns containing numbers within Post.URL.
+
+We rename "post_url_1" as url_post_engagements, and its corresponding date "post_publish_date_2" as date_post_engagements. "post_url_4" is renamed as url_post_impressions and "post_publish_date_5" as post_publish_date_5.
+
+Notice that the dates in post_publish_date_2 and post_publish_date_5 #\* are characters and not dates. We need to transform them into dates
+
+```{r bringing_the_original_data}
+#| echo: TRUE
+#| warning: false
+
+
+clean_up <- openxlsx::read.xlsx(
+  'data/Part_4/LI_data.xlsx',
+  sheet = 'TOP POSTS',
+  startRow = 3) |> 
+  as_tibble(.name_repair = 'unique') |> 
+  janitor::clean_names() 
+
+clean_up |> 
+  rename(
+    url_post_engagements = post_url_1,
+    date_post_engagements = post_publish_date_2,
+    url_post_impressions = post_url_4,
+    date_post_impressions = post_publish_date_5
+  )
+
+#* Notice that the dates in post_publish_date_2 and post_publish_date_5
+#* are characters and not dates
+
+class(clean_up$post_publish_date_2)
+class(clean_up$post_publish_date_5)
+
+deleteme <- clean_up |> 
+  rename(
+    url_post_engagements = post_url_1,
+    date_post_engagements = post_publish_date_2,
+    url_post_impressions = post_url_4,
+    date_post_impressions = post_publish_date_5
+  ) |> 
+  mutate(
+    across(contains("date"), function(x) mdy(x))
+  )
+
+#Another variation of across 
+
+deletmen <- clean_up |> 
+  rename(
+    url_post_engagements = post_url_1,
+    date_post_engagements = post_publish_date_2,
+    url_post_impressions = post_url_4,
+    date_post_impressions = post_publish_date_5
+  ) |> 
+  mutate(
+    across(contains("date"), .fns = mdy)
+  )
+
+class(deleteme$date_post_engagements)
+```
+
+Saving cleaned up dataset. Next lets check that the date_post_engagements variable is within the peak interval of dates we previously identified. Once we do this, we realize the peak interval is empty. The reason being is that the interval does not have enough padding.
+
+Once corrected the interval, we can pull the urls of post engagements. Once we secured the urls corresponding the period with the highest number of engagements, we can use chrome.
+
+Using the url link, we discovered that the pike is related to Albert Rapp's linkedin account dealing with ggplot Ecosystem - 10 Visualizations and 11 packages
+
+```{r saving_cleaned_up_dat_posts}
+#| echo: TRUE
+#| warning: false
+
+dat_posts <- openxlsx::read.xlsx(
+  'data/Part_4/LI_data.xlsx',
+  sheet = 'TOP POSTS',
+  startRow = 3) |> 
+  as_tibble(.name_repair = 'unique') |> 
+  janitor::clean_names() |> 
+  #Renaming the columns with dates
+  rename(
+    url_post_engagements = post_url_1,
+    date_post_engagements = post_publish_date_2,
+    url_post_impressions = post_url_4,
+    date_post_impressions = post_publish_date_5
+  ) |> 
+  #Transforming date characters var into date variables
+    mutate(
+    across(contains("date"), .fns = mdy)
+  )
+
+#Checking that the post date variables are formatted as dates
+class(dat_posts$date_post_engagements)
+class(dat_posts$date_post_impressions)
+
+#Adding more padding to the interval peak
+interval_peak <-  interval(
+  start = dat_peak_followers - ddays(x = 2),
+  end = dat_peak_followers + ddays(x = 1)
+  )
+
+dat_posts |> 
+  filter(date_post_engagements %within% interval_peak)
+
+#Pulling the url post engagements
+
+dat_posts |> 
+  filter(date_post_engagements %within% interval_peak) |> 
+  pull(url_post_engagements)
+
+```
+
+## Lesson 13: Calculating moving averages
+
+### rollsum() & rollmean()
+
+This technique is particularly relevant for time series analysis. Previous lesson demonstrated the utility of the week_start() function to capture periods of time. zoo is a package that can handle moving averages. It has several roll functions for summarizing data. rollsum(x, k =) with argument k, which determines how many things we want to sum up. The following vector representing the sum of the three numbers in the vector: 6 = 1+2+3, 9 = 2+3+4, 15 = 4+5+6, 18 = 5 + 6 +7. It is basically a rolling sum.
+
+**\[1\] 1 2 3 4 5 6 7 8 9 10** is transformed as : **\[1\] 6 9 12 15 18 21 24 27**
+
+You can also add the fill argument `fill = NA`, which adds an NA at the begging and end of the vector.
+
+\[1\] NA 6 9 12 15 18 21 24 27 NA
+
+You can also align the NA to the left of the number.
+
+You can also request the mean of the squence of three numbers
+
+```{r moving_averages}
+#| echo: TRUE
+#| warning: false
+
+library(zoo)
+
+#Example of moving numbers
+
+x <- 1:10
+
+#Argument k determines how many things we want to sum up
+zoo::rollsum(x, k = 3)
+
+#Adding fill argument
+zoo::rollsum(x, k = 3, fill = NA)
+
+#Aligning to the left
+zoo::rollsum(x, k = 3, fill = NA, align = 'left')
+
+#You can also request the mean
+zoo::rollmean(x, k = 3, fill = NA, align = 'left')
+
+
+
+```
+
+### Applying rolling numbers to our data
+
+Applying the `rollmean()` to the dat_followers to create a roll mean. Using a key = 7 which would correspond to 7 days. Next we add fill NA to fill empty cells. We need to align the NA to the left.
+
+Next we can save the roll mean. Next we can do a graph, which is basically an average number of followers per week.
+
+```{r rolling_functions_date_dates}
+#| echo: TRUE
+#| warning: false
+
+dat_followers |> 
+  mutate(
+    roll_mean = zoo::rollmean(x = new_followers,
+                              k = 7,
+                              fill = NA,
+                              align = 'left')
+  )
+
+
+dat_rolling_followers <- dat_followers |> 
+  mutate(
+    roll_mean = zoo::rollmean(x = new_followers,
+                              k = 7,
+                              fill = NA,
+                              align = 'left')
+  ) 
+
+```
+
+#### Depicting the average number of followers per week
+
+```{r graph_average_number}
+#| echo: TRUE
+#| warning: false
+
+
+dat_rolling_followers |> 
+  ggplot(aes(x = date, y = roll_mean)) +
+  geom_line(linewidth = 1, col = 'dodgerblue4') +
+  theme_minimal(base_size = 20) +
+  labs(title = 'Average number of followers per week') +
+  theme(plot.title.position = 'plot',
+        plot.title = element_text(rel(1.2)))
+
+
+  
+
+```
+
+#### Depicting the total number of followers per week
+
+```{r total_number_followers}
+#| echo: TRUE
+#| warning: false
+
+dat_rolling_followers <- dat_rolling_followers |> 
+  mutate(
+    roll_total = zoo::rollsum(x = new_followers,
+                              k = 7,
+                              fill = NA,
+                              align = 'left'))
+
+dat_rolling_followers |> 
+  ggplot(aes(x = date, y = roll_total)) +
+  geom_line(linewidth = 1, col = 'dodgerblue4') +
+  theme_minimal(base_size = 20) +
+  labs(title = 'Total number of followers per week') +
+  theme(plot.title.position = 'plot',
+        plot.title = element_text(rel(1.2)))
+
+
+dat_rolling_followers |> 
+  ggplot(aes(x = date, y = new_followers)) +
+  geom_line(linewidth = 1, col = 'dodgerblue4') +
+  theme_minimal(base_size = 20) +
+  labs(title = 'New followers per week') +
+  theme(plot.title.position = 'plot',
+        plot.title = element_text(rel(1.2)))
+
+
+```
+
+### Smoothing rolling averages
+
+If we go to weekly average we could smooth the graph, eliminate spikes and add the observations.
+
+```{r smoothing_roll_averages}
+#| echo: TRUE
+#| warning: false
+
+dat_rolling_followers <- dat_followers |> 
+  mutate(
+    roll_mean = zoo::rollmean(x = new_followers,
+                              k = 7,
+                              fill = NA,
+                              align = 'left')
+  ) 
+
+dat_rolling_followers |> 
+  ggplot(aes(x = date, y = roll_mean)) +
+  geom_line(linewidth = 1, col = 'dodgerblue4') +
+  geom_point(aes(y = new_followers), size = 0.5) +
+  theme_minimal(base_size = 20) +
+  labs(title = 'Seven Day Average Number of Followers',
+       x = element_blank(),
+       y = element_blank()) +
+  theme(plot.title.position = 'plot',
+        plot.title = element_text(rel(1.2)))
+
+
+
+
+
+```
+
+#### Doing monthly
+
+It creates a smoother graph
+
+```{r monthly_numnber}
+#| echo: TRUE
+#| warning: false
+
+#Doing the monthly
+
+dat_rolling_followers <- dat_followers |> 
+  mutate(
+    roll_monthly_mean = zoo::rollmean(x = new_followers,
+                              k = 30,
+                              fill = NA,
+                              align = 'left'))
+
+dat_rolling_followers |> 
+  ggplot(aes(x = date, y = roll_monthly_mean)) +
+  geom_line(linewidth = 1, col = 'dodgerblue4') +
+  #geom_point(aes(y = new_followers), size = 0.5) +
+  theme_minimal(base_size = 20) +
+  labs(title = 'Monthly Average Number of Followers',
+       x = element_blank(),
+       y = element_blank()) +
+  theme(plot.title.position = 'plot',
+        plot.title = element_text(rel(1.2)))
+
+
+```
+
+## Lesson 14: Checking time series for completeness
+
+This lesson teaches how to calculate sequences of dates so that you don't miss dates. When you calculate dates from different sources they may omit some date sequences. The end result your analyses can be affected.
+
+When calculating a sequence of dates, use seq() function to make weekly sequence of dates between 2024 and 2025. It allows one to fill out missing dates.
+
+```{r checking_dates_completeness}
+#| echo: TRUE
+#| warning: false
+
+
+#Sequence of dates from 2024 to 2025 by week
+
+seq(
+  make_date(2024),
+  make_date(2025),
+  by = 'week'
+)
+
+#Sequence of dates from 2024 to 2025 by day
+
+days_2024 <- seq(
+  make_date(2024),
+  make_date(2025),
+  by = 'day'
+)
+```
+
+Notice Albert created a vector of dates starting January 1 2024 and ending January 1, 2025. It has 367 days in total.
+
+Using the the tidyverse complete() function, he completed the date column in the database `dat_followers` using the vector of 367 days `days_2024` as follows : `complete(date = days_2024)`. Basically, we are asking to complete the vector days_2024. It makes certain all dates are in the new column or variable. The previous dat_followers date set had 365 rows. The new one has 374 rows. And then we can do the same calculation as before.
+
+The tidyverse complete() function turns implicit missing values into explicit missing values. complete() is a wrapper around `expand()` , dplyr:: full_join(), and replace_na() that is useful for completing missing combinations of data.
+
+```{r using_dat_followers_seq}
+#| echo: TRUE
+#| warning: false
+
+
+dat_rolling_followers_completer <- dat_followers |> 
+  complete(date = days_2024) |> 
+  arrange(date) |> 
+  mutate(
+    roll_monthly_mean = zoo::rollmean(
+      x = new_followers,
+      k = 30,
+      fill = NA,
+      align = 'left'))
+
+dat_rolling_followers_completer |> 
+  ggplot(aes(x = date, y = roll_monthly_mean)) +
+  geom_line(linewidth = 1, col = 'dodgerblue4') +
+  #geom_point(aes(y = new_followers), size = 0.5) +
+  theme_minimal(base_size = 20) +
+  labs(title = 'Monthly Average Number of Followers',
+       x = element_blank(),
+       y = element_blank()) +
+  theme(plot.title.position = 'plot',
+        plot.title = element_text(rel(1.2)))
+
+
+```
+
+## Lesson 15: Putting it together
+
+### Reading & cleaning file
+
+Using a couple of YouTube data sets on view statistics on Albert Rapp's channel or videos.
+
+The first is to upload the channel statistics during the last 365 days. This dataset has problems with the first raw.
+
+-   We need clean the data with janitor::clean_names, and then remove the first raw which has summary information using `slice(-1)`
+
+-   Notice the video_publish_time is a character that needs to be transformed as date with `mdy(video_publish_date)`
+
+-   Selecting recent years 2023 or 2024. We can extract the year out of video_publish_time using `year(video_publish_time)`
+
+```{r putting_it_together}
+#| echo: TRUE
+#| warning: false
+
+#Uploading channel stats last 365 days
+
+
+library(readr)
+
+test <- read.csv("~/Documents/GitHub/r_data_cleanning_master_class/data/Part_4/yt_channel_stats_last_365_days.csv", na.strings = 'NA', header = TRUE) |> janitor::clean_names()
+
+
+#Removing first raw using slice(-1)
+
+dat_channel_stats <- read.csv("~/Documents/GitHub/r_data_cleanning_master_class/data/Part_4/yt_channel_stats_last_365_days.csv", na.strings = 'NA', header = TRUE) |> janitor::clean_names() |> 
+  slice(-1) |> 
+  mutate(video_publish_time = mdy(video_publish_time)) |> 
+  filter(year(video_publish_time) >= 2023)
+
+```
+
+### Finding most popular videos
+
+What are the most popular videos?
+
+-   Using `slice_max()` to order videos by frequency of while identifying the 5 top or largest number of videos watched.
+
+-   Next we want to identify the video title, views and video published time
+
+```{r descriptive_stats}
+#| echo: TRUE
+#| warning: false
+
+
+dat_channel_stats |> 
+  slice_max(order_by = views, n = 5) |> 
+  select(video_title,views,video_publish_time)
+
+
+```
+
+### Depicting the video usage.
+
+```{r depicting_video_watching}
+#| echo: TRUE
+#| warning: false
+
+dat_channel_stats |> 
+  ggplot(aes(x = video_publish_time, y = views)) +
+  geom_col(width = 3, fill = 'dodgerblue4') +
+  theme_minimal(base_size = 20,
+                base_family = "Source Sans Pro")
+
+```
+
+Rerunning the analysis by watch time instead of number of views.
+
+```{r watch_time}
+#| echo: TRUE
+#| warning: false
+
+dat_channel_stats |> 
+  slice_max(order_by = watch_time_hours, n = 5) |> 
+  select(video_title,
+         watch_time_hours,
+         video_publish_time)
+
+
+dat_channel_stats |> 
+  ggplot(aes(x = watch_time_hours, y = views)) +
+  geom_col(width = 3, fill = 'dodgerblue4') +
+  theme_minimal(base_size = 20,
+                base_family = "Source Sans Pro")
+
+
+```
+
+The shorter video on "Use These Data Cleaning Helpers for R from the janitor package" got the third highest ranking in terms of time the user spent watching it. It has a shorter duration than the two top watched videos.
+
+Examining usage using other data sets: daily watching by video and yt watching. We could merge the two data sets by date. The end result is a data set with dates, vies and watch time hours.
+
+Calculating week using the floor_date() function and rounding it to the next week, where the week starts on Monday. Similarly, we can create another column for month. And then we could add the quarter time
+
+```{r further_data_to_examine}
+#| echo: TRUE
+#| warning: false
+
+dat_daily_views <- read_csv("data/Part_4/yt_daily_views_last_365_days.csv") |> 
+  janitor::clean_names()
+
+dat_daily_watchtime <- read_csv("data/Part_4/yt_daily_watchtime_last_365_days.csv") |> 
+  janitor::clean_names()
+
+dat_daily_channel_stats <- dat_daily_views |> 
+left_join(dat_daily_watchtime,
+          by = 'date') |> 
+  #Creating week, month & quarter using floor_date() function
+  mutate(
+    week = floor_date(date, unit = 'week', week_start = 1),
+    month = floor_date(date, unit = 'month'),
+    quarter = floor_date(date, unit = 'quarter')
+    
+  )
+
+```
+
+The end result is a data set with views and hours organized by dates, weeks, months and quarters.
+
+### Examining views across time
+
+Depicting data as trends over time. It is a typical pattern in time series.
+
+```{r examening_daily_channel}
+#| echo: TRUE
+#| warning: false
+
+dat_daily_channel_stats |> 
+  ggplot(aes(x = date , y = views)) +
+  geom_line(linewidth = 1, color = 'dodgerblue4' ) +
+  theme_minimal(base_size = 20,
+                base_family = "Source Sans Pro")
+  
+
+
+```
+
+### Examining time hours spent watching
+
+```{r hours_spent_watching}
+#| echo: TRUE
+#| warning: false
+
+
+dat_daily_channel_stats |> 
+  ggplot(aes(x = date , y = watch_time_hours)) +
+  geom_line(linewidth = 1, color = 'dodgerblue4' ) +
+  theme_minimal(base_size = 20,
+                base_family = "Source Sans Pro")
+  
+```
+
+### Summarizing on a weekly basis
+
+Given the spiking nature of the data, we may want to aggregate total views and watch_time_hours on a weakly basis. And then we can depict the weekly watching times and views.
+
+```{r aggregate_weekly}
+#| echo: TRUE
+#| warning: false
+
+dat_weekly_channel_stats <- dat_daily_channel_stats |> 
+  summarise(
+    across(c('views','watch_time_hours'),
+           function(x) sum(x, na.rm = TRUE)),
+    .by = week
+  ) 
+
+dat_weekly_channel_stats |> 
+  ggplot(aes(x = week , y = watch_time_hours)) +
+  geom_line(linewidth = 1, color = 'dodgerblue4' ) +
+  theme_minimal(base_size = 20,
+                base_family = "Source Sans Pro")
+  
+
+#Since doing weekly agregation better use geom_step()
+
+dat_weekly_channel_stats |> 
+  ggplot(aes(x = week , y = watch_time_hours)) +
+  geom_step(linewidth = 1, color = 'dodgerblue4' ) +
+  theme_minimal(base_size = 20,
+                base_family = "Source Sans Pro")
+  
+```
+
+### Summarizing on a monthly basis
+
+```{r aggregate_monthly}
+#| echo: TRUE
+#| warning: false
+
+dat_monthly_channel_stats <- dat_daily_channel_stats |> 
+  summarise(
+    across(c('views','watch_time_hours'),
+           function(x) sum(x, na.rm = TRUE)),
+    .by = month
+  ) 
+
+dat_monthly_channel_stats |> 
+  ggplot(aes(x = month , y = watch_time_hours)) +
+  geom_line(linewidth = 1, color = 'dodgerblue4' ) +
+  theme_minimal(base_size = 20,
+                base_family = "Source Sans Pro")
+  
+
+#Since doing weekly agregation better use geom_step()
+
+dat_monthly_channel_stats |> 
+  ggplot(aes(x = month , y = watch_time_hours)) +
+  geom_step(linewidth = 1, color = 'dodgerblue4' ) +
+  theme_minimal(base_size = 20,
+                base_family = "Source Sans Pro")
+  
+
+
+
+```
+
+### Summarizing on a quarterly basis
+
+```{r aggregate_quartely}
+#| echo: TRUE
+#| warning: false
+
+
+dat_quarterly_channel_stats <- dat_daily_channel_stats |> 
+  summarise(
+    across(c('views','watch_time_hours'),
+           function(x) sum(x, na.rm = TRUE)),
+    .by = quarter
+  ) 
+
+dat_quarterly_channel_stats |> 
+  ggplot(aes(x = quarter, y = watch_time_hours)) +
+  geom_line(linewidth = 1, color = 'dodgerblue4' ) +
+  theme_minimal(base_size = 20,
+                base_family = "Source Sans Pro")
+  
+
+#Since doing weekly agregation better use geom_step()
+
+dat_quarterly_channel_stats |> 
+  ggplot(aes(x = quarter, y = watch_time_hours)) +
+  geom_step(linewidth = 1, color = 'dodgerblue4' ) +
+  theme_minimal(base_size = 20,
+                base_family = "Source Sans Pro")
+
+
+
+```
+
+### Using a moving average
+
+We need to create a vector with all the days from December 31, 2023 through December 31, 2024. It would serve as a foundation for the moving average. Next we add a vector signifying the length of a week in 7 days. Next we rely on the daily channel stats, and complete the weeks using the `complete()` function, to complete all the dates we should have.
+
+The original dat_daily_channel_stats data frame has 355 days. Adding the complete() function adds 2 more days to the data set (357). Next we could get rid of the columns week through quarter. We don't need those variables because we can create a rolling average, out of the views and watch_time_hours columns.
+
+Next we can create a roll sum of views using the zoo's package. k = 7 while making certain all missing values are filled with an NA, while aligning left.
+
+The end result is a column containing a rolling sum of views up that date. For instance, for the 7 days of the week of December there were 904 views.
+
+We can also do a rolling count for watch time hours. The end result is a column reporting the total number of watch time per week. The total number of hours spent watching the videos from December 25 through 31 was 38.9.
+
+```{r using_moving_average}
+#| echo: TRUE
+#| warning: false
+
+
+daily_seq <- seq(
+  make_date(2023,12,31),
+  make_date(2024,12,31),
+  by = 'day'
+)
+
+rolling_length <- 7
+
+dat_rolling_channel_stats <- dat_daily_channel_stats |> 
+  #Making certain date has all the days we should have
+  complete(date = daily_seq ) |> 
+  arrange() |> 
+  #Deleting week thru quarter
+  select(-(week:quarter)) |> 
+ mutate(
+    rollsum_views = zoo::rollsum(
+      views,
+      k = rolling_length,
+      fill = NA,
+      align = c('left')
+    ),
+    rollsum_watchtime = zoo::rollsum(
+      watch_time_hours,
+      k = rolling_length,
+      fill = NA,
+      align = c('left')
+    )
+  )
+
+
+
+```
+
+### Visualizing the rolling views
+
+```{r visualizing_rolling_views}
+#| echo: TRUE
+#| warning: false
+
+dat_rolling_channel_stats |> 
+  ggplot(aes(x = date, y = rollsum_views)) +
+  geom_line(linewidth = 1, color = 'dodgerblue4' ) +
+  theme_minimal(base_size = 20,
+                base_family = "Source Sans Pro")
+
+#Making the rolling lenght wider from 7 days to 30 makes a smoother fig
+
+rolling_length <- 30
+
+dat_rolling_channel_stats <- dat_daily_channel_stats |> 
+  #Making certain date has all the days we should have
+  complete(date = daily_seq ) |> 
+  arrange() |> 
+  #Deleting week thru quarter
+  select(-(week:quarter)) |> 
+ mutate(
+    rollsum_views = zoo::rollsum(
+      views,
+      k = rolling_length,
+      fill = NA,
+      align = c('left')
+    ),
+    rollsum_watchtime = zoo::rollsum(
+      watch_time_hours,
+      k = rolling_length,
+      fill = NA,
+      align = c('left')
+    )
+  )
+
+dat_rolling_channel_stats |> 
+  ggplot(aes(x = date, y = rollsum_views)) +
+  geom_line(linewidth = 1, color = 'dodgerblue4' ) +
+  theme_minimal(base_size = 20,
+                base_family = "Source Sans Pro")
+
+
+```
+
+### Visualizing rolling watch time
+
+We could do the same thing for roll sum watch time
+
+```{r visualizing_rolling_watchtime}
+#| echo: TRUE
+#| warning: false
+
+rolling_length <- 30
+
+dat_rolling_channel_stats <- dat_daily_channel_stats |> 
+  #Making certain date has all the days we should have
+  complete(date = daily_seq ) |> 
+  arrange() |> 
+  #Deleting week thru quarter
+  select(-(week:quarter)) |> 
+ mutate(
+    rollsum_views = zoo::rollsum(
+      views,
+      k = rolling_length,
+      fill = NA,
+      align = c('left')
+    ),
+    rollsum_watchtime = zoo::rollsum(
+      watch_time_hours,
+      k = rolling_length,
+      fill = NA,
+      align = c('left')
+    )
+  )
+
+dat_rolling_channel_stats |> 
+  ggplot(aes(x = date, y = rollsum_watchtime)) +
+  geom_line(linewidth = 1, color = 'dodgerblue4' ) +
+  theme_minimal(base_size = 20,
+                base_family = "Source Sans Pro")
+
+
+```
+
+### Doing a video paste analysis
+
+Loading the daily views by video. Notice that the video publish time variable is a character that needs to be transformed into a date. We also want to filter out all of the videos before 2022. We do so with the lubridate::day() function within tidyverse filter() function as follows: `filter(year(video_publish_time) >= 2023)`
+
+```{r daily_video_watchtime_analysis}
+#| echo: TRUE
+#| warning: false
+
+
+dat_daily_vid5_views <- read.csv("~/Documents/GitHub/r_data_cleanning_master_class/data/Part_4/yt_daily_views_by_video_last_365_days.csv") |> 
+  janitor::clean_names() |> 
+  mutate(
+    video_publish_time = mdy(video_publish_time)
+  ) 
+
+```
+
+#### Doing the same thing for daily watch time per video
+
+```{r daily_watch_video_analysis}
+#| echo: TRUE
+#| warning: false
+
+dat_daily_vid5_watchtime <- read.csv("~/Documents/GitHub/r_data_cleanning_master_class/data/Part_4/yt_daily_watchtime_by_video_last_365_days.csv") |> 
+  janitor::clean_names() |> 
+  mutate(
+    video_publish_time = mdy(video_publish_time)
+  ) 
+
+```
+
+#### Joining daily with watching views
+
+Merging while making sure we don't grab the video title again because would have duplicate columns. We also make certain we join by date and content.
+
+```{r merging_daily_views_df}
+#| echo: TRUE
+#| warning: false
+
+dat_daily_vid5_stats <- dat_daily_vid5_views |> 
+  left_join(
+    dat_daily_vid5_watchtime |> 
+      select(-(video_title:duration)),
+    by = join_by(date, content)
+)
+
+```
+
+#### Aggregating dat_daily_vid5_views
+
+Also illustrates the use of `across()` function.
+
+```{r aggregating_daily_vids_stats}
+#| echo: TRUE
+#| warning: false
+
+
+dat_vid5_stats <- dat_daily_vid5_stats |> 
+  summarise(
+    across(
+      .cols = c(views, watch_time_hours),
+      function(x) sum(x, na.rm = TRUE)
+    ),
+    .by = c(video_title, video_publish_time)
+  )
+
+
+```
+
+#### Calculate how many views per day
+
+Calculate the days since the top five videos were published. We do so by creating and interval from the day the video was released up to the day the data were created; namely, December 31, 2024. It creates a new column, days_since_published which is an interval.
+
+Next we can divide the interval by duration of days function `ddays(1)`
+
+We can also estimate the view per day
+
+We can get rid of the video publish time by dividing views by days_since_published. We can do the same for watched hours per day
+
+```{r total_views_per_day}
+#| echo: TRUE
+#| warning: false
+
+dat_vid5_stats |> 
+  mutate(
+    days_since_published = interval(
+      start = video_publish_time,
+      end = make_date(2024,12,31)) / ddays(1),
+    views_per_day = views/days_since_published,
+    hours_per_day = watch_time_hours/days_since_published ) |> 
+  select(-c(video_publish_time, views, watch_time_hours))
+
+
+```
+
+#### Calculate how many views per day
+
+Notice the video "How to master Interactive Tables" have many views even though it is a recent video. It represents an statistical artifact.
+
+Consequently, we could select the top watched videos 20 videos `slice_max(views, n = 20)` would throw out young videos. Then we see different numbers.
+
+We could also use the filter function specifying that the video published time should be equal to today minus something that was released during the last 60 days
+
+```{r channel_stats_per_day}
+#| echo: TRUE
+#| warning: false
+
+dat_channel_stats |> 
+  mutate(
+    days_since_published = interval(
+      start = video_publish_time,
+      end = make_date(2024,12,31)) / ddays(1),
+    views_per_day = views/days_since_published,
+    hours_per_day = watch_time_hours/days_since_published ) |> 
+  select(video_title,views_per_day,hours_per_day ) |> 
+  arrange(desc(views_per_day))
+
+#Selecting the top 20 videos
+
+dat_channel_stats |> 
+  slice_max(order_by = views, n = 20) |> 
+  mutate(
+    days_since_published = interval(
+      start = video_publish_time,
+      end = make_date(2024,12,31)) / ddays(1),
+    views_per_day = views/days_since_published,
+    hours_per_day = watch_time_hours/days_since_published ) |> 
+  select(video_title,views_per_day,hours_per_day ) |> 
+  arrange(desc(views_per_day))
+
+#Filtering by recent releases within the last 2 months
+
+dat_channel_stats |> 
+  filter(video_publish_time <= today() - ddays(60)) |> 
+  mutate(
+    days_since_published = interval(
+      start = video_publish_time,
+      end = make_date(2024,12,31)) / ddays(1),
+    views_per_day = views/days_since_published,
+    hours_per_day = watch_time_hours/days_since_published ) |> 
+  select(video_title,views_per_day,hours_per_day ) |> 
+  arrange(desc(views_per_day))
+
+
+```
+
+#### Using the daily video stats data set
+
+Filtering out videos that were published in the year 2024. You can see that we have zero view counts. Next sorting rows by so that for every video title we have the date in descending error.
+
+Then we can estimate cumulative sum of using the cumulative sum function for views as well watch time hours.
+
+Basically it produces aggregate count over time
+
+```{r filtering_out_daily_video_stats}
+#| echo: TRUE
+#| warning: false
+
+
+dat_daily_vid3_stats <-  dat_daily_vid5_stats |> 
+  filter(
+    year(video_publish_time) == 2024,
+    date >= video_publish_time
+  ) |> 
+  arrange(video_title,date) |> 
+  mutate(
+    cum_views = cumsum(views),
+    cum_hours = cumsum(watch_time_hours),
+    .by = video_title
+  )
+
+
+
+```
+
+#### Daily video watch visualization
+
+```{r}
+
+dat_daily_vid3_stats |> 
+  ggplot(aes(x = date, y = cum_views, color = video_title)) +
+  geom_line(linewidth = 1) +
+  theme_minimal(base_size = 20,
+                base_family = "Source Sans Pro") +
+  theme(
+    legend.text = element_text(size = rel(0.5))
+  )
+
+
+dat_daily_vid3_stats |> 
+  ggplot(aes(x = date, y = cum_hours, color = video_title)) +
+  geom_line(linewidth = 1) +
+  theme_minimal(base_size = 20,
+                base_family = "Source Sans Pro") +
+  theme(
+    legend.text = element_text(size = rel(0.5))
+  )
+
+
+
+
+```
+
+Here we want weeks since published
+
+```{r}
+
+library(tidyverse)
+
+dat_daily_vid3_stats |> 
+  mutate(
+    date = ymd(date)
+  ) |> 
+  mutate(
+    weeks_since_published = interval(
+      video_publish_time,
+      date / dweeks(1)
+    )
+  )
+
+
+```

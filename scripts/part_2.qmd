@@ -70,11 +70,11 @@ By default, csv will assign generic column names.
 #| warning: false
 #| code-fold: true
 
-read_csv('/Users/albertocabrera/Documents/GitHub/r_data_cleanning_master_class/data/Part_2/01_exibble_no_headers.csv')
+# read_csv('/Users/albertocabrera/Documents/GitHub/r_data_cleanning_master_class/data/Part_2/01_exibble_no_headers.csv')
 
 
-# read_csv('data/Part_2/01_exibble_no_headers.csv', 
-#          col_names = FALSE)
+read_csv('data/Part_2/01_exibble_no_headers.csv',
+         col_names = FALSE)
 
 
 ```
@@ -115,10 +115,10 @@ It displays a message with illegible data. Notice that the first two columns con
 #| code-fold: true
 
 
-read_csv('/Users/albertocabrera/Documents/GitHub/r_data_cleanning_master_class/data/Part_2/05_exibble_with_metadata.csv')
+# read_csv('/Users/albertocabrera/Documents/GitHub/r_data_cleanning_master_class/data/Part_2/05_exibble_with_metadata.csv')
 
 
-# read_csv("data/Part_2/05_exibble_with_metadata.csv")
+read_csv("data/Part_2/05_exibble_with_metadata.csv")
 
 ```
 
@@ -129,8 +129,7 @@ We need to skip the first two rows using `skip =2`, which are not relevant. Afte
 #| warning: false
 #| code-fold: true
 
-read_csv("/Users/albertocabrera/Documents/GitHub/r_data_cleanning_master_class/data/Part_2/05_exibble_with_metadata.csv",
-         skip = 2)
+read_csv("/Users/albertocabrera/Documents/GitHub/r_data_cleanning_master_class/data/Part_2/05_exibble_with_metadata.csv",skip = 2)
 ```
 
 ### Read csv files in European format using read_csv2
@@ -207,7 +206,7 @@ read_delim('/Users/albertocabrera/Documents/GitHub/r_data_cleanning_master_class
 
 ## Lesson 5: Reading Excel Files
 
-One package useful for reading excel files is `oepnxls`. However, the data frame looks weird. This is why we transform it into tibble with the following function `as_tibble()`.
+One package useful for reading excel files is {`openxls}`. However, the data frame looks weird. This is why we transform it into tibble with the following function `as_tibble()`.
 
 ```{r read_excel_files}
 #| echo: true
@@ -234,7 +233,6 @@ library(lubridate)
 openxlsx::read.xlsx('/Users/albertocabrera/Documents/GitHub/r_data_cleanning_master_class/data/Part_2/06_exibble.xlsx') |> 
   as_tibble() |> 
   mutate(dates = lubridate::as_date(dates))
-
 
 ```
 
@@ -425,8 +423,8 @@ This means that while the numbers look like they could do what numbers do, they 
 #| warning: false
 #| code-fold: true
 
-# read_csv("/Users/albertocabrera/Documents/GitHub/r_data_cleanning_master_class/data/Part_2/02_exibble.csv") |> 
-#   select(-(1:6)) |> 
+# read_csv("/Users/albertocabrera/Documents/GitHub/r_data_cleanning_master_class/data/Part_2/02_exibble.csv") |>
+#   select(-(1:6)) |>
 #   mutate(number = missing_NULL + 2)
 
 ```
@@ -449,7 +447,7 @@ read_csv("/Users/albertocabrera/Documents/GitHub/r_data_cleanning_master_class/d
 
 ### Handling missing values in excel files
 
-Notice variables missing_Null and missing_dates are incorrectly identified as characters.
+Notice variables missing_Null and missing_dates, or columns, are incorrectly identified as characters.
 
 ```{r handling_na_excel}
 #| echo: true
@@ -465,12 +463,14 @@ openxlsx::read.xlsx("/Users/albertocabrera/Documents/GitHub/r_data_cleanning_mas
 
 ### Recoding missing in a xlsx file at the outset
 
-You can actually tell `read_xlsx()` what constitutes a missing value. With the `na` argument, you can specify a vector of strings that should be treated as `NA`.
+You can actually tell `read_xlsx()` what constitutes a missing value. With the `na.strings` argument, you can specify a vector of strings that should be treated as `NA`. In this case na.strings = c(" ", "(null)", "Unknown") instructs read.xlsx to treat empty spaces, (null) and Unknown as missing.
 
 ```{r recoding_na_excel}
 #| echo: true
 #| warning: false
 #| code-fold: true
+
+library(openxlsx)
 
 openxlsx::read.xlsx("/Users/albertocabrera/Documents/GitHub/r_data_cleanning_master_class/data/Part_2/06_exibble.xlsx",
                     na.strings = c("", "(null)", "Unknown")) |> 
@@ -519,19 +519,18 @@ openxlsx::read.xlsx(
   as_tibble() |> 
   select(-c(1:6)) |> 
   mutate(missing_NULL = parse_number(missing_NULL),
-         missing_dates = ymd_hms(missing_dates))
+         missing_dates = lubridate::ymd_hms(missing_dates))
 
 
 ```
 
 ## Lesson 9: Transforming/Parsing dates & date times
 
-Notice the use of quiet in the recoding of missing_dates variable as date. There is no option in the lubridate function to handle missing values. This is why we need to use the quite argument, which codes the string `NULL` or "Unknown" as missing. However, in the previous example, it is depicted how to code all variables missing values at the outset, and then recode them accordingly as numeric and date formats.
+Notice the use of quiet in the recoding of missing_dates variable as date. There is no option in the lubridate function to handle missing values. This is why we need to use the `quite` argument, which codes the string `NULL` or "Unknown" as missing. However, in the previous example, it is depicted how to code all variables missing values at the outset, and then recode them accordingly as numeric and date formats.
 
 Notice that the readr's `parse_number()` function allows one to specify missing values using `na =`.
 
 ```{r parsing_dates_datetimes}
-
 #| echo: true
 #| warning: false
 #| code-fold: true
@@ -544,7 +543,7 @@ openxlsx::read.xlsx(
   mutate(
     missing_NULL = parse_number(
       missing_NULL,
-      #Notice parse_function allows one to report missing values
+      #Notice parse_function allows to report missing values
       na = c("", "NA", "(null)", "Unknown")),
     missing_dates = 
       #Notice lubridate has no option for NAs instead use quite = TRUE
@@ -624,7 +623,7 @@ tibble(
 
 ```
 
-The readr functions such as `parse_datetime()` and `parse_number()` won't work for this example. On the other hand, the `lubridate` package works best for this situation.
+The readr functions such as `parse_datetime()` and `parse_number()` won't work for this example. On the other hand, the {`lubridate}` package works best for this situation.
 
 The option `orders` can tell lubridate the correct order of the date to be followed. This option save us the complicated format `format = '%Y-%m-%d %H:%M:%S'` used in parse_date from readr. Instead we use lubridate to specify day, month, year and hour "c(`dmyHM`)". And then we specify the correct format for each element of the vector.
 
@@ -649,7 +648,7 @@ tibble(
 
 ## Lesson 11: Combining data sets column-wise & row-wise
 
-This lesson introduces the equivalent concepts of merging from Stata and SPSS
+This lesson introduces the equivalent concepts of merging data sets from Stata and SPSS
 
 ### Binding rows
 
@@ -700,9 +699,9 @@ bind_cols(tib1,tib2)
 
 ```
 
-## Lesson 12: Combining datasets by left\_ and right_join
+## Lesson 12: Combining data sets by left\_ and right_join
 
-This lesson illustrates how to combine two data sets. Each dataset has different rows, and different names for the key variable. In the flights dataset the key variable is `origin`. In the airports dataset the key variable is `faa`.
+This lesson illustrates how to combine two data sets. Each data set has different rows, and different names for the key variable. In the flights data set the key variable is `origin`. In the airports data set, the name of the key variable is `faa`.
 
 ### Creating flights data set
 
@@ -729,7 +728,7 @@ airlines <-  nycflights23::airlines |>
 
 ### left_join
 
-Selecting some variables from the flights dataset. We want to add the name of the carrier. They key matching variable in both data sets is `carrier`.
+Selecting some variables from the flights data set. We want to add the name of the carrier. They key matching variable in both data sets is `carrier`.
 
 ```{r selecting_columns_flights_dataset}
 #| echo: true
@@ -742,9 +741,11 @@ flights |>
 
 ```
 
-Another example of left join that may not be as easier as the previous example. In this example we have abbreviations for airport destinations. For merging, we need another database with the full name of the airports. This name is found in the `airports` data set under the label `faa`.
+#### Another example of left join not as easier as the previous one 
 
-In the example below, we are filtering from the airports' column faa the names that appear in the flights dataset variable origin. In other words the two variables are the same (faa = origin) but have different labels. The trick is to eliminate duplicates.
+In this example we have abbreviations for airport destinations. For merging, we need another database with the full name of the airports. This name is found in the `airports` data set under the label `faa`.
+
+In the example below, we are filtering from the airports' column faa the names that appear in the flights data set variable origin. In other words the two variables are the same (faa = origin) but have different labels. The trick is to eliminate duplicates.
 
 If we try to merge the two files as before a mistake will occur because R does not know that faa is the same as origin.
 
@@ -757,6 +758,7 @@ library(nycflights23)
 
 #* Eliminating duplicate names of airports.  
 #* The end result of filtering is selecting NY airports only
+#* which are located in the airports data set
 
 
 airports <- nycflights23::airports |> 
@@ -790,7 +792,7 @@ flights |>
 
 ### Adding key in right_join.
 
-We get exactly the same dataset made up of 435,352 rows. The reason it produced the same results is the filtering we applied to the airports dataset `filter(faa %in% unique(flights$origin))`
+We get exactly the same data set made up of 435,352 rows. The reason it produced the same results is the filtering we applied to the airports data set `filter(faa %in% unique(flights$origin)).`
 
 ```{r right_join_adding_key}
 #| echo: true
@@ -804,7 +806,7 @@ flights |>
   
 ```
 
-Let's see what happens when eliminating the filtering that allowed both dataset to have the same airports.
+Let's see what happens when eliminating the filtering that allowed both data sets to have the same airports.
 
 Redoing the right and left join does not produce the same number of rows. The left join yield 435,342 rows while the right produces 436,590 rows.
 
@@ -873,7 +875,7 @@ reduced_right
 
 ## Lesson 13: Other join types
 
-Other joins being illustrated with a small dataset. In this example the left_join kept all the airports from the `flights` data set, or 1,251. But the columns are empty except for the New York airports that are contained in the `flights` dataset.
+Other joins being illustrated with a small data set. In this example the left_join kept all the airports from the `flights` data set, or 1,251. But the columns are empty except for the New York airports that are contained in the `flights` data set.
 
 ```{r other_joins}
 #| echo: true
@@ -899,7 +901,7 @@ airports |>
 
 ### Full join
 
-Using two rows, or two rows per airpot
+Using two rows, or two rows per airport.
 
 ```{r full_join}
 
@@ -938,7 +940,7 @@ airports |>
 
 Using join based on multiple criteria.
 
-### Creating wind speeds dataset
+### Creating wind speeds data set
 
 ```{r wind_speeds_df}
 #| echo: true
@@ -1115,6 +1117,7 @@ scores |>
   pivot_longer(cols = -date, 
                names_to = "score_category",
                values_to = "score",
+               #Removes prefix
                names_prefix = "score_")
 
 
@@ -1137,6 +1140,7 @@ payments |>
     cols = contains('date'),
     names_to = "payment_date",
     values_to = 'date',
+    #Extracting the prefix
     names_pattern = "(\\w+)_payment_date"
   )
 
@@ -1158,8 +1162,8 @@ payments |>
   pivot_longer(
     cols = contains('date'),
     names_to = "payment_date",
+    names_pattern = "(.+)_payment_date",
     values_to = 'date',
-    names_pattern = "(.+)_payment_date"
   ) |> 
   arrange(utility,date)
 ```
@@ -1190,7 +1194,7 @@ payments |>
 
 ### Using names_glue function
 
-Notice that the column labeled `next` appears within ticks. In R the word `next` is a reserve name. We can use the pivot_wider function `names_glue()`. If we want a variable name we use curly brackets `{ }`. And then we write the text we want to add outside the curly brackets. In this case we want to rebuild the original value labels last_payment_date, next_payment_date and final_payment_date. Thus we add the name of the variable containing the labels; namely, payment_date
+Notice that the column labeled `next` appears within ticks. In R the word `next` is a reserve name. We can use the pivot_wider function `names_glue()`. If we want a variable name we use curly brackets `{ }`. And then we write the text we want to add outside the curly brackets. In this case we want to rebuild the original value labels; namely, `last_payment_date`, `next_payment_date` and `final_payment_date`. Thus we add the name of the variable containing the labels; namely, payment_date.
 
 ```{r removing_reserve_label_pivot_wider}
 #| echo: true
@@ -1201,8 +1205,8 @@ payments |>
   pivot_longer(
     cols = contains('date'),
     names_to = "payment_date",
-    values_to = "date",
-    names_pattern = "(.+)_payment_date"
+        names_pattern = "(.+)_payment_date",
+    values_to = "date"
   ) |> 
   pivot_wider(
     names_from = 'payment_date',
@@ -1927,7 +1931,7 @@ openxlsx::read.xlsx(
   janitor::clean_names() |> 
   mutate(
     across(.cols = contains('date'),
-           function(x) lubridate::as_date(x))
+           .fns = function(x) lubridate::as_date(x))
   )
 
 #* Another option to transform numeric into date is using 
@@ -2035,7 +2039,7 @@ shipment_test <- shipments <- openxlsx::read.xlsx(
   janitor::clean_names() |> 
   mutate(
     across(.cols = contains('date'),
-           function(x) as_date(x)),
+           .fns = function(x) as_date(x)),
     days_shipped_to_delivered = interval(
       start = shipment_date,
       end =  actual_delivery_date) / days(x = 1),
@@ -2294,7 +2298,7 @@ warehouses <- warehouse_cells |>
 
 #### Suppliers
 
-Moving to the supplier information dataset. While the dataset was loaded without a problem, the column names need to be cleaned.
+Moving to the supplier information data set. While the data set was loaded without a problem, the column names need to be cleaned.
 
 1.  Cleaning variable names using janitor
 
