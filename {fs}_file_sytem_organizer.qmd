@@ -1,0 +1,162 @@
+---
+title: "{fs} The package you need"
+author: "Alberto Rapp"
+date: March 30, 2025
+format:
+  html:
+    code-link: true
+    code-fold: true
+    self-contained: true
+    embed-resources: true
+    toc: true
+    theme: Zephyr
+    number-sections: false
+execute: 
+  warning: false
+  message: false
+  echo: false
+editor_options: 
+  chunk_output_type: console
+---
+
+# {fs} package
+
+In this [YouTube](https://www.youtube.com/watch?v=EfHVYXqIuJ4&t=4s), Alberto introduces the file system package.
+
+Basically: the file system package [fs](http://fs.r-lib.org/) provides a cross-platform, uniform interface to file system operations. [fs](http://fs.r-lib.org/) uses [libuv](http://docs.libuv.org/en/v1.x/fs.html) under the hood, which gives a rock solid cross-platform interface to the filesystem.
+
+It is a system allowing to organize folder and files within folders. It allows one to concatenate paths, and files together
+
+## Displaying the directory tree
+
+1.  We can use fs to display the structure of the directory of the folder `r_data_cleanning_master_class`.
+
+2.  Next we can display a subdirectory
+
+```{r file_dir_tree}
+#| echo: true
+#| warning: false
+
+library(tidyverse)
+library(fs)
+
+#Displays the directory of the current project
+dir_tree()
+
+#Listing the files under the subdirectory Data
+dir_tree('data')
+
+#Listing the files contained in the directory data/Part_5/ 
+fs::dir_ls('data/Part_5')
+
+```
+
+## Directory information
+
+The directory information function. It displays information about the files contained in a particular folder.
+
+The `dir_info()` function provides a tibble directory with lots of information like the paths, type, size etc. For most applications `dir_ls()` function would be enough.
+
+```{r directory_information}
+#| echo: true
+#| warning: false
+
+fs::dir_info('images')
+
+fs::dir_info('data')
+
+fs::dir_ls('data/')
+
+#To recurse across all subfolders, use:
+
+fs::dir_ls('data/', recurse = TRUE)
+
+fs::dir_ls('data', recurse = TRUE)
+
+
+#Listing files ending with extension .csv 
+
+fs::dir_ls(path = 'data/Part_5', regexp = '.+\\.csv$')
+
+#Listing files labeled fake_data end ending with .csv
+
+fs::dir_ls(path = 'data/Part_5', regexp = 'fake_data_.+\\.csv')
+
+
+#Identifying files with the label Shipments contained in Part_2
+fs::dir_ls(path = 'data/Part_2', regexp = '.+_Shipments.+\\.xlsx$')
+ 
+#Identifyning files endings with .cvs in Part_4
+
+fs::dir_ls(path = 'data/Part_4', 
+           recurse = TRUE,
+           regexp = '\\.csv$')
+
+
+```
+
+## Iterating over all datasets
+
+Merging several csv datafiles by iterating over several csv files using the map() function.
+
+```{r iterating_over_datasets}
+#| echo: true
+#| warning: false
+
+csv_files <- fs::dir_ls(path = "data/Part_5",
+                        regexp = 'fake_data_.+\\.csv')
+
+# Transforming files into excel double
+
+csv_files |>  
+  map(read_csv)
+
+
+```
+
+### But what about drawing a plot
+
+Creating a custom function, labeled `file_path`, which is supposed to do something with the file path. In this function we apply the readr `read_csv()`function to read csv files, and then pass it to the ggplot
+
+```{r plotting_iteraction}
+#| echo: true
+#| warning: false
+
+
+#Listing csv files under raw-input subdirectory
+fs::dir_ls(
+  path = 'data/raw-input',
+  recurse = TRUE,
+  regexp = '\\.csv$'
+)
+
+#Creating a vector of files
+
+csv_files <- fs::dir_ls(
+  path = 'data/raw-input',
+  recurse = TRUE,
+  regexp = '\\.csv$'
+)
+
+# #Creating a custom function
+# 
+# csv_files |>  
+#   map(\(file_path) {
+#     plt <- read_csv(file_path) |> 
+#       ggplot(aes(x = col_a, y = col_b)) +
+#       geom_point(size = 10, color = 'dodgerblue4')
+#     
+#     out_path <- file_path |> 
+#       path_ext_set('.png') |> 
+#       str_replace(`^raw-input`, 'output' )
+#     
+#     dir.create(path_dir(out_path))
+#     ggsave(out_path)
+#   })
+
+
+
+
+
+
+```

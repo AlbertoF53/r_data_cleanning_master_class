@@ -1,0 +1,63 @@
+---
+title: "ggplot2 (step by step tutoral"
+author: "Albert Rapp"
+date: April 14, 2024
+format:
+  html:
+    code-link: true
+    code-fold: true
+    code-summary: "Show the code"
+    self-contained: true
+    embed-resources: true
+    toc: true
+    theme: Zephyr
+    number-sections: false
+execute: 
+  warning: false
+  message: false
+  echo: false
+editor_options: 
+  chunk_output_type: console
+---
+
+# How to create Beautiful charts
+
+[This](https://www.youtube.com/watch?v=IWXcw6NHM6E&list=PLBnFxG6owe1HRvUL6A5QNF_8ujP8NdLMc) is a starting guiding presentation. Started with basic things.
+
+## First basic plot
+
+Using mapping and specifying the values and colors of the points. The first chart does not work as intended because of the display of the colors
+
+```{r}
+#| echo: true
+#| warning: false
+library(tidyverse)
+
+ggplot() +
+  geom_point( mapping = aes(x = c(345, 234, 122, 33),
+                            y = c(325, 434, 234, 232),
+                            colour = c('dodgerblue4', 
+                                       'red', 'seagreen', 'seagreen')))
+
+
+
+
+
+
+```
+
+### Second option
+
+```{r}
+#| echo: true
+#| warning: false
+
+ggplot() +
+  geom_point( mapping = aes(x = c(345, 234, 122, 33),
+                            y = c(325, 434, 234, 232)))
+
+
+
+```
+
+The `echo: false` option disables the printing of code (only output is displayed).

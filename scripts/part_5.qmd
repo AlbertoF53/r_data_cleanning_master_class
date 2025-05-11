@@ -1,0 +1,952 @@
+---
+title: "Part 5"
+author: "Albert Rapp"
+date: April 14, 2025
+format:
+  html:
+    code-link: true
+    code-fold: true
+    code-summary: "Show the code"
+    self-contained: true
+    embed-resources: true
+    toc: true
+    theme: Zephyr
+    number-sections: false
+execute: 
+  warning: false
+  message: false
+  echo: false
+editor_options: 
+  chunk_output_type: console
+---
+
+## Part V
+
+## Lesson 1: Motivating Functional Prog
+
+Demonstrating the power of functional programming by uploading all the data files in a single go using the fs package. We can do so using the `fs::dir_ls()` package to list the elements of an specific directory.
+
+Assuming we want to list only those files with the fake_data, which we could do by using the option `regexp = fake_data`. We could save this list as vector titled csv_files.
+
+Below we use fs to display a directory tree, listing files contained in a subdirectory
+
+```{r loading_package}
+#| echo: TRUE
+#| warning: false
+
+library(tidyverse)
+library(fs)
+
+#Displays the directory of the current project
+dir_tree()
+
+
+#Listing the files under the subdirectory Data
+dir_tree('data')
+
+#Listing the files contained in the directory data/Part_5
+fs::dir_ls('data/Part_5')
+
+#Listing the files contained in the directory data/Part_5 with the label fake_data
+
+fs::dir_ls('data/Part_5', regexp = 'fake_data_.+\\.csv')
+
+#Or using a regexp shortcut, by displaying files ending with csv
+
+fs::dir_ls('data/Part_5', regexp = '.+\\.csv$')
+
+#Saving fake_data files files in a v ector
+csv_files <- fs::dir_ls('data/Part_5', regexp = 'fake_data_.+\\.csv$')
+
+csv_files
+
+```
+
+### Using for loop
+
+We can create a csv_list, and for our for loop we could iterate for k in s, we could read the element of the vector using the k entry. We not only want to read, but we also want to populate the cvs_list with 5 csv files.
+
+```{r using_for_loop}
+#| echo: TRUE
+#| warning: false
+
+library(tidyverse)
+csv_files <- fs::dir_ls(path = 'data/Part_5', 
+                        regexp = 'fake_data_.+\\.csv')
+
+csv_list <- list()
+for (k in seq_along(csv_files)) {
+  csv_list[[k]] <- read_csv(csv_files[k])
+}
+
+csv_list 
+```
+
+#### Binding together the 5 csv files
+
+Binding together the five csv files into a single file.
+
+```{r binding_rows_files}
+#| echo: TRUE
+#| warning: false
+
+combined_file <- csv_list |> 
+  bind_rows()
+
+combined_file
+```
+
+### Functional programming easing the way
+
+Functional programming has some tricks that can make this binding process faster and smoother. It removes the need of using for loop procedures.
+
+We basically start by taking the vector of csv_files, the one reporting the path where the files are using`fs::dir_lis`. Next, we pass the vector to the `map()` function, with the read_csv command of readr package. It produces a list of tibbles of the 5 csv files. Next we can find the 5 files together using tidyverse `bind_rows()` function.
+
+```{r functional_programming}
+#| echo: TRUE
+#| warning: false
+
+#Saving listing in a file
+csv_files <- fs::dir_ls(path = 'data/Part_5', 
+                        regexp = 'fake_data_.+\\.csv$')
+
+#Using map to match read_csv function to the 5 fake_data files
+combined_new <- csv_files |> 
+  map(read_csv) |> 
+  bind_rows()
+
+#Using `show_col_types = FALSE` to quite output message
+
+combined_new <- csv_files |> 
+  map(~read_csv(.x, show_col_types = FALSE)) |> 
+  bind_rows()
+
+#* Or
+
+combined_new <- map(csv_files, read_csv) |> 
+  bind_rows()
+
+
+
+combined_new
+```
+
+### Functional programming: Another example
+
+Using the gapminder file to illustrate the use of map(). The gapminder file has life expectancies of countries across time. Say we want to examine how life expectancy are different across time for every continent. So we want to run a linear regression across years and life expectancy across each continent.
+
+#### First option for loop
+
+Identifying unique continents. Next we need an empty list for the continent data as well as for the linear regressions. And we also need an empty vector for the slopes, and the length of this vector needs to be predefined.
+
+```{r functional_programming_2nd_example_for_loop}
+#| echo: TRUE
+#| warning: false
+
+library(gapminder)
+
+gapminder::gapminder
+
+#Selecting unique 5 continents
+continents <- unique(gapminder::gapminder$continent)
+
+continents
+
+#Empty list for continent data
+continent_data <- list()
+
+#Empty list for linear regression
+lm_list <- list()
+
+#Empty vector for regression slopes
+
+slope_coefficients <- numeric(length(continents))
+
+#Iterating using for loop
+
+for (k in seq_along(continents)) {
+  continent_data[[k]] <- gapminder::gapminder |> 
+    filter(continent == continents[k])
+  
+  lm_list[[k]] <- lm(
+    lifeExp ~ year,
+    data = continent_data[k]
+  )
+  slope_coefficients[k] <- coef(lm_list[k])[2]
+}  
+
+#Collecting all results
+
+tibble(
+  continent = continents,
+  data = continent_data,
+  lin_mod = lm_list,
+  slope = slope_coefficients
+)
+
+
+```
+
+#### Functional approach using map()
+
+This is another illustration as to how functional programming can reduce the amount of coding.
+
+Taking the gapminder dataset. Next, we nest the data using the tydiverse `nest()` function. Notice that by specifying `data = -continent` we create a tibble with data in each continent.
+
+**Step-by-step breakdown:**
+
+1.  **gapminder dataset**: This dataset has columns like country, continent, year, lifeExp, pop, and gdpPercap.
+
+2.  **nest(data = -continent)**: The minus sign (-) before continent tells R:
+
+    1.  *Exclude continent from the nested columns.*
+
+    2.  *Group the data by each unique continent value.*
+
+    3.  *For each group, collect the **rest** of the columns into a new list-column called data.*
+
+3.  **Result**: You end up with a new tibble (check) that has 5 rows (one for each continent). It has two columns:
+
+    • continent: the name of the continent
+
+    • data: a nested tibble (or “sub-table”) with all the rows from that continent, containing all other variables (e.g., country, year, etc.).
+
+4.  Next we can use the mutate to calculate the linear model for each of the five continents.
+
+    1.  Once again, we need to `map()` function. Into this map function, we stick the data column from the nested tibble file with 5 rows (five continents) and two columns (continent variable) and the list of tibble of nested data corresponding to country, year, lifeExp, pop, gdpPercap.
+
+    2.  Next we add a mutate function creating a new variable `lin_mod` using the map() function. The map function identifies the column name in the tibble file containing the data, next specifies the custom function consisting of a regression line. In it, the source of data is specified. Recall that the nested tibble file has two columns: continent and data. So the 5 data nested dataset would go into the linear regression function.
+
+    3.  Finally we request a slope variable, being created by map_dbl(). This function specifies the column labeled lin_mod, while invoking the regression coefficient results. In particular the slope coefficient denoted as \[2\]. The intercept is denoted as \[1\].
+
+```{r functional_programming_2nd_example_map_approach}
+#| echo: TRUE
+#| warning: false
+
+library(tidyverse)
+library(fs)
+library(gapminder)
+
+gapminder::gapminder |> 
+  nest(data = -continent) |> 
+  mutate(
+    #Applyng linear regression to the data column
+    lin_mod = map(
+      data, function(x) lm(lifeExp ~ year, data = x)
+                  ),
+    #Extracting the slope from the the lin_model column in a numerica format using map_dbl()
+    slope = map_dbl(lin_mod, function(x) coef(x)[2]) )
+
+```
+
+##### Visualizing regression results
+
+```{r regression_hbar}
+#| echo: TRUE
+#| warning: false
+
+library(tidyverse)
+library(purrr)
+library(gapminder)
+
+# Model slopes by continent
+slopes_df <- gapminder::gapminder |> 
+  nest(data = -continent) |> 
+  mutate(
+    lin_mod = map(
+      data, function(x) lm(lifeExp ~ year, data = x)
+                  ),
+    slope = map_dbl(lin_mod, function(x) coef(x)[2]) )
+
+
+# Plot
+slopes_df |> 
+  ggplot(aes(x = continent, y = slope, fill = continent)) +
+  geom_col(width = 0.6) +
+  labs(
+    title = "Estimated Annual Change in Life Expectancy by Continent",
+    x = "Continent",
+    y = "Slope (Years of Life Expectancy per Year)"
+  ) +
+  theme_minimal() +
+  theme(legend.position = "none") +
+  geom_text(aes(label = round(slope, 2)), vjust = -0.5, size = 4)
+
+
+```
+
+##### Visualizing regression results per continent
+
+```{r regression_face_wrap}
+#| echo: TRUE
+#| warning: false
+
+library(tidyverse)
+library(purrr)
+library(gapminder)
+
+#Plotting per continent
+gapminder |> 
+  ggplot(aes(x = year, y = lifeExp)) +
+  geom_point(alpha = 0.3, color = "gray40") +
+  geom_smooth(method = "lm", se = FALSE, color = "steelblue", size = 1.2) +
+  facet_wrap(~ continent) +
+  labs(
+    title = "Life Expectancy Trends by Continent (1952–2007)",
+    subtitle = "Linear regression lines shown per continent",
+    x = "Year",
+    y = "Life Expectancy"
+  ) +
+  theme_minimal(base_size = 13)
+```
+
+## Lesson 2: Mechanics of map()
+
+This lesson focus solely on examples of the the map function. It unveils the mechanism behind this function. The components of the map function:
+
+The first component .x stands for the list or atomic vector. The next is the function to be applied to each of the elements of the atomic vector. It returns an output of the same length as the input.
+
+**map(.x, .f,..., progress = FALSE)**
+
+In the example below, we use map() to create a vector of numbers.
+
+-   Next we create an anonymous function multiplying each value by 2.
+
+-   We can make the output more interesting by making the function more interesting. Passing the original values while reporting the resulting vector: `map(1:20, function(x) c(x,2*x))`
+
+-   You can also apply function names. In this case the function generate_reply() game. If the numbers entered are divided by 3 or 5, the function returns the label "fizzbuzz".
+
+```{r map_mechanics_example_1}
+#| echo: TRUE
+#| warning: false
+
+library(tidyverse)
+library(purrr)
+library(gapminder)
+
+#Applying annonymous function to a vector
+map(1:20, function(x) 2*x)
+
+#Modified function to list original numbers along the function results
+map(1:20, function(x) c(x, 2*x))
+
+#Using function games
+generate_reply <- function(x) {
+  if (x %% 3 == 0 & x %% 5 == 0) {
+    return("fizzbuzz")
+  } else if (x %% 3 == 0) {
+    return('fizz')
+  } else if (x %% 5 == 0) {
+    return("buzz")
+  } else {
+    return(as.character(x))
+  }
+}
+
+generate_reply(3)
+
+generate_reply(5)
+
+generate_reply(15)
+
+#Applying the function to the vector of 20 numbers
+map(1:20, function(x) c(x, generate_reply(x)))
+
+map(1:20, generate_reply)
+
+
+```
+
+In summary, the map() function makes possible in a short syntax is taking complicated problems and breaking it into a single step via a function.
+
+## Lesson 3: Variants of map()
+
+There are several variations of the map() function. Illustrating those variations using the examples of the prior lesson
+
+-   Returning something else rather than lists associated to `map(1:20, function(x) 2 * x)` using map_dbl(), which returns a number output
+
+-   Returning a character vector instead of a list using map_chr(). For example: `map_chr(1:20, generate_reply)`.
+
+```{r variations_prior_example}
+#| echo: TRUE
+#| warning: false
+
+library(tidyverse)
+library(purrr)
+library(gapminder)
+
+
+#Returning mumeric output with map_dbl()
+map_dbl(1:20, function(x) 2 * x)
+
+#Returning character vector instead of a list
+map_chr(1:20, generate_reply)
+
+map(1:20, function(x) c(x, 2 * x))
+map(1:20, generate_reply)
+
+#Double entry lists do not work with map_chr
+map_chr(1:20, function(x) c(x, 2*x)) #error
+map_dbl(1:20, function(x) c(x, 2*x)) #error
+
+
+```
+
+## Lesson 4: Breaking down first motivating example
+
+Two ways to create a directory of file using `fs::dir_lis` directory list. The `dir_ls()` is equivalent to the `ls` command. It returns filenames as a named `fs_path` character vector. The names are equivalent to the values, which is useful for passing onto functions like `purrr::map_dfr()`.
+
+1.  We are using the regular expression `fake_data.+\\.csv` to extract all the files with the suffice fake_data and whose last id is .csv.
+
+    1.  fake_data\_   =\> matches the literal string "fake_data\_"
+
+    2.  .+           =\> matches \*\*one or more\*\* of any character (except newline)
+
+    3.  \\\\.csv       =\> matches the literal string ".csv"
+
+2.  Next we use the map function, which iterates over the csv_files vector. Then we ask map() function to use this vector to read the csv files, using the readr R library.
+
+    1.  Notice the csv files appear as a tibble file with 2 columns: column_a and column_b, that need to be merged to constitute a single file
+
+3.  Albert Rapp prefers the following variation:
+
+    1.  Include the vector of csv files, then passing it to the map function specifying the read_csv function and finally binding the 5 csv files together
+
+```{r lesson_4_breaking_down}
+#| echo: TRUE
+#| warning: false
+
+library(tidyverse)
+library(purrr)
+library(gapminder)
+library(fs)
+
+#* Two option so dir_ls. The first option does not fully describe
+#* the regular expression
+
+#* First option discussed before
+#csv_files <- fs::dir_ls('data/Part_5', regexp = 'fake_data')
+
+#* Second option with fill genexp
+csv_files <- fs::dir_ls(path = "data/Part_5",
+                        regexp = 'fake_data_.+\\.csv')
+
+#Next we use the map function
+
+map(csv_files, read_csv) |> 
+  bind_rows()
+
+# Albert Rapp prefers the following option
+
+csv_files |> 
+  map(read_csv) |> 
+  bind_rows()
+
+
+```
+
+### Variation of the map() function: map_dfr
+
+A variation not in the R documentation: map_dfr, which was superseded. It allows for data row bind. It is a shortcut
+
+```{r variations_map_function_learning}
+#| echo: TRUE
+#| warning: false
+
+csv_files |> 
+  map_dfr(read_csv)
+
+
+```
+
+## Lesson 5: Breaking down 2nd motivating example
+
+In this example we ran a regression line in each of the five files, corresponding to countries nested within a continent.
+
+1.  The first example is to run the regression line using gapminder across all continents and countries
+
+2.  We want to call the lm function for each of the five continents
+
+```{r breaking_2nd_motivation_example}
+#| echo: TRUE
+#| warning: false
+
+library(tidyverse)
+library(purrr)
+library(gapminder)
+
+gapminder::gapminder
+
+lm(lifeExp ~ year, data = gapminder::gapminder)
+
+```
+
+Calling the lm function for each of the five continents. Procedure:
+
+-   Nesting the data by continent. Requesting nesting all but the continent.
+
+-   Nesting creates a tibble file. The second column, labeled data, contains the data per each continent.
+
+-   Next we could iterate the regression equation across the five continents using mutate() in creating a regression equation.
+
+    -   We add a customized function to link the variables to the function
+
+        -   Note: in the map() function, we need to specify the name of the column containing the nested or list data; namely **`data.`**
+
+        -   Next we can use mutate to create a new column labeled **`ln_mod`**
+
+        -   This new column is the product of a map() function, which links the data column from the tibble file, while applying a custom function to each of the 5 elements of the data column.
+
+        -   Next we specify a custom function which applies a regression model to each of the continents. The key is to refer to the `data` as x, an argument of the customized function. As a data argument, the customized function uses the placeholder we defined in the custom function.
+
+        -   Creating the slope column, **`lin_mod`**, by using once more the map() function, but calling upon the ln_md column to extract the slope. Notice we are extracting the slope using a customized function that goes through each of the 5 coefficient lists (intercept \[1\] and slope \[2\]).
+
+        -   In order to make it in a nicer display, we could make it into **`map_dbl()`** to show the numbers. The difference is is that **`map()`** returns a list, while `map_dbl()`returns values.
+
+```{r lm_nested_continent_breakdown}
+#| echo: TRUE
+#| warning: false
+
+#Returning a list of values for slope
+gapminder::gapminder |> 
+  nest(data = -continent) |> 
+  mutate(
+    #Calculating the lim_mod new column
+    lim_mod = map(data, function(x) lm(lifeExp ~ year, data = x)),
+    #Extracting the slope from the lm_mod column
+    slope = map(lim_mod, function(x) coef(x)[2])
+  )
+
+#Returning values for the slope with map_dbl
+gapminder::gapminder |> 
+  nest(data = -continent) |> 
+  mutate(
+    #Calculating the lim_mod new column
+    lim_mod = map(data, function(x) lm(lifeExp ~ year, data = x)),
+    #Extracting the slope from the lm_mod column & nicer display
+    slope = map_dbl(lim_mod, function(x) coef(x)[2])
+  )
+
+```
+
+## Lesson 6: Purr shorthand notation
+
+Showing a couple of shorthand notations for the map() function.
+
+-   Instead of using **function(x)**, **\\(x),** you could use \~ "tilde", followed by {}
+
+```{r purr_shorthand_6}
+#| echo: TRUE
+#| warning: false
+
+gapminder::gapminder |> 
+  nest(data = -continent) |> 
+  mutate(
+    lin_mod = map(
+      data, ~{lm(lifeExp ~ year, data = .x)}
+    ),
+    coefficients = map(lin_mod, coef),
+    slope = map_dbl(coefficients,2)
+  )
+
+# We could get the expectancy column
+
+gapminder::gapminder |> 
+  nest(data = -continent) |> 
+  mutate(
+    lin_mod = map(
+      data, ~{lm(lifeExp ~ year, data = .x)}
+    ),
+    coefficients = map(lin_mod, coef),
+    slope = map_dbl(coefficients,2),
+    #Extracting the lifeExp column
+    lifeExp = map(data, 'lifeExp')
+  )
+
+```
+
+## Lesson 7: Using additional function arguments
+
+Going back to creating a list of files, or merging 5 csv files using dir_ls path function. Next we grab all the csv files using map_drf() function. The map_dfr() returns data frames. This map_drf() is a shortcut allowing us to avoid using bind_rows() function after merging all files.
+
+-   To eliminate all notifications prompted by map_dfr(), add the argument `show_col_types = FALSE`
+
+-   However the documentation on `map()` advises against this option, recommending instead creating a function.
+
+-   Also recommended is to specify each column type instead of relying on the default. We could do so using the readr() argument col_types()
+
+    -   Note that the simply using `map_dfr(function(x), read_csv(x, show_col_types = FALSE))` generates the two columns (a and b) to be declared dbl.
+
+```{r additional_function_arg_7}
+#| echo: TRUE
+#| warning: false
+
+
+csv_files <- fs::dir_ls(path = "data/Part_5",
+                        regexp = 'fake_data_.+\\.csv')
+
+#Removing unwanted notifications about columns, but not recommended
+csv_files |> 
+  map_dfr(read_csv,show_col_types = FALSE)
+
+
+#Recommended option to remove unwnated notifications using functions
+csv_files |> 
+  map_dfr(function(x) read_csv(x, show_col_types = FALSE))
+
+
+#* Specifying column types. This option correctly identifies
+#* column_b as double numeric.
+
+csv_files |> 
+  map_dfr(function(x) read_csv(x, show_col_types = FALSE,
+                               col_types = cols(
+                                 column_a = col_integer(),
+                                 column_b = col_double())))
+
+```
+
+## Lesson 8: Iterate for side-effects with walk()
+
+Examining the contents of the two first files in csv_files using `csv_files[1:2]`. Instead of passing to the map_dfr() function, we could use another map function; the `walk()` function.
+
+-   Passing the first two csv files to the read_csv function using walk. Notice we get messages but not output
+
+-   Essentially, the `walk()` function works like the `map()` but does not return anything.
+
+-   You need to save it as a vector to display the output
+
+-   So we do we care for it? It could help to create files, and then a plot. Inside the function we could save it as plt. Next we can save as ggsave and using fs to create a path to png images.
+
+```{r iterate_walk_8}
+#| echo: TRUE
+#| warning: false
+
+csv_files <- fs::dir_ls(path = "data/Part_5",
+                        regexp = 'fake_data_.+\\.csv$')
+
+#Examening the first two csv files
+csv_files[1:2]
+
+#* Passing the first two files to the walk() function
+#* generates messages but no output
+csv_files[1:2] |> 
+  walk(read_csv)
+
+y <-  csv_files[1:2] |> 
+  walk(read_csv)
+
+y
+
+#Using walk to create plots that are invisible
+
+csv_files[1:2] |> 
+  walk(function(x) {
+   plt <-  read_csv(x, show_col_types = FALSE) |> 
+      ggplot(aes(x = column_a, y = column_b)) +
+      geom_point()
+   
+   ggsave(fs::path_ext_set(x, ext = '.png'))
+  } )
+
+#* We can create the images for all seven files
+csv_files|> 
+  walk(function(x) {
+   plt <-  read_csv(x, show_col_types = FALSE) |> 
+      ggplot(aes(x = column_a, y = column_b)) +
+      geom_point()
+   
+   ggsave(fs::path_ext_set(x, ext = '.png'))
+  } )
+
+```
+
+## Lesson 9: Vectorization vs iteration
+
+In this lesson, Albert expands on his previous discussion of using map as a replacement for iteration.
+
+Using the fizzbuzz iteration function to play a game. For numbers that are divisible by 3 or 5, the function reports fizz or buzz. For numbers that divisible by both 3 and 5, the function would report fizzbus.
+
+However iteration has several disadvantages next to vectorization. Iteration cannot deal with complex vectors.
+
+For instance, trying to enter a vector of numbers between 1 and 20 into the function generate_reply() produces the following erro:
+
+> generate_reply(1:20) Error in if (x%%3 == 0 & x%%5 == 0) { : the condition has length \> 1
+
+And iteration is slower than vectorization.
+
+```{r vectorization_iteration_9}
+#| echo: TRUE
+#| warning: false
+
+generate_reply <- function(x) {
+  if (x %% 3 == 0 & x %% 5 == 0) {
+    return("fizzbus") 
+   } else if (x %% 3 == 0) {
+      return("fizz")
+   } else if (x %% 5 == 0) {
+      return("buzz")
+   } else {
+      return(as.character(x))
+    }
+}
+
+#Entering a digit 3
+
+generate_reply(3)
+
+generate_reply(4)
+
+generate_reply(5)
+
+#15 can be divivded by either 3 or 5, prompting fizzbus
+generate_reply(15)
+
+generate_reply(9)
+
+generate_reply(1:20)
+```
+
+### Vectorizing version of the function with if conditions
+
+#### For simple cases of either or use if_else
+
+If you switch to tydiverse `if_else()` or `case_when()` functions, you can also deal with multiple conditions that functions can't cope with.
+
+Using`if_else()`to create a function that is simpler than the previous one. Recall, the grammar of `if_else(`) function
+
+if_else(**condition**, *true*, [false]{.underline}, missing = NULL, ..., ptype = NULL, size = NULL)
+
+In this case we want to check for two conditions x %% 3 == 0 \| x %% 5 == 0. In other words, if x can be divided by 3 or 5 can be divided by 5.
+
+Notice the return should be `as.character(x)` to avoid getting error messages.
+
+```{r vectorization_version}
+#| echo: TRUE
+#| warning: false
+
+generate_simple_reply_vector <- function(x) {
+    if_else(
+      (x %% 3 == 0) | (x %% 5 == 0), 
+      'fizz,fuzz or fizzbuzz',
+            as.character(x) )
+}
+
+generate_simple_reply_vector(15) 
+
+#We can even feed a vector into the function
+
+generate_simple_reply_vector(1:10) 
+```
+
+#### For simple cases of either or use if_else
+
+When we have a situation where we have multiple conditions, `case_when()` is a better option.
+
+```{r vector_complex_cases_case_when}
+#| echo: TRUE
+#| warning: false
+
+generate_simple_reply_vector <- function(x) {
+    case_when(
+      (x %% 3 == 0 & x %% 5 == 0) ~ 'fizzfuzz',
+      (x %% 3 == 0) ~ 'fizz',
+      (x %% 5 == 0) ~ 'fuzz',
+      .default = as.character(x))
+              
+}
+
+generate_simple_reply_vector(15)
+
+
+#We can also use this function for vector of values
+
+generate_simple_reply_vector(1:15)
+```
+
+## Lesson 10: Navigating through nested datasets
+
+This lesson demonstrates how to navigate through complex nested data sets. It showcases a couple of tools to help navigate these nested datasets.
+
+-   Displaying the content of the data using the `glimpse()` function. It displays the contents of the dataset
+
+-   Targeting a particular column with glimpse() as well.
+
+-   We could even target a particular column within the nested data
+
+-   Pluck is function that allows one to reduce the weird use of double \[\[\]\] and \$
+
+```{r navigating_nested_10}
+#| echo: TRUE
+#| warning: false
+
+
+tib_gap_regression <- gapminder::gapminder |> 
+  nest(data = -continent) |> 
+  mutate(
+    lin_mod = map(
+      data, function(x) lm(lifeExp ~ year, data = x)
+    ),
+    slope = map_dbl(lin_mod, function(x) coef(x)[2])
+  )
+
+#Displaying the contents of the file using glimpse
+tib_gap_regression |> glimpse()
+
+#Targeting a particular column; say data
+
+tib_gap_regression$data
+
+#Looking at the first component of data; namly, Afghanistan
+
+tib_gap_regression$data[[1]]
+
+#Adding glimpse
+
+tib_gap_regression$data[[1]] |> glimpse()
+
+#Targeting lifeExp within Afghanistan, and entry 254
+
+tib_gap_regression$data[[1]]$lifeExp[254]
+
+#Targeting lifeExp within Afghanistan, and entry 301
+tib_gap_regression$data[[1]]$lifeExp[301]
+
+#***********       Pluck function ***************
+
+#Extracting data from the first country: Afghanistan
+tib_gap_regression |> pluck('data', 1)
+
+#Extracting LifeExp data from the first country: Afghanistan
+
+tib_gap_regression |> pluck('data', 1, 'lifeExp')
+
+#Extracting Life Expectancy from Afghanistan corresponding to case 391
+
+tib_gap_regression |> pluck('data', 1, 'lifeExp', 391)
+
+```
+
+## Lesson 11: Iterate over two inputs
+
+In this lesson, we would learn how to iterate over multiple things.
+
+-   Extracting one linear model first using pluck function
+
+-   Extracting the data from the first continent along with the regression results
+
+-   Next we can use the predict function where we can stick
+
+-   Next we can compare the observed life expectancy against the predicted expectancy under the model, and estimate errors
+
+-   Then, we calculate the mean square error, which is 79.2
+
+```{r iterate_over_2_points}
+#| echo: TRUE
+#| warning: false
+
+library(tidyverse)
+library(gapminder)
+library(fs)
+        
+        
+
+#Extracting the slope and adding it to the model
+
+tib_gap_regression <- gapminder::gapminder |> 
+  nest(data = -continent) |> 
+  mutate(
+    lin_mod = map(
+      data, function(x) lm(lifeExp ~ year, data = x)
+    ),
+    slope = map_dbl(lin_mod, function(x) coef(x)[2])
+  )
+
+#Using pluck function to select all five linear regressions
+
+tib_gap_regression |> pluck('lin_mod')
+
+#Plucking the first linear regression coefficients
+
+continent_lm <-  tib_gap_regression |> pluck('lin_mod',1)
+
+# Extracting data from the first continent, Afghanistan, as well
+
+continent_data <- tib_gap_regression |> pluck('data',1)
+
+#* Using predict function to bring together the data from
+#* predicting Life Expectancy from first continent along with
+#* based on the linear model. Using predict allow us to estimate
+#* predictions based on life expectancy for the Asian continent
+
+predictions <- predict(
+  continent_lm, continent_data
+)
+
+#* Substracting predictions vs observed life expectancy
+
+errors <-  predictions - continent_data$lifeExp
+
+#Estimating Mean Square Error of residuals
+
+mse <- mean(errors^2)
+
+```
+
+We have done this estimate of MSE for one continent. Obviously, we want to estimate MSEs across continents. We need to iterate the linear regression across continents and then estimate residuals across the 5 continents. Unfortunately, map() function won't work. The alternative function is `map(2)` which allows to iterate over two arguments at a time. It is the two column version of `map()`
+
+-   Retrieve the `tib_gap_regression` vector
+
+-   Mutate using map2 which allows us to bring two columns.
+
+    -   The first column is the `lin_mod` column which contains the slope and intercept.
+
+    -   The second column would be the `data` column from tib_gap_regression.
+
+    -   Then we need the function that takes two arguments that can iterate over the rows representing each continent.
+
+    -   Next is to estimate the predictions and subtract them from the observed life expectancy across all continents. We need the map2() function again. In this case we need to define an anonymous function that does the substraction from the observed vector of predicted life expectancies minus vector of observed life expectancies.
+
+    -   Then we can calculate the Mean Square Errors using map_dbl() to estimate numbers using a customized function to estimate square means across continents
+
+```{r iterate_mse_across_continents}
+#| echo: TRUE
+#| warning: false
+
+#Estimating the predictions across all continents
+
+tib_gap_regression |> 
+  mutate(
+    predictions = map2(
+      lin_mod,
+      data,
+      function(linear_model, tib) {
+        predict(
+          linear_model, 
+          tib)
+        
+      }
+  ),
+  
+  errors = map2(
+    predictions,
+    data,
+  #Anonimous function shorthand predictions - data
+    ~{.x - .y$lifeExp}
+    ),
+  
+  mse = map_dbl(
+    errors,
+    function(x) mean(x^2)
+  )
+    
+  )
+
+
+
+
+
+
+
+
+```
