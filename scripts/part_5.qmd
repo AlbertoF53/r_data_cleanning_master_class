@@ -36,6 +36,7 @@ Below we use fs to display a directory tree, listing files contained in a subdir
 
 library(tidyverse)
 library(fs)
+library(gapminder)
 
 #Displays the directory of the current project
 dir_tree()
@@ -927,7 +928,6 @@ tib_gap_regression |>
         
       }
   ),
-  
   errors = map2(
     predictions,
     data,
@@ -942,11 +942,127 @@ tib_gap_regression |>
     
   )
 
+```
+
+## Lesson 12: Iterating over many arguments
+
+Illustrating the use of iterating in producing a chart, a silly plot.
+
+-   Specifying a vector with the number of curved curves
+
+-   Defining a tibble containing all the parameters for the geom_curve function
+
+    -   Throwing a line for a starting point (x, y) to an ending point (xend, yend)
+
+    -   Finally tweeting the size or line width of the curves ranging from 0 to 2, and the curvature of the lines from -1 to 1
+
+-   Next we estimate curve layers using parameters in the tibble data set using the `pmap()`function.
+
+    -   Note that the `pmap()` relies on arguments calling for list of vectors. In this case a tibble data frame is nothing else but a combination of vectors in the form of columns. In this case, a tibble is a nicely formatted list of vectors `l` . And once you have the list, you can stick it into a function `f`. `pmap(.l, .f, ..., .progress = FALSE)`
+
+    -   We use the `~` tilde notation because it makes it easy to identify which argument goes where.
+
+        -   Next we use the `geom_curve()` function after the tilde
+
+        -   For the first aes() x element, we use the first element in the list or tibble which is signified as `x= ..1.`
+
+        -   For xend, we have to use `xend = ..2`, to signify the second thing, or second column or vector
+
+        -   We do the same for y and yend which represent the 3th and 4th vectors, or columns
+
+        -   And, finally for the things we don't map, we can use the `linewidth()` function and set it to
+
+-   At this point, the curve_parameters consists of a vector with 50 mappings that need to be put together to display the graph. This can be done using the `reduce()` function, with the `+` operator. Reducing \`+\` computes the sum of a vector while reducing \`\*\`.
+
+    -   Next we need to add the `.init = ggplot`.
+
+-   We can also change the color of the curve lines
+
+```{r iterating_many_arguments}
+#| echo: TRUE
+#| warning: false
+
+n_curves <-  50
+
+#* Defining the dataset with 50 lines - 
+#* Defining curve parameters 
+curve_parameters <- tibble(
+  x = runif(n_curves),
+  xend = runif(n_curves),
+  y = runif(n_curves),
+  yend = runif(n_curves),
+  #Size or line width of the lines
+  linewidth = runif(n_curves, 0, 2),
+  #Curvature of lines
+  curvature = runif(n_curves, -1, 1)
+)
+
+#Creates 50 mappings
+curve_parameters |> 
+  pmap(
+    ~geom_curve(
+      aes(x = ..1,
+          xend = ..2,
+          y = ..3,
+          yend = ..4,
+          ),
+      linewidth = ..5,
+      curvature = ..6
+    )
+  )
+
+#Creating a curve layer as a vector
+
+curve_layers <- curve_parameters |> 
+  pmap(
+    ~geom_curve(
+      aes(x = ..1,
+          xend = ..2,
+          y = ..3,
+          yend = ..4,
+          ),
+      linewidth = ..5,
+      curvature = ..6
+    )
+  )
 
 
+#* Using reduced function to glue them together
+#* We also need to use the initiate argument which identifies
+#* the use of ggplot() to graph the 50 curves
 
+reduce(
+  curve_layers,
+  `+`,
+  .init = ggplot()
+)
 
+#Changing color of the curve lines to dodgerblue4
 
+curve_layers <- curve_parameters |> 
+  pmap(
+    ~geom_curve(
+      aes(x = ..1,
+          xend = ..2,
+          y = ..3,
+          yend = ..4,
+          ),
+      linewidth = ..5,
+      curvature = ..6,
+      color = 'dodgerblue4'
+    )
+  )
+
+reduce(
+  curve_layers,
+  `+`,
+  .init = ggplot()
+)
+
+#Another option is to use ggplot() directly
+
+ggplot() +
+  curve_layers
 
 
 ```
