@@ -1066,3 +1066,242 @@ ggplot() +
 
 
 ```
+
+## Lesson 13: Using named arguments in pmap()
+
+Instead of using `..` along with numbers `..2` to identify the vectors, we could use names. Recall the tibble file contains 6 vectors, columns, labeled x, xend, y, yend, linewidth and curvature. The first 4 vectors identify the coordinates of the curves (initial and end).
+
+-   Instead of using `~geom_curve(` we can use \`\~{ geom_curve( }
+
+-   Using dynamic dots via a vector l \<- list(...), and then accessing the elements using l\$xend, and so on
+
+Notice you can ask then for ggplot. But it would take a little bit more time to run.
+
+```{r naming_arguments_pmap}
+#| echo: TRUE
+#| warning: false
+
+n_curves <-  50
+
+#* Defining the dataset with 50 lines - 
+#* Defining curve parameters 
+curve_parameters <- tibble(
+  x = runif(n_curves),
+  xend = runif(n_curves),
+  y = runif(n_curves),
+  yend = runif(n_curves),
+  #Size or line width of the lines
+  linewidth = runif(n_curves, 0, 2),
+  #Curvature of lines
+  curvature = runif(n_curves, -1, 1)
+)
+
+
+#Replacing ~geom_curve() with ~{}. 
+
+curve_layers <- curve_parameters |> 
+  pmap(
+    ~{
+  #Defining a vector with dynamic dots & referencing with l$x
+    l <- list(...)
+    geom_curve(
+      aes(
+          x = l$x,
+          xend = l$xend,
+          y = l$y,
+          yend = l$yend,
+          ),
+      linewidth = l$linewidth,
+      curvature = l$curvature,
+      color = 'dodgerblue4'
+    ) }
+  )
+
+ggplot() +
+  curve_layers
+
+
+```
+
+## Lesson 14: **Iterating and using intermediate steps with reduce() and accumulate()**
+
+This lesson deals with iterations that are not separated from one another. A strange concept. However, this is common place as shown in the functions sum(1:20) and cumsum(1:20). The last function displays the intermediate steps that led to the sum of 210.
+
+```{r interating_cumsum}
+#| echo: TRUE
+#| warning: false
+
+sum(1:20)
+
+cumsum(1:20)
+
+
+```
+
+### The accumulate() is relevant
+
+`accumulate()` sequentially applies a 2-argument function to elements of a vector. Each application of the function uses the initial value or result of the previous application as the first argument. The second argument is the next value of the vector. The results of each application are returned in a list. The accumulation can optionally terminate before processing the whole vector in response to a done() signal returned by the accumulation function.
+
+The way accumulate() works is by listing all the things you want to accumulate. Then you specify the function that could take two arguments, for example `function(x, y) x+y`. This function replicates the `cumsum()` function.
+
+-   accumulate() is equivalent to cumsum()
+
+-   reduce() is equivalent to sum(), but it needs to specify a function and the direction.
+
+```{r accumulate_function_14}
+#| echo: TRUE
+#| warning: false
+
+accumulate(
+  1:20,
+  function(x, y) x + y
+)
+
+#Another option to summarize the function using accumulate()
+
+accumulate(
+  1:20,
+  `+`
+)
+
+#Reduce summation with additive function
+reduce(
+  1:20, .f = `+`
+)
+
+
+```
+
+### Real world scenarios 
+
+Two scenarios. One is creating a tibble with ID. The second is combining csv datasets
+
+#### Creating a column with IDs
+
+Describing a situation where reduce() and accumulate() functions are needed. In this example.
+
+-    Creating a tibble, which is independent of the input, that creates 5 different tibles, each with 5 numbers in a column labeled `x` (5 x 1).
+
+-   Next we want to bind together the 5 tibble tables using accumulate() along with the bind_cols function. The output lists all the steps in binding up together the 5 tibbles.
+
+-   We can labels the 5 rows using accumulate. In this case we specify \`.int = tibble(id = letters\[1:5\])). This function creates a new column, labeled id, displaying the labels for each row.
+
+```         
+accumulate2(.x, .y, .f, ..., .init, .simplify = NA, .ptype = NULL)
+```
+
+A shortcut is to either use reduce() or the map function `map_dfc(.x, .f, ...)` , which is a function that returns data frames. All what you need to ad is the id = letters inside the bind_cols()
+
+```{r real_world_accum_reduce}
+#| echo: TRUE
+#| warning: false
+
+#Creating five tibbles 
+1:5 |> 
+  map( function(x) tibble(x = runif(5)))
+
+#Binding together 5 tibble tables
+
+1:5 |> 
+  map( function(x) tibble(x = runif(5))) |> 
+  #Binding up together the 5 tables
+  accumulate(bind_cols)
+
+#Labeling the rows in the combined tibble table 
+
+
+1:5 |> 
+  map( function(x) tibble(x = runif(5))) |> 
+  #Creating an id column whose values are letters
+  accumulate(bind_cols,
+             .init = tibble(id = letters[1:5]))
+
+
+#If you don't care about the intermediate steps, use the reduce() 
+
+1:5 |> 
+  map( function(x) tibble(x = runif(5))) |> 
+  #Creating an id column whose values are letters
+  reduce(bind_cols,
+             .init = tibble(id = letters[1:5]))
+
+#* Using map_dfc() along with bin_cols() and tibble inside
+#* Note: the id column is listed at the end of the tibble table
+
+1:5 |> 
+  map_dfc( function(x) tibble(x = runif(5))) |> 
+  bind_cols(tibble(id = letters[1:5]))
+
+```
+
+#### Combining 5 fake id data sets
+
+Using the finding sub-directory function `dir_ls()` fs package. Locating the fake id data sets.
+
+-   Using map(read_csv) to transform the csv data sets in excel.
+
+    -   This option creates two columns, and the data are not sorted in any way.
+
+-   Using map_dfr() to bring them together, but the data frames are not put together nicely.
+
+    -   Recall that in the past we created a vector with the 5 files, and using map() to bind them together.
+
+    -   We then have repeated ids creating multiple NAs in the process. In other words the data are diffracted into 5 columns, and the id column has duplicated labels
+
+-   Solution calls for the use of the map(), accumulate() and full join functions
+
+    -   First option of simply using accumulate(full_join) did not work
+
+    -   Instead we can create a function that takes two arguments
+
+        -   But we get the same results of mismatched table
+
+```{r combining_5_fake_id_data_sets}
+#| echo: TRUE
+#| warning: false
+
+#Checking the contents of the subdirectory data/Part_5
+
+fs::dir_ls('data/Part_5')
+
+#* Trying to bind them together, but the output is bad
+fs::dir_ls('data/Part_5', regexp = 'fake_id_.+\\.csv$') |> 
+  map_dfr(read_csv) 
+
+
+
+#* Remember in the previous lesson we created a vector and then
+#* we binded together the files using map() and bind_rows()
+
+csv_files <- fs::dir_ls(path = "data/Part_5",
+                        regexp = 'fake_data_.+\\.csv')
+
+csv_files |> 
+  map(read_csv) |> 
+  bind_rows()
+
+#* A similar approach with our new functions using map() and 
+#* accumulate() together with the full join function.
+#* But this option does not work
+
+fs::dir_ls('data/Part_5', regexp = 'fake_id_.+\\.csv$') |> 
+  map(read_csv) |> 
+  accumulate(full_join)
+
+#* Using a function with two arguments. 
+#* But produces the same bad results
+
+fs::dir_ls('data/Part_5', regexp = 'fake_id_.+\\.csv$') |> 
+  map(read_csv) |> 
+  accumulate(function(x, y) full_join(x, y, by = 'id'))
+
+#* Getting rid of specification warnings regarding columns
+#* using `show_col_types = FALSE`
+
+fs::dir_ls('data/Part_5', regexp = 'fake_id_.+\\.csv$') |> 
+  map(function(x) read_csv(x, show_col_types = FALSE)) |> 
+  accumulate(function(x, y) full_join(x, y, by = 'id'))
+
+
+
+```
