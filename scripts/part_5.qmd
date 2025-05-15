@@ -37,6 +37,7 @@ Below we use fs to display a directory tree, listing files contained in a subdir
 library(tidyverse)
 library(fs)
 library(gapminder)
+library(janitor)
 
 #Displays the directory of the current project
 dir_tree()
@@ -1172,7 +1173,7 @@ reduce(
 
 ```
 
-### Real world scenarios 
+### Real world scenarios
 
 Two scenarios. One is creating a tibble with ID. The second is combining csv datasets
 
@@ -1180,7 +1181,7 @@ Two scenarios. One is creating a tibble with ID. The second is combining csv dat
 
 Describing a situation where reduce() and accumulate() functions are needed. In this example.
 
--    Creating a tibble, which is independent of the input, that creates 5 different tibles, each with 5 numbers in a column labeled `x` (5 x 1).
+-   Creating a tibble, which is independent of the input, that creates 5 different tibles, each with 5 numbers in a column labeled `x` (5 x 1).
 
 -   Next we want to bind together the 5 tibble tables using accumulate() along with the bind_cols function. The output lists all the steps in binding up together the 5 tibbles.
 
@@ -1261,7 +1262,6 @@ Using the finding sub-directory function `dir_ls()` fs package. Locating the fak
 #| warning: false
 
 #Checking the contents of the subdirectory data/Part_5
-
 fs::dir_ls('data/Part_5')
 
 #* Trying to bind them together, but the output is bad
@@ -1270,7 +1270,7 @@ fs::dir_ls('data/Part_5', regexp = 'fake_id_.+\\.csv$') |>
 
 
 
-#* Remember in the previous lesson we created a vector and then
+#* Remember on previous lessons we created a vector and then
 #* we binded together the files using map() and bind_rows()
 
 csv_files <- fs::dir_ls(path = "data/Part_5",
@@ -1282,14 +1282,15 @@ csv_files |>
 
 #* A similar approach with our new functions using map() and 
 #* accumulate() together with the full join function.
-#* But this option does not work
+#* But this option merges columns instead of rows producing a
+#* 6 X 5 tibble. Id column is added.
 
 fs::dir_ls('data/Part_5', regexp = 'fake_id_.+\\.csv$') |> 
   map(read_csv) |> 
   accumulate(full_join)
 
 #* Using a function with two arguments. 
-#* But produces the same bad results
+#* But it displays warnings regarding columns
 
 fs::dir_ls('data/Part_5', regexp = 'fake_id_.+\\.csv$') |> 
   map(read_csv) |> 
@@ -1301,6 +1302,128 @@ fs::dir_ls('data/Part_5', regexp = 'fake_id_.+\\.csv$') |>
 fs::dir_ls('data/Part_5', regexp = 'fake_id_.+\\.csv$') |> 
   map(function(x) read_csv(x, show_col_types = FALSE)) |> 
   accumulate(function(x, y) full_join(x, y, by = 'id'))
+
+
+
+```
+
+## Lesson 15: **Making functions safer for iteration**
+
+This lesson demonstrates how to create safer functions. And, for that, we start with an unsafe function.
+
+-   Illustration of an unsafe function.
+
+    -   This is a random function in which 40% of the times it would display an error message. This means that in some cases we don't get an error message, while in other cases we do. The function generates a random number between 0 and 1.
+
+    -   This unsafe function is particularly troublesome when using map_dbl(), and incorporating the unsafe function.
+
+```{r unsafe_function_15}
+#| echo: TRUE
+#| warning: false
+
+unsafe_fct <- function(x) {
+  if (runif(1) < 0.4) {
+    stop('Error!')
+  } else {
+    return(x)
+  }
+}
+
+#Calling the unsafe function a couple of times
+
+unsafe_fct(5)
+
+#Trouble using map_dlb
+
+unsafe_fct(5)
+
+map_dbl(1:10, unsafe_fct)
+```
+
+#### Ways to correct unsafe functions
+
+Adverb functions:
+
+-   purrr::possibly(). This function returns a modified version of the original version that does what it was intended to do. `possibly(.f, otherwise = NULL, quite = TRUE)`
+
+-   purrr::safely()
+
+In this example we correct our unsafe function by asking possibly to return a ten
+
+```{r adverbs_possibly_15}
+#| echo: TRUE
+#| warning: false
+
+purrr::possibly(
+  unsafe_fct,
+  otherwise = 10
+)
+
+#Creating a vector
+
+unsafe_fct_with_default <- possibly(
+  unsafe_fct,
+  otherwise = 10
+)
+
+#Testing the corrected function
+
+unsafe_fct_with_default(2)
+
+#Doing the iteration we wanted to do, with the unsafe_fct_with_default
+
+map_dbl(1:10, unsafe_fct_with_default)
+
+
+```
+
+#### safely() adverb function
+
+safely() generates another function, which we could add as a vector or variable.
+
+```{r adverbs_functions_safely}
+#| echo: TRUE
+#| warning: false
+
+safely(
+  unsafe_fct,
+  otherwise = 10
+)
+
+#Saving it as a variable
+safe_fct <-  safely(
+  unsafe_fct,
+  otherwise = 10
+)
+
+#Calling the safe function in a given value
+
+safe_fct(5)
+
+#Using the safe function along map()
+
+res <- map(1:10, safe_fct)
+
+res |> 
+  glimpse()
+
+#Placing results in a tibble
+
+tibble(
+  results = map_dbl(res, 'result')
+)
+
+
+#* Checking for additional errors using map logical to generate a
+#* true or false
+#* The function succeeded interate over results using a custom
+#* function checking to see whether is NULL.
+#* Under this scenario, we always know if we succeeded. 
+
+tibble(
+  results = map_dbl(res, 'result'),
+  succeeded = map_lgl(res, function(x) is.null(x$error))
+)
 
 
 
