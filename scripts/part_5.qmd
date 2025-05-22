@@ -1428,3 +1428,357 @@ tibble(
 
 
 ```
+
+## Lesson 16: Retrying failed attempts with insistently()
+
+example of a function that automatically retries when there is an error. This function is useful when calling web services that may not be available, and you have to wait some seconds for the web services to try again.
+
+The solution is to wrap the unsafe function into the `purrr::insistently()` function. There is a rate option.
+
+```         
+insistently(f, rate = rate_backoff(), quiet = TRUE)
+```
+
+The one illustrated is delayed, which is `rate_delayed`
+
+```{r retrying_insist_16}
+#| echo: TRUE
+#| warning: false
+
+#* Unsafe function, which is the foundation
+
+unsafe_fct <- function(x) {
+  if (runif(1) < 0.4) {
+    stop('Error!')
+  } else {
+    return(x)
+  }
+}
+
+#Wrapping unsafe function into insistently
+
+insistently(unsafe_fct, rate_delay(pause = 0.1, 
+                                   max_times = 2))
+
+#Saving it into a new variable
+
+unsafe_fct_with_delayed_retry <- 
+  insistently(unsafe_fct, rate_delay(pause = 0.1, 
+                                   max_times = 2))
+
+#* Next taking the function and mapping by taking the numbers 1 to 10
+#* and then use the new function 10 times
+
+map(1:10, unsafe_fct_with_delayed_retry)
+
+#* We get an error reporting the request failed after 2 attempts
+#* Increasing the number of max_times
+
+unsafe_fct_with_delayed_retry <- 
+  insistently(unsafe_fct, rate_delay(pause = 0.1, 
+                                   max_times = 10))
+
+map(1:10, unsafe_fct_with_delayed_retry)
+
+#This time we see things get work out
+
+#We can also use map_dbl() to have a nicer output
+
+map_dbl(1:10, unsafe_fct_with_delayed_retry)
+
+```
+
+### Defining another function
+
+Defining another function that does not use rate_delayed but rate_backoff. The idea of this adverb is that you have multiple parameters, each of them specifying how you want to try things. It allow us to specify the number of pauses the minimum and maximum pause, and how many times. And how king you want to wait. It also adds randomness to the wait time.
+
+Example below we are using:
+
+1.  A pause base of one second
+
+2.  Capping the pauses to 60
+
+3.  Setting up a minimum pause of one second
+
+4.  Then we want to stop after trying 3 times
+
+```{r defining_backoff_function_16}
+#| echo: TRUE
+#| warning: false
+
+unsafe_fct_with_exp_backoff <- insistently(
+    unsafe_fct, 
+    rate_backoff(
+      pause_base = 0.1,
+      pause_cap = 60,
+      pause_min = 0.1,
+      max_times = 10
+      
+    )
+  )
+
+#* Tryng as the same as before but increasing max_times to 10
+
+map_dbl(1:10, unsafe_fct_with_exp_backoff)
+
+```
+
+## Lesson 17: Using tryCatch() for more robust functions
+
+Another way to write better functions that do not require the adverb() package. It involves the try and catch function which is the most general function we could use.
+
+The function tryCatch evaluates its expression argument in a context where the handlers provided in the ... argument are available. The finally expression is then evaluated in the context in which tryCatch was called; that is, the handlers supplied to the current tryCatch call are not active when the finally expression is evaluated.
+
+Steps:
+
+1.  Create an error my_variable using an empty variable
+
+2.  Wrapping the empty variable under the `tryCatch()` function, which is an R-based function
+
+    1.  Wrapping code you want to execute. Inside the `tryCatch()` we can specify what to do with the error takes place via a function, which depends on the error `e`.
+
+    2.  Next specify a message regarding the error incurred. In other words, it allows to specify your own error message with more meaning.
+
+        1.  You can also define a fallback alternative. For example the value of 10.
+
+        2.  You can also include a value to be returned
+
+        3.  We can also add a glue function, with a place holder for the value we specified before
+
+    3.  In short tryCath() function is similar to the purrr adverb `possibly()`. But the tryCatch provides more control in displaying additional messages, which would help to debug the program.
+
+    4.  Adding more meaning to the message, by gluing the original error message, `'my_variable' not found` being displayed.
+
+    5.  All this means you could define your own function. Inside this function we could add the tryCath() function earlier defined
+
+    6.  We could even expand the customized function to add another element; say multiple the value provided by 2
+
+```{r try_catch_17}
+#| echo: TRUE
+#| warning: false
+
+#my_variable
+
+#This prompts the following erro
+
+# Error: object 'my_variable' not found
+
+tryCatch({
+  my_variable
+  },  error = function(e){
+    message("Hello. An error occured")
+    message("Fallback plan executed")
+    10
+  })
+
+#Adding a variable with a value as an alternative
+
+tryCatch({
+  my_variable
+  },  error = function(e){
+    val <- 5
+    message("Hello. An error occured")
+    message("Fallback plan executed")
+    val
+  })
+
+#* Adding a glue function calling for the placed value at the
+#* beginning
+
+tryCatch({
+  my_variable
+  },  error = function(e){
+    val <- 5
+    message("Hello. An error occured")
+    message(
+      glue::glue("Fallback plan executed: {val} is returned")
+    )
+    val
+  })
+
+#* Making the error message more meaningful by displaying the original
+#* error message "object 'my_variable' not found" being displayed
+
+# The following object prompted the original error message
+
+#my_variable
+
+tryCatch({
+  #The empty object produced the not found error
+  my_variable
+  },  error = function(e){
+    val <- 5
+    message(
+      glue::glue("Hello. An error occured: {e$message}"))
+    message(
+      glue::glue("Fallback plan executed: {val} is returned")
+    )
+    val
+  })
+
+#Creating a new function with the tryCatch() function inside
+my <- function(x) {
+  tryCatch({
+  #The empty object produced the not found error
+  my_variable
+  },  error = function(e){
+    val <- 5
+    message(
+      glue::glue("Hello. An error occured: {e$message}"))
+    message(
+      glue::glue("Fallback plan executed: {val} is returned")
+    )
+    val
+  })
+}
+
+
+#Calling the function with a particular value
+
+
+my(25)
+
+#* Modifying the function by creating an intermediate_variable
+
+my <- function(x) {
+  #Adding an intermediate variable
+  intermediate_variable <- tryCatch({
+  #The empty object produced the not found error
+  my_variable
+  },  error = function(e){
+    val <- 5
+    message(
+      glue::glue("Hello. An error occured: {e$message}"))
+    message(
+      glue::glue("Fallback plan executed: {val} is returned")
+    )
+    val
+  })
+  
+  intermediate_variable * 2
+}
+
+my(25)
+
+```
+
+## Lesson 18: Using the {cli} package
+
+This {cli} packages facilitates replacing the use of the glue package. It is an specialized package that eases the use of look alike glue syntax, while allowing customized highlighting to the console.
+
+cli packages allows one to make the error messages more informative. Procedure:
+
+-   Replace glue for cli. But the first attempt did not work.
+
+-   We need to use the option `cli_alert_info()` and the `clip_alert_danger()` functions. They have an advantage of providing additional icons the explain the results
+
+-   Adding custom styling. For example: making the error message **bold** using `.strong`. However, we need to use curly brackets
+
+-   Similarly, we could also modify the text associated to the message of success by displaying the intermediate_variable value using curly brackets { }
+
+```{r cli_package_18}
+#| echo: TRUE
+#| warning: false
+
+#* Modifying the origian function by targeting the glue functions
+
+my <- function(x) {
+  
+  intermediate_variable <- tryCatch({
+
+  my_variable
+  },  error = function(e){
+    val <- 5
+    message(
+      cli::cli("Hello. An error occured: {e$message}"))
+    message(
+      cli::cli("Fallback plan executed: {val} is returned")
+    )
+    val
+  })
+  
+  intermediate_variable * 2
+}
+
+my(354)
+
+# Adding the clip_alert_info(), and clip_alert_danger() functions
+
+my <- function(x) {
+  
+  intermediate_variable <- tryCatch({
+
+  my_variable
+  },  error = function(e){
+    val <- 5
+
+      cli::cli_alert_info(
+        "Hello. An error occured: {e$message}")
+
+      cli::cli_alert_danger(
+        "Fallback plan executed: {val} is returned")
+    
+    val
+  })
+  
+  intermediate_variable * 2
+}
+
+my(354)
+
+#Instead of danger message, we could change it to a success
+
+my <- function(x) {
+  
+  intermediate_variable <- tryCatch({
+
+  my_variable
+  },  error = function(e){
+    val <- 5
+
+      cli::cli_alert_info(
+        "Hello. An error occured: {e$message}")
+      
+ #Changing danger icon to success icon
+      cli::cli_alert_success(
+        "Fallback plan executed: {val} is returned")
+    
+    val
+  })
+  
+  intermediate_variable * 2
+}
+
+my(354)
+
+# Bolding the error message
+
+
+#Instead of danger message, we could change it to a success
+
+my <- function(x) {
+  
+  intermediate_variable <- tryCatch({
+
+  my_variable
+  },  error = function(e){
+    val <- 5
+
+      cli::cli_alert_info(
+        #Bolding the message
+        "Hello. An error occured: {.strong {e$message}}")
+      
+        #Displaying the intermediate value as a variable {}
+      cli::cli_alert_success(
+        "Fallback plan executed: {.var intermediate_variable} now uses {.val {val}}")
+    
+    val
+  })
+  
+  intermediate_variable * 2
+}
+
+my(354)
+
+
+```
