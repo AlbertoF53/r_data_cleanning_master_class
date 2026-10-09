@@ -91,6 +91,36 @@ List of 4                                           ← a list with 4 parts
 
 ---
 
+## Turn regression results into a tidy table: `broom::tidy()`
+
+`broom` loads with `library(tidymodels)` (or `library(broom)` on its own). It turns
+model output into a **tibble** — one row per coefficient — that you can `filter()`,
+`arrange()`, plot, or pass to `gt()`.
+
+| I want to... | Use | What it delivers |
+|---|---|---|
+| Coefficients, standard errors, t-statistics, p-values | `tidy(model)` | Columns `term`, `estimate`, `std.error`, `statistic`, `p.value`. Works on `lm()` and on a tidymodels fit like `fit(linear_reg(), ...)`. |
+| Add 95% confidence intervals | `tidy(model, conf.int = TRUE)` | Adds `conf.low` and `conf.high`. Change the level with `conf.level = 0.90`. |
+| One-row model summary (R², adjusted R², sigma, F p-value) | `glance(model)` | The fit statistics from `summary()`, as a tibble. |
+| Plain coefficients from a tidymodels fit | `extract_fit_engine(model) \|> coef()` | A named numeric vector, as with `lm()`. |
+
+**Example** (`tidymodels_all_about.qmd`, lines 112-119):
+
+```r
+lm_fit <- fit(linear_reg(), Outstate ~ Top10perc + PhD, data = College)
+tidy(lm_fit)
+#>   term        estimate std.error statistic  p.value
+#> 1 (Intercept)   5203.     553.        9.41 5.64e-20
+#> 2 Top10perc      114.       7.95     14.4  1.37e-41
+#> 3 PhD             28.8      8.59      3.36 8.23e- 4
+```
+
+**Gotchas:**
+- **`coef()` on a tidymodels fit returns `NULL`.** The fit is a parsnip wrapper, not an `lm` object; the real model is inside. Use `tidy()`, or unwrap first with `extract_fit_engine()`.
+- **What `tidy()` shows depends on the engine.** A penalized model (`engine = "glmnet"`, elastic net) gives only `term`, `estimate`, `penalty` — no standard errors or p-values, because glmnet doesn't compute them.
+
+---
+
 ## Handle missing values (Part 1, lessons 2 and 7)
 
 | I want to... | Use | What it delivers |
