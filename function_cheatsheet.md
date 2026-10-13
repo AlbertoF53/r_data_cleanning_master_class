@@ -121,6 +121,23 @@ tidy(lm_fit)
 
 ---
 
+## Read a Help page: argument-name conventions
+
+Open a Help page with `?function_name` (or the Help pane). Some argument names are conventions shared across many functions:
+
+| Argument | Convention | Examples |
+|---|---|---|
+| `x` | the **main object** the function works on — a placeholder, like *x* in algebra; what kind of object depends on the function | `mean(x)`, `print(x)`, `finalize_workflow(x, parameters)` (x = a workflow) |
+| `data` | a **data frame** | `lm(formula, data)`, `recipe(formula, data)` |
+| `new_data` | a data frame of **new** cases to apply a fitted model or recipe to | `predict(fit, new_data)`, `bake(rec, new_data)` |
+| `...` | "**other arguments**," passed on to another function | `map(x, f, ...)` |
+
+**Gotcha:** one Help page often covers a **family** of functions, so `x` can mean different objects. The `finalize_*()` page: in `finalize_workflow()` `x` is a workflow, in `finalize_model()` a model specification, in `finalize_recipe()` a recipe. Check the **Value** and **Examples** sections at the bottom of the page to see what is expected.
+
+Source: `Documents/R-Books/tidymodels_all_about.qmd` (`finalize_workflow()`).
+
+---
+
 ## Handle missing values (Part 1, lessons 2 and 7)
 
 | I want to... | Use | What it delivers |
