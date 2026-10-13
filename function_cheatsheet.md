@@ -94,14 +94,16 @@ List of 4                                           ← a list with 4 parts
 ## Turn regression results into a tidy table: `broom::tidy()`
 
 `broom` loads with `library(tidymodels)` (or `library(broom)` on its own). It turns
-model output into a **tibble** — one row per coefficient — that you can `filter()`,
-`arrange()`, plot, or pass to `gt()`.
+model output into a **tibble** that you can `filter()`, `arrange()`, plot, or pass to `gt()`.
+The broom trio: `tidy()` = one row per **coefficient**; `glance()` = one row per **model**;
+`augment()` = one row per **observation**.
 
 | I want to... | Use | What it delivers |
 |---|---|---|
 | Coefficients, standard errors, t-statistics, p-values | `tidy(model)` | Columns `term`, `estimate`, `std.error`, `statistic`, `p.value`. Works on `lm()` and on a tidymodels fit like `fit(linear_reg(), ...)`. |
 | Add 95% confidence intervals | `tidy(model, conf.int = TRUE)` | Adds `conf.low` and `conf.high`. Change the level with `conf.level = 0.90`. |
 | One-row model summary (R², adjusted R², sigma, F p-value) | `glance(model)` | The fit statistics from `summary()`, as a tibble. |
+| Add predictions and residuals to the data, one row per observation | `augment(model)` (`lm()`) or `augment(fitted_model, new_data = test)` (tidymodels) | `lm()`: adds `.fitted`, `.resid`, plus diagnostics `.hat`, `.sigma`, `.cooksd`, `.std.resid` (only the model's variables; add `data = df` to keep all columns). tidymodels: all columns of `new_data` plus `.pred` and `.resid`. |
 | Plain coefficients from a tidymodels fit | `extract_fit_engine(model) \|> coef()` | A named numeric vector, as with `lm()`. |
 
 **Example** (`tidymodels_all_about.qmd`, lines 112-119):
@@ -117,6 +119,7 @@ tidy(lm_fit)
 
 **Gotchas:**
 - **`coef()` on a tidymodels fit returns `NULL`.** The fit is a parsnip wrapper, not an `lm` object; the real model is inside. Use `tidy()`, or unwrap first with `extract_fit_engine()`.
+- **`augment()` on a tidymodels workflow needs the *fitted* version.** `augment(knn_wf_final, ...)` fails with "Can't extract a model fit from an untrained workflow"; use the output of `fit()` (e.g. `knn_fit_final`) and pass `new_data = test`.
 - **What `tidy()` shows depends on the engine.** A penalized model (`engine = "glmnet"`, elastic net) gives only `term`, `estimate`, `penalty` — no standard errors or p-values, because glmnet doesn't compute them.
 
 ---
