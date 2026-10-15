@@ -1,5 +1,7 @@
 # Data Cleaning & Regex Recall Sheet — organized by "what do I want to do?"
 
+Companion: the tidymodels cheatsheet, `~/Documents/R-books/tidymodels_cheatsheet.md` (splitting, recipes, workflows, cross-validation, tuning, metrics).
+
 Look up by task, not by function name — find the row that matches what you're
 trying to accomplish, then use the function/pattern listed. Sources: the
 lesson files in this folder (`slice_function.R`, `automate_with_fs_copy.qmd`,
