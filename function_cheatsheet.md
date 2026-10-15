@@ -134,6 +134,7 @@ Open a Help page with `?function_name` (or the Help pane). Some argument names a
 | `data` | a **data frame** | `lm(formula, data)`, `recipe(formula, data)` |
 | `new_data` | a data frame of **new** cases to apply a fitted model or recipe to | `predict(fit, new_data)`, `bake(rec, new_data)` |
 | `...` | "**other arguments**," passed on to another function | `map(x, f, ...)` |
+| `truth`, `estimate` (yardstick metrics) | `truth` = the column of **observed** outcome values (Y); `estimate` = the column of **predicted** values (Ŷ). "Truth" is machine-learning jargon ("ground truth") | `rmse(test_aug, truth = Outstate, estimate = .pred)` |
 
 **Gotcha:** one Help page often covers a **family** of functions, so `x` can mean different objects. The `finalize_*()` page: in `finalize_workflow()` `x` is a workflow, in `finalize_model()` a model specification, in `finalize_recipe()` a recipe. Check the **Value** and **Examples** sections at the bottom of the page to see what is expected.
 
